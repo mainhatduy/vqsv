@@ -1,0 +1,10 @@
+{
+  "java.project.sourcePaths": ["src/main/java"],
+  "java.project.outputPath": "build/ide-classes",
+  "java.project.referencedLibraries": [
+    "original/game.jar",
+    "../emulator/freej2me_plus.jar"
+  ],
+  "files.exclude": {"**/.DS_Store": true},
+  "search.exclude": {"build": true, "runtime": true}
+}
