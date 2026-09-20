@@ -250,7 +250,7 @@ public final class ScreenView {
                 } else {
                     game.WorldManager.getInstance();
                     game.WorldManager.a(var3_4, 0, 0, BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
-                    game.WorldManager.getInstance().b.a(var3_4);
+                    game.WorldManager.getInstance().stringTable.a(var3_4);
                 }
                 ++var2_10.i;
                 ** GOTO lbl185
@@ -321,7 +321,7 @@ lbl185:
             }
             case 8: {
                 if (this.i >= 5) {
-                    var1_1.drawImage(game.BattleScreen.getInstance().c, 0, 0, 20);
+                    var1_1.drawImage(game.BattleScreen.getInstance().battleBgImage, 0, 0, 20);
                 }
                 ScreenView.y.a(var1_1);
                 if (this.i < ScreenView.A.length) break;

@@ -12,7 +12,7 @@ import javax.microedition.lcdui.Image;
  * MapEngine - Tile map data loader, layer compositor, and viewport clipping manager.
  */
 public final class MapEngine {
-    private static MapEngine e;
+    private static MapEngine instance;
     private static final int[] f;
     private int g = -1;
     private int h = -1;
@@ -24,12 +24,12 @@ public final class MapEngine {
     private byte n = (byte)-1;
     private byte o = (byte)-1;
     private Image[] p = null;
-    public int a;
-    public int b;
+    public int cameraX;
+    public int cameraY;
     private int q;
     private int r;
-    public int c;
-    public int d;
+    public int mapTileWidth;
+    public int mapTileHeight;
     private int s;
     private int t;
     private int u;
@@ -45,10 +45,10 @@ public final class MapEngine {
     private boolean E = true;
 
     public static MapEngine getInstance() {
-        if (e == null) {
-            e = new MapEngine();
+        if (instance == null) {
+            instance = new MapEngine();
         }
-        return e;
+        return instance;
     }
 
     public MapEngine() {
@@ -194,17 +194,17 @@ public final class MapEngine {
         if (this.k == 0) {
             return;
         }
-        this.t = this.b / this.l;
-        this.s = this.a / this.k;
-        this.v = (this.b + this.h) / this.l;
-        if ((this.b + this.h) % this.l != 0) {
+        this.t = this.cameraY / this.l;
+        this.s = this.cameraX / this.k;
+        this.v = (this.cameraY + this.h) / this.l;
+        if ((this.cameraY + this.h) % this.l != 0) {
             ++this.v;
         }
         if (this.v > this.j) {
             this.v = this.j;
         }
-        this.u = (this.a + this.g) / this.k;
-        if ((this.a + this.g) % this.k != 0) {
+        this.u = (this.cameraX + this.g) / this.k;
+        if ((this.cameraX + this.g) % this.k != 0) {
             ++this.u;
         }
         if (this.u > this.i) {
@@ -312,7 +312,7 @@ public final class MapEngine {
             for (int i = n4; i < n6; ++i) {
                 short s2 = this.A[n2][n3][i];
                 if (s2 == -1) continue;
-                g.drawRegion(this.p[0], this.z[s2][1], this.z[s2][2], this.z[s2][3], this.z[s2][4], 0, n3 * this.k - this.a, i * this.l - this.b, 20);
+                g.drawRegion(this.p[0], this.z[s2][1], this.z[s2][2], this.z[s2][3], this.z[s2][4], 0, n3 * this.k - this.cameraX, i * this.l - this.cameraY, 20);
             }
             ++n3;
         }
@@ -325,26 +325,26 @@ public final class MapEngine {
                 if (s2 == -1) continue;
                 short s3 = (short)(s2 & 0xFFF);
                 s2 = (short)f[(s2 & 0x7000) >> 12];
-                g.drawRegion(this.p[this.z[s3][0]], this.z[s3][1], this.z[s3][2], this.z[s3][3], this.z[s3][4], s2, n3 * this.k - this.a, i * this.l - this.b, 20);
+                g.drawRegion(this.p[this.z[s3][0]], this.z[s3][1], this.z[s3][2], this.z[s3][3], this.z[s3][4], s2, n3 * this.k - this.cameraX, i * this.l - this.cameraY, 20);
             }
             ++n3;
         }
     }
 
     public final void a(int n2, int n3) {
-        this.a = n2 - this.g / 2;
-        this.b = n3 - this.h / 2;
-        if (this.a + this.g >= this.i * this.k) {
-            this.a = this.i * this.k - this.g;
+        this.cameraX = n2 - this.g / 2;
+        this.cameraY = n3 - this.h / 2;
+        if (this.cameraX + this.g >= this.i * this.k) {
+            this.cameraX = this.i * this.k - this.g;
         }
-        if (this.a <= 0) {
-            this.a = 0;
+        if (this.cameraX <= 0) {
+            this.cameraX = 0;
         }
-        if (this.b + this.h >= this.j * this.l) {
-            this.b = this.j * this.l - this.h;
+        if (this.cameraY + this.h >= this.j * this.l) {
+            this.cameraY = this.j * this.l - this.h;
         }
-        if (this.b <= 0) {
-            this.b = 0;
+        if (this.cameraY <= 0) {
+            this.cameraY = 0;
         }
     }
 
@@ -373,7 +373,7 @@ public final class MapEngine {
     }
 
     public final boolean c(int n2, int n3) {
-        return n2 <= 0 || n2 >= this.c || n3 <= 0 || n3 >= this.d;
+        return n2 <= 0 || n2 >= this.mapTileWidth || n3 <= 0 || n3 >= this.mapTileHeight;
     }
 
     static {

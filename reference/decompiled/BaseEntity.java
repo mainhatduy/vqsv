@@ -5,41 +5,41 @@
  * BaseEntity - Abstract movable entity with position coordinates, bounding box, and velocity.
  */
 public class BaseEntity {
-    public short[] c;
-    public short[] d;
+    public short[] baseStats;
+    public short[] currentStats;
     protected boolean e;
     protected boolean f;
     protected boolean g;
     protected byte h;
-    public int i;
-    public int j;
+    public int posX;
+    public int posY;
     public int k;
     public int l;
     public byte m;
-    public byte n;
+    public byte facingDirection;
     public byte o;
-    public BaseEntity p;
+    public BaseEntity ownerEntity;
     public int q;
     public int r;
     public int s;
-    private short a = (short)10;
-    private int[][] b;
-    private boolean t = false;
+    private short followDistance = (short)10;
+    private int[][] followHistory;
+    private boolean isFollowing = false;
 
     public final void a(byte val, short sVal2) {
-        this.d[val] = sVal2;
+        this.currentStats[val] = sVal2;
     }
 
     public final short a(byte val) {
-        return this.d[1];
+        return this.currentStats[1];
     }
 
     public void g() {
-        for (int n2 = 0; n2 < this.c.length; n2 = (int)((byte)(n2 + 1))) {
+        for (int n2 = 0; n2 < this.baseStats.length; n2 = (int)((byte)(n2 + 1))) {
             int n3 = n2;
-            short s2 = this.c[n3];
+            short s2 = this.baseStats[n3];
             n3 = n2;
-            this.d[n3] = s2;
+            this.currentStats[n3] = s2;
         }
     }
 
@@ -71,123 +71,123 @@ public class BaseEntity {
         return this.g;
     }
 
-    public void b(int n2, int n3) {
-        this.i = n2;
-        this.j = n3;
+    public void setPosition(int x, int y) {
+        this.posX = x;
+        this.posY = y;
     }
 
-    public final void b(byte val) {
-        this.n = val;
+    public final void setFacingDirection(byte dir) {
+        this.facingDirection = dir;
     }
 
-    public final int l() {
-        return this.i;
+    public final int getPosX() {
+        return this.posX;
     }
 
-    public final int m() {
-        return this.j;
+    public final int getPosY() {
+        return this.posY;
     }
 
-    public final void d(int n2) {
-        this.i += n2;
+    public final void movePosX(int dx) {
+        this.posX += dx;
     }
 
-    public final void e(int n2) {
-        this.j += n2;
+    public final void movePosY(int dy) {
+        this.posY += dy;
     }
 
     public void b(int n2) {
-        this.i += n2;
-        this.j += 4;
+        this.posX += n2;
+        this.posY += 4;
     }
 
     public final boolean a(int n2, int n3, int n4) {
-        if (this.i == n3 && this.j == n4) {
+        if (this.posX == n3 && this.posY == n4) {
             return true;
         }
-        int n5 = EngineUtils.a(this.i, this.j, n3, n4);
+        int n5 = EngineUtils.a(this.posX, this.posY, n3, n4);
         if (n5 < n2) {
-            this.i = n3;
-            this.j = n4;
+            this.posX = n3;
+            this.posY = n4;
         } else {
-            this.d((n3 - this.i) * n2 / n5);
-            this.e((n4 - this.j) * n2 / n5);
+            this.movePosX((n3 - this.posX) * n2 / n5);
+            this.movePosY((n4 - this.posY) * n2 / n5);
         }
         return false;
     }
 
     public final void a(SpriteRenderer d2, d d3) {
-        if (!this.t) {
+        if (!this.isFollowing) {
             return;
         }
-        if (this.p.h == 0) {
+        if (this.ownerEntity.h == 0) {
             return;
         }
-        this.b[0][0] = this.p.i;
-        this.b[0][1] = this.p.j;
-        this.b[0][2] = d2.b;
-        this.b[0][3] = this.p.n;
-        for (int i2 = this.a; i2 > 0; --i2) {
+        this.followHistory[0][0] = this.ownerEntity.i;
+        this.followHistory[0][1] = this.ownerEntity.j;
+        this.followHistory[0][2] = d2.b;
+        this.followHistory[0][3] = this.ownerEntity.n;
+        for (int i2 = this.followDistance; i2 > 0; --i2) {
             byte by;
-            this.b[i2][0] = this.b[i2 - 1][0];
-            this.b[i2][1] = this.b[i2 - 1][1];
-            this.b[i2][2] = this.b[i2 - 1][2];
-            this.b[i2][3] = this.b[i2 - 1][3];
-            if (i2 % this.a != 0) continue;
-            this.b(this.b[i2][0], this.b[i2][1]);
-            if (this.b[i2][3] == 3) {
-                d3.a((byte)this.b[i2][2], (byte)1, false);
+            this.followHistory[i2][0] = this.followHistory[i2 - 1][0];
+            this.followHistory[i2][1] = this.followHistory[i2 - 1][1];
+            this.followHistory[i2][2] = this.followHistory[i2 - 1][2];
+            this.followHistory[i2][3] = this.followHistory[i2 - 1][3];
+            if (i2 % this.followDistance != 0) continue;
+            this.setPosition(this.followHistory[i2][0], this.followHistory[i2][1]);
+            if (this.followHistory[i2][3] == 3) {
+                d3.a((byte)this.followHistory[i2][2], (byte)1, false);
             } else {
-                d3.a((byte)this.b[i2][2], (byte)this.b[i2][3], false);
+                d3.a((byte)this.followHistory[i2][2], (byte)this.followHistory[i2][3], false);
             }
-            this.n = by = (byte)this.b[i2][3];
+            this.facingDirection = by = (byte)this.followHistory[i2][3];
         }
     }
 
     public final void c(byte val) {
         int n2;
-        this.t = true;
-        this.b = new int[this.a + 1][4];
-        for (n2 = 0; n2 < this.a + 1; ++n2) {
-            this.b[n2][0] = this.p.i;
-            this.b[n2][1] = this.p.j;
-            this.b[n2][3] = this.p.n;
+        this.isFollowing = true;
+        this.followHistory = new int[this.followDistance + 1][4];
+        for (n2 = 0; n2 < this.followDistance + 1; ++n2) {
+            this.followHistory[n2][0] = this.ownerEntity.i;
+            this.followHistory[n2][1] = this.ownerEntity.j;
+            this.followHistory[n2][3] = this.ownerEntity.n;
         }
         if (val >= 0) {
-            for (n2 = 0; n2 < this.a + 1; ++n2) {
-                this.b[n2][2] = val;
+            for (n2 = 0; n2 < this.followDistance + 1; ++n2) {
+                this.followHistory[n2][2] = val;
             }
         }
-        switch (this.p.n) {
+        switch (this.ownerEntity.n) {
             case 1: {
-                int[] intArray = this.b[10];
-                intArray[0] = intArray[0] - this.a;
+                int[] intArray = this.followHistory[10];
+                intArray[0] = intArray[0] - this.followDistance;
                 break;
             }
             case 3: {
-                int[] intArray = this.b[10];
-                intArray[0] = intArray[0] + this.a;
+                int[] intArray = this.followHistory[10];
+                intArray[0] = intArray[0] + this.followDistance;
                 break;
             }
             case 2: {
-                int[] intArray = this.b[10];
-                intArray[1] = intArray[1] + this.a;
+                int[] intArray = this.followHistory[10];
+                intArray[1] = intArray[1] + this.followDistance;
                 break;
             }
             case 0: {
-                int[] intArray = this.b[10];
-                intArray[1] = intArray[1] - this.a;
+                int[] intArray = this.followHistory[10];
+                intArray[1] = intArray[1] - this.followDistance;
             }
         }
-        this.b(this.b[10][0], this.b[10][1]);
+        this.setPosition(this.followHistory[10][0], this.followHistory[10][1]);
     }
 
-    public final boolean n() {
-        return this.t;
+    public final boolean isFollowing() {
+        return this.isFollowing;
     }
 
-    public final void a(BaseEntity n2) {
-        this.p = n2;
+    public final void setOwnerEntity(BaseEntity owner) {
+        this.ownerEntity = owner;
     }
 }
 

@@ -15,7 +15,7 @@ public final class Pet
 extends WorldEntity {
     private static short[] M = new short[]{90, 95, 100, 110, 125};
     public static final byte[] t = new byte[]{12, 30, 5};
-    SkillEffect u;
+    SkillEffect currentSpellEffect;
     short[][] v;
     short[][] w;
     byte[][] x;
@@ -44,7 +44,7 @@ extends WorldEntity {
     public byte I = 0;
     protected boolean J;
     protected short[] K;
-    protected SkillEffect L = null;
+    protected SkillEffect passiveAuraEffect = null;
     private byte Z = 0;
 
     public Pet() {
@@ -104,50 +104,50 @@ extends WorldEntity {
         if (this.a == null) {
             this.a = new SpriteRenderer();
         }
-        this.a.a((int)this.growthRate, false);
+        this.spriteRenderer.a((int)this.growthRate, false);
         this.d((byte)0);
     }
 
     public final void d() {
         super.d();
         if (this.a != null) {
-            this.a.a();
+            this.spriteRenderer.a();
             this.a = null;
         }
     }
 
     public final void a(short sVal, byte val2) {
-        byte by2 = this.n;
-        this.u = null;
-        this.u = new SkillEffect();
-        this.u.a(new short[]{sVal, val2, by2});
-        this.u.b(this.i, this.j);
+        byte by2 = this.facingDirection;
+        this.currentSpellEffect = null;
+        this.currentSpellEffect = new SkillEffect();
+        this.currentSpellEffect.a(new short[]{sVal, val2, by2});
+        this.currentSpellEffect.b(this.posX, this.posY);
         if (sVal == 20 && val2 == 3 || sVal == 22 && val2 == 4) {
-            int[] intArray = this.a.b(0, by2);
-            this.u.b(this.i, this.j - intArray[3]);
+            int[] intArray = this.spriteRenderer.b(0, by2);
+            this.currentSpellEffect.b(this.posX, this.posY - intArray[3]);
         }
-        this.u.c(true);
+        this.currentSpellEffect.c(true);
     }
 
     private void z(int n2) {
-        this.L = new SkillEffect();
+        this.passiveAuraEffect = new SkillEffect();
         short[] shortArray = game.BattleScreen.m[n2];
         short[] shortArray2 = new short[shortArray.length + 5];
         System.arraycopy(shortArray, 1, shortArray2, 6, shortArray.length - 1);
-        shortArray = new short[]{shortArray[0], (short)this.i, (short)this.j, GameDatabase.gameDatabase[0][this.petId][17], 0, this.n};
+        shortArray = new short[]{shortArray[0], (short)this.posX, (short)this.posY, GameDatabase.gameDatabase[0][this.petId][17], 0, this.facingDirection};
         System.arraycopy(shortArray, 0, shortArray2, 0, shortArray.length);
-        this.L.a(shortArray2);
-        this.L.c(true);
+        this.passiveAuraEffect.a(shortArray2);
+        this.passiveAuraEffect.c(true);
     }
 
     public final void d(byte val) {
         switch (val) {
             case 0: {
-                this.a.a(val, (byte)-1, true);
+                this.spriteRenderer.a(val, (byte)-1, true);
                 break;
             }
             case 1: {
-                this.a.a(val, (byte)0, true);
+                this.spriteRenderer.a(val, (byte)0, true);
                 switch (this.petId) {
                     case 0: {
                         this.z(27);
@@ -186,11 +186,11 @@ extends WorldEntity {
                 break;
             }
             case 2: {
-                this.a.a(val, (byte)0, true);
+                this.spriteRenderer.a(val, (byte)0, true);
                 break;
             }
             case 3: {
-                if (game.BattleScreen.getInstance().b != 0) break;
+                if (game.BattleScreen.getInstance().battleMode != 0) break;
                 this.d();
                 Pet b2 = this;
                 short[] shortArray = new short[]{16, 0, 0, 4};
@@ -205,7 +205,7 @@ extends WorldEntity {
                 break;
             }
             case 4: {
-                this.a.a(val, (byte)-1, true);
+                this.spriteRenderer.a(val, (byte)-1, true);
             }
         }
         this.U = val;
@@ -213,72 +213,72 @@ extends WorldEntity {
 
     public final void o() {
         this.a();
-        if (this.u != null) {
-            this.u.e();
+        if (this.currentSpellEffect != null) {
+            this.currentSpellEffect.e();
         }
-        if (this.L != null) {
-            this.L.e();
+        if (this.passiveAuraEffect != null) {
+            this.passiveAuraEffect.e();
         }
     }
 
     public final void a(Graphics g) {
-        if (this.L != null && this.U == 1) {
+        if (this.passiveAuraEffect != null && this.U == 1) {
             switch (this.petId) {
                 case 0: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                     break;
                 }
                 case 10: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                     break;
                 }
                 case 91: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                     break;
                 }
                 case 92: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                     break;
                 }
                 case 97: 
                 case 98: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                     break;
                 }
                 case 62: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                     break;
                 }
                 case 75: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                     break;
                 }
                 case 87: {
-                    if (!this.a.b(1)) break;
-                    this.L.a();
+                    if (!this.spriteRenderer.b(1)) break;
+                    this.passiveAuraEffect.a();
                 }
             }
         }
-        if (this.L != null && this.Z == 0) {
-            this.L.a(g);
+        if (this.passiveAuraEffect != null && this.Z == 0) {
+            this.passiveAuraEffect.a(g);
         }
         Graphics graphics2 = g;
         Pet b2 = this;
         if (b2.f) {
             b2.a.a(graphics2, b2.i, b2.j, b2.n);
         }
-        if (this.L != null && this.Z == 1) {
-            this.L.a(g);
+        if (this.passiveAuraEffect != null && this.Z == 1) {
+            this.passiveAuraEffect.a(g);
         }
-        if (this.u != null) {
-            this.u.a(g);
+        if (this.currentSpellEffect != null) {
+            this.currentSpellEffect.a(g);
         }
     }
 
@@ -286,7 +286,7 @@ extends WorldEntity {
         return this.U;
     }
 
-    public final int q() {
+    public final int getPetId() {
         return this.petId;
     }
 
@@ -298,11 +298,11 @@ extends WorldEntity {
         return this.X;
     }
 
-    public final int s() {
+    public final int getLevel() {
         return this.level;
     }
 
-    public final boolean t() {
+    public final boolean isMaxLevel() {
         return this.level == 50;
     }
 
@@ -316,14 +316,14 @@ extends WorldEntity {
         }
     }
 
-    public final int u() {
+    public final int getExpToNextLevel() {
         if (this.level >= 50) {
             return game.Pet.A(50);
         }
         return game.Pet.A(this.level + 1);
     }
 
-    public final void v() {
+    public final void levelUp() {
         ++this.level;
         this.g(-game.Pet.A(this.level));
         this.J();
@@ -397,7 +397,7 @@ extends WorldEntity {
         }
     }
 
-    public final int z() {
+    public final int getCurrentExp() {
         return this.currentExp;
     }
 
@@ -411,16 +411,16 @@ extends WorldEntity {
 
     public final int B() {
         int n2;
-        if (((Pet)this.p).X == 0 && game.Player.getInstance().c((byte)4, (byte)0) == 2) {
-            this.p.d[3] = n2 = (int)((short)(this.p.c[3] * (100 + GameDatabase.gameDatabase[2][4][5]) / 100));
+        if (((Pet)this.ownerEntity).X == 0 && game.Player.getInstance().c((byte)4, (byte)0) == 2) {
+            this.ownerEntity.d[3] = n2 = (int)((short)(this.ownerEntity.c[3] * (100 + GameDatabase.gameDatabase[2][4][5]) / 100));
         }
-        n2 = ((Pet)this.p).f((byte)2) ? this.d[2] - this.p.d[3] * (100 + GameDatabase.gameDatabase[3][2][5]) / 100 : this.d[2] - this.p.d[3];
+        n2 = ((Pet)this.ownerEntity).f((byte)2) ? this.d[2] - this.ownerEntity.d[3] * (100 + GameDatabase.gameDatabase[3][2][5]) / 100 : this.d[2] - this.ownerEntity.d[3];
         if (this.f((byte)0)) {
             if (this.d[1] <= GameDatabase.gameDatabase[3][0][5] * this.c[1] / 100) {
-                n2 = this.d[2] * (100 + GameDatabase.gameDatabase[3][0][6]) / 100 - this.p.d[3];
+                n2 = this.d[2] * (100 + GameDatabase.gameDatabase[3][0][6]) / 100 - this.ownerEntity.d[3];
             }
         } else if (this.f((byte)1)) {
-            n2 = this.d[2] * (100 + GameDatabase.gameDatabase[3][1][5]) / 100 - this.p.d[3];
+            n2 = this.d[2] * (100 + GameDatabase.gameDatabase[3][1][5]) / 100 - this.ownerEntity.d[3];
         }
         return n2;
     }
@@ -549,9 +549,9 @@ extends WorldEntity {
             }
             case 11: {
                 this.v[val][1] = (short)n2;
-                Pet b2 = game.BattleScreen.getInstance().d[n2];
+                Pet b2 = game.BattleScreen.getInstance().enemyPets[n2];
                 for (int i = 0; i < b2.N[0]; ++i) {
-                    this.a(b2.x[0][i], (int)b2.v[b2.x[0][i]][1], (int)game.BattleScreen.getInstance().d[n2].K[i]);
+                    this.a(b2.x[0][i], (int)b2.v[b2.x[0][i]][1], (int)game.BattleScreen.getInstance().enemyPets[n2].K[i]);
                 }
                 b2.D();
                 break;
@@ -645,9 +645,9 @@ extends WorldEntity {
                 break;
             }
             case 11: {
-                Pet b2 = game.BattleScreen.getInstance().d[this.v[11][1]];
+                Pet b2 = game.BattleScreen.getInstance().enemyPets[this.v[11][1]];
                 for (int i = 0; i < b2.N[0]; ++i) {
-                    this.a(b2.x[0][i], (int)b2.v[b2.x[0][i]][1], (int)game.BattleScreen.getInstance().d[this.v[11][1]].K[i]);
+                    this.a(b2.x[0][i], (int)b2.v[b2.x[0][i]][1], (int)game.BattleScreen.getInstance().enemyPets[this.v[11][1]].K[i]);
                 }
                 b2.D();
                 break;
@@ -883,7 +883,7 @@ extends WorldEntity {
     }
 
     public final void a(byte val, Pet b2) {
-        this.p = b2;
+        this.ownerEntity = b2;
         this.D = val;
         for (int i = 0; i < this.z.length; ++i) {
             if (this.z[i] != val) continue;

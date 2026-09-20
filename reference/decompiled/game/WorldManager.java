@@ -26,21 +26,21 @@ import javax.microedition.lcdui.Image;
  */
 public final class WorldManager
 extends BaseScreen {
-    private static WorldManager Z;
-    public TileMapRenderer a;
+    private static WorldManager instance;
+    public TileMapRenderer tileMapRenderer;
     private ParticleEffect aa;
-    public StringTable b;
-    public Player c;
-    public NpcEntity[] d;
+    public StringTable stringTable;
+    public Player player;
+    public NpcEntity[] npcList;
     public Vector e;
     private int ab;
     public int sceneId;
     public int roomId;
     private int ac;
-    public short h;
-    public short i;
+    public short playerSpawnX;
+    public short playerSpawnY;
     public int j;
-    public String k;
+    public String mapName;
     public static int[] l;
     public static Image m;
     private static Image ad;
@@ -119,10 +119,10 @@ extends BaseScreen {
     private boolean aW;
 
     public static WorldManager getInstance() {
-        if (Z == null) {
-            Z = new WorldManager();
+        if (instance == null) {
+            instance = new WorldManager();
         }
-        return Z;
+        return instance;
     }
 
     public WorldManager() {
@@ -131,10 +131,10 @@ extends BaseScreen {
         this.sceneId = 0;
         this.roomId = 0;
         this.ac = 0;
-        this.h = (short)128;
-        this.i = (short)256;
+        this.playerSpawnX = (short)128;
+        this.playerSpawnY = (short)256;
         this.j = -1;
-        this.k = "Gỗ thô";
+        this.mapName = "Gỗ thô";
         this.o = null;
         this.ap = null;
         this.p = null;
@@ -158,9 +158,9 @@ extends BaseScreen {
         this.aS = new boolean[]{false, false, false, false, false, false, false};
         this.aT = new byte[]{10, 15, 20, 30, 40, 50, 100};
         this.aW = false;
-        this.a = MapEngine.getInstance();
+        this.tileMapRenderer = MapEngine.getInstance();
         this.aa = ParticleEffect.getInstance();
-        this.b = new StringTable();
+        this.stringTable = new StringTable();
     }
 
     public final boolean c() {
@@ -225,11 +225,11 @@ extends BaseScreen {
                 iOException.printStackTrace();
             }
         }
-        this.c.Q = this.aw[l[this.sceneId] + this.roomId];
-        if (this.c.t >= 0 && !this.c.g(this.c.t)) {
-            this.c.s();
+        this.player.Q = this.aw[l[this.sceneId] + this.roomId];
+        if (this.player.t >= 0 && !this.player.g(this.player.t)) {
+            this.player.s();
         }
-        this.aA = this.c.Q[4];
+        this.aA = this.player.Q[4];
         this.aB = (byte)-1;
         for (n2 = 0; n2 < this.aM.length / 4; n2 = (int)((byte)(n2 + 1))) {
             if (this.sceneId != this.aM[n2 << 2] || this.roomId != this.aM[(n2 << 2) + 1]) continue;
@@ -293,7 +293,7 @@ extends BaseScreen {
         }
         this.eventManager = game.OverworldScreen.getInstance();
         this.eventManager.a(this);
-        this.c = game.Player.getInstance();
+        this.player = game.Player.getInstance();
         game.WorldManager.L[1] = -1;
         game.WorldManager.L[0] = -1;
         if (ag == null) {
@@ -301,7 +301,7 @@ extends BaseScreen {
             ah = new short[127][][];
             ai = new boolean[127][2];
         }
-        if (!this.c.y) {
+        if (!this.player.y) {
             if (W) {
                 this.Y();
                 this.aa();
@@ -542,7 +542,7 @@ extends BaseScreen {
         this.U();
         this.V();
         object2 = this;
-        this.k = game.WorldManager.f(384 + l[((WorldManager)object2).f] + ((WorldManager)object2).g);
+        this.mapName = game.WorldManager.f(384 + l[((WorldManager)object2).f] + ((WorldManager)object2).g);
         ((WorldManager)object2).a.a(((WorldManager)object2).ab);
         ((WorldManager)object2).a.a(0, 0);
         ((WorldManager)object2).b.a(((WorldManager)object2).a);
@@ -581,27 +581,27 @@ extends BaseScreen {
             ((WorldManager)object2).b.a(((WorldManager)object2).aa);
             ((WorldManager)object2).b.b();
         } else {
-            if (!this.c.y) {
-                object2 = new short[]{this.h, this.i, w, 4, 4, 8, 40, 100, 0};
-                this.c.a((short[])object2);
-                this.c.I();
+            if (!this.player.y) {
+                object2 = new short[]{this.playerSpawnX, this.playerSpawnY, w, 4, 4, 8, 40, 100, 0};
+                this.player.a((short[])object2);
+                this.player.I();
             }
             if (y == -1) {
                 this.aa.getAnimationData(z, A, true);
-                this.b.a(this.aa);
-                this.b.b();
+                this.stringTable.a(this.aa);
+                this.stringTable.b();
             } else {
-                this.aa.getAnimationData(this.d[y], true);
-                this.b.a(this.aa);
-                this.b.b();
+                this.aa.getAnimationData(this.npcList[y], true);
+                this.stringTable.a(this.aa);
+                this.stringTable.b();
             }
             x = true;
         }
         this.W();
         if (this.sceneId == 3 && this.roomId == 7) {
-            if (this.c.x > 0) {
-                this.c.x = 0;
-                this.c.c(0);
+            if (this.player.x > 0) {
+                this.player.x = 0;
+                this.player.c(0);
             }
             if (this.av == null) {
                 this.av = new Image[4];
@@ -609,14 +609,14 @@ extends BaseScreen {
                     this.av[i3] = ae.loadImage("/data/tex/", "down" + i3);
                 }
             }
-            this.c.s();
-            this.c.h(0);
+            this.player.s();
+            this.player.h(0);
         }
         if (this.sceneId == 5 && this.roomId == 6 || this.sceneId == 4 && (this.roomId == 3 || this.roomId == 4)) {
-            if (this.c.B[0][0] == 2) {
-                ScreenView.getInstance().a(this.aa.i, this.aa.j - this.ar[this.c.t + 1], game.WorldManager.w(), game.WorldManager.x(), 110, 110);
+            if (this.player.B[0][0] == 2) {
+                ScreenView.getInstance().a(this.aa.i, this.aa.j - this.ar[this.player.t + 1], game.WorldManager.w(), game.WorldManager.x(), 110, 110);
             } else {
-                ScreenView.getInstance().a(this.aa.i, this.aa.j - this.ar[this.c.t + 1], game.WorldManager.w(), game.WorldManager.x(), 50, 50);
+                ScreenView.getInstance().a(this.aa.i, this.aa.j - this.ar[this.player.t + 1], game.WorldManager.w(), game.WorldManager.x(), 50, 50);
             }
         } else {
             ScreenView.getInstance().c();
@@ -633,9 +633,9 @@ extends BaseScreen {
     }
 
     private void W() {
-        for (int i = 0; i < this.d.length; ++i) {
-            this.d[i].f();
-            this.b.a(this.d[i]);
+        for (int i = 0; i < this.npcList.length; ++i) {
+            this.npcList[i].f();
+            this.stringTable.a(this.npcList[i]);
         }
     }
 
@@ -646,7 +646,7 @@ extends BaseScreen {
         this.p.a.a((byte)13, (byte)-1);
         this.p.s = 0;
         this.p.c();
-        this.b.a(this.p);
+        this.stringTable.a(this.p);
         this.p.b(n2, n3);
         WorldEntity f3 = f2;
         this.p.p = f3;
@@ -655,7 +655,7 @@ extends BaseScreen {
     public final void e() {
         if (this.p != null) {
             this.p.d();
-            this.b.b(this.p);
+            this.stringTable.b(this.p);
         }
     }
 
@@ -676,12 +676,12 @@ extends BaseScreen {
         this.o.p = f3;
         this.o.c(f2.a.g());
         this.o.c();
-        this.b.a(this.o);
+        this.stringTable.a(this.o);
     }
 
     public final void g() {
         if (this.o != null) {
-            this.b.b(this.o);
+            this.stringTable.b(this.o);
             this.o = null;
         }
     }
@@ -724,15 +724,15 @@ extends BaseScreen {
             }
             for (n4 = 0; n4 < g2.D.length; ++n4) {
                 for (n3 = 0; n3 < g2.D[n4].length; ++n3) {
-                    dataOutputStream.writeByte(this.c.D[n4][n3]);
+                    dataOutputStream.writeByte(this.player.D[n4][n3]);
                 }
             }
-            dataOutputStream.writeByte(this.c.H);
-            dataOutputStream.writeByte(this.c.G);
-            dataOutputStream.writeByte(this.c.F);
-            dataOutputStream.writeByte(this.c.I);
-            for (n4 = 0; n4 < this.c.R.length; ++n4) {
-                dataOutputStream.writeByte(this.c.R[n4]);
+            dataOutputStream.writeByte(this.player.H);
+            dataOutputStream.writeByte(this.player.G);
+            dataOutputStream.writeByte(this.player.F);
+            dataOutputStream.writeByte(this.player.I);
+            for (n4 = 0; n4 < this.player.R.length; ++n4) {
+                dataOutputStream.writeByte(this.player.R[n4]);
             }
             if (!this.j()) {
                 return false;
@@ -789,12 +789,12 @@ extends BaseScreen {
             } else {
                 dataOutputStream.writeByte(this.o.a.a);
             }
-            dataOutputStream.write(this.c.u);
+            dataOutputStream.write(this.player.u);
             dataOutputStream.writeInt(q);
             dataOutputStream.writeBoolean(K);
             long l2 = game.GameStateController.getInstance().d + game.GameStateController.getInstance().e - game.GameStateController.getInstance().f;
             dataOutputStream.writeLong(l2);
-            dataOutputStream.writeByte(this.c.t);
+            dataOutputStream.writeByte(this.player.t);
             af[0].a(byteArrayOutputStream);
             byteArrayOutputStream.close();
             dataOutputStream.close();
@@ -814,8 +814,8 @@ extends BaseScreen {
             int n5;
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(af[0].a());
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-            this.h = dataInputStream.readShort();
-            this.i = dataInputStream.readShort();
+            this.playerSpawnX = dataInputStream.readShort();
+            this.playerSpawnY = dataInputStream.readShort();
             short s2 = dataInputStream.readByte();
             for (n5 = 0; n5 < g2.B.length; ++n5) {
                 for (n4 = 0; n4 < g2.B[n5].length; ++n4) {
@@ -835,15 +835,15 @@ extends BaseScreen {
             }
             for (n5 = 0; n5 < g2.D.length; ++n5) {
                 for (n4 = 0; n4 < g2.D[n5].length; ++n4) {
-                    this.c.D[n5][n4] = dataInputStream.readByte();
+                    this.player.D[n5][n4] = dataInputStream.readByte();
                 }
             }
-            this.c.H = dataInputStream.readByte();
-            this.c.G = dataInputStream.readByte();
-            this.c.F = dataInputStream.readByte();
-            this.c.I = dataInputStream.readByte();
-            for (n5 = 0; n5 < this.c.R.length; ++n5) {
-                this.c.R[n5] = dataInputStream.readByte();
+            this.player.H = dataInputStream.readByte();
+            this.player.G = dataInputStream.readByte();
+            this.player.F = dataInputStream.readByte();
+            this.player.I = dataInputStream.readByte();
+            for (n5 = 0; n5 < this.player.R.length; ++n5) {
+                this.player.R[n5] = dataInputStream.readByte();
             }
             this.aj();
             this.ai();
@@ -888,9 +888,9 @@ extends BaseScreen {
             int[] intArray2 = new int[by];
             for (n2 = 0; n2 < n5; ++n2) {
                 intArray2[n2] = dataInputStream.readByte();
-                if (this.c.z[intArray2[n2]] == null) continue;
-                this.c.z[intArray2[n2]].w();
-                E.addElement(this.c.z[intArray2[n2]]);
+                if (this.player.z[intArray2[n2]] == null) continue;
+                this.player.z[intArray2[n2]].w();
+                E.addElement(this.player.z[intArray2[n2]]);
             }
             for (n2 = 0; n2 < this.aS.length; ++n2) {
                 this.aS[n2] = dataInputStream.readBoolean();
@@ -900,12 +900,12 @@ extends BaseScreen {
             if (by2 != -1) {
                 this.a(n2);
             }
-            this.c.u = dataInputStream.readByte();
+            this.player.u = dataInputStream.readByte();
             q = dataInputStream.readInt();
             K = dataInputStream.readBoolean();
             game.GameStateController.getInstance().d += dataInputStream.readLong();
             g2.t = dataInputStream.readByte();
-            g2.a(new short[]{this.h, this.i, s2, 4, 4, 8, 40, 100, 0});
+            g2.a(new short[]{this.playerSpawnX, this.playerSpawnY, s2, 4, 4, 8, 40, 100, 0});
             byteArrayInputStream.close();
             dataInputStream.close();
         }
@@ -1194,8 +1194,8 @@ extends BaseScreen {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-            dataOutputStream.writeInt(this.c.E());
-            dataOutputStream.writeInt(this.c.G());
+            dataOutputStream.writeInt(this.player.E());
+            dataOutputStream.writeInt(this.player.G());
             af[6].a(byteArrayOutputStream);
             byteArrayOutputStream.close();
             dataOutputStream.close();
@@ -1210,10 +1210,10 @@ extends BaseScreen {
         try {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(af[6].a());
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-            this.c.F();
-            this.c.H();
-            this.c.s(dataInputStream.readInt());
-            this.c.u(dataInputStream.readInt());
+            this.player.F();
+            this.player.H();
+            this.player.s(dataInputStream.readInt());
+            this.player.u(dataInputStream.readInt());
             byteArrayInputStream.close();
             dataInputStream.close();
             return true;
@@ -1227,9 +1227,9 @@ extends BaseScreen {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-            dataOutputStream.writeInt(this.c.K.size());
-            for (int i = 0; i < this.c.K.size(); ++i) {
-                int[] intArray = (int[])this.c.K.elementAt(i);
+            dataOutputStream.writeInt(this.player.K.size());
+            for (int i = 0; i < this.player.K.size(); ++i) {
+                int[] intArray = (int[])this.player.K.elementAt(i);
                 dataOutputStream.writeInt(intArray.length);
                 for (int i3 = 0; i3 < intArray.length; ++i3) {
                     dataOutputStream.writeInt(intArray[i3]);
@@ -1250,13 +1250,13 @@ extends BaseScreen {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(af[9].a());
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
             int n2 = dataInputStream.readInt();
-            this.c.K.removeAllElements();
+            this.player.K.removeAllElements();
             for (int i = 0; i < n2; ++i) {
                 int[] intArray = new int[dataInputStream.readInt()];
                 for (int i3 = 0; i3 < intArray.length; ++i3) {
                     intArray[i3] = dataInputStream.readInt();
                 }
-                this.c.K.addElement(intArray);
+                this.player.K.addElement(intArray);
             }
             byteArrayInputStream.close();
             dataInputStream.close();
@@ -1271,9 +1271,9 @@ extends BaseScreen {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-            dataOutputStream.writeInt(this.c.J.size());
-            for (int i = 0; i < this.c.J.size(); ++i) {
-                int[] intArray = (int[])this.c.J.elementAt(i);
+            dataOutputStream.writeInt(this.player.J.size());
+            for (int i = 0; i < this.player.J.size(); ++i) {
+                int[] intArray = (int[])this.player.J.elementAt(i);
                 dataOutputStream.writeInt(intArray.length);
                 for (int i3 = 0; i3 < intArray.length; ++i3) {
                     dataOutputStream.writeInt(intArray[i3]);
@@ -1294,13 +1294,13 @@ extends BaseScreen {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(af[8].a());
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
             int n2 = dataInputStream.readInt();
-            this.c.J.removeAllElements();
+            this.player.J.removeAllElements();
             for (int i = 0; i < n2; ++i) {
                 int[] intArray = new int[dataInputStream.readInt()];
                 for (int i3 = 0; i3 < intArray.length; ++i3) {
                     intArray[i3] = dataInputStream.readInt();
                 }
-                this.c.J.addElement(intArray);
+                this.player.J.addElement(intArray);
             }
             byteArrayInputStream.close();
             dataInputStream.close();
@@ -1315,9 +1315,9 @@ extends BaseScreen {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-            dataOutputStream.writeByte(this.c.A);
-            for (int i = 0; i < this.c.A; ++i) {
-                int[] intArray = this.c.z[i].P();
+            dataOutputStream.writeByte(this.player.A);
+            for (int i = 0; i < this.player.A; ++i) {
+                int[] intArray = this.player.z[i].P();
                 dataOutputStream.writeInt(intArray.length);
                 for (int i3 = 0; i3 < intArray.length; ++i3) {
                     dataOutputStream.writeInt(intArray[i3]);
@@ -1339,16 +1339,16 @@ extends BaseScreen {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(af[7].a());
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
             byte by = dataInputStream.readByte();
-            for (n2 = 0; n2 < this.c.A; ++n2) {
-                this.c.z[n2] = null;
+            for (n2 = 0; n2 < this.player.A; ++n2) {
+                this.player.z[n2] = null;
             }
-            this.c.A = 0;
+            this.player.A = 0;
             for (n2 = 0; n2 < by; ++n2) {
                 int[] intArray = new int[dataInputStream.readInt()];
                 for (int i = 0; i < intArray.length; ++i) {
                     intArray[i] = dataInputStream.readInt();
                 }
-                this.c.a(intArray);
+                this.player.a(intArray);
             }
             byteArrayInputStream.close();
             dataInputStream.close();
@@ -1360,7 +1360,7 @@ extends BaseScreen {
     }
 
     public final boolean k() {
-        if (!this.c(this.c)) {
+        if (!this.c(this.player)) {
             return false;
         }
         if (!this.X()) {
@@ -1407,10 +1407,10 @@ extends BaseScreen {
     }
 
     private void ak() {
-        for (int i = 0; i < this.d.length; ++i) {
-            if (this.d[i].t != 0 || this.d[i].v != 14) continue;
-            NpcEntity a2 = this.d[i];
-            this.d[i].A = 0;
+        for (int i = 0; i < this.npcList.length; ++i) {
+            if (this.npcList[i].t != 0 || this.npcList[i].v != 14) continue;
+            NpcEntity a2 = this.npcList[i];
+            this.npcList[i].A = 0;
             while (true) {
                 int n2 = 16 * (a2.A + 1);
                 byte by = a2.a.g();
@@ -1442,11 +1442,11 @@ extends BaseScreen {
     }
 
     public final void f() {
-        this.b.getInstance();
-        this.a.b();
-        if (this.d != null) {
-            for (int i = 0; i < this.d.length; ++i) {
-                NpcEntity a2 = this.d[i];
+        this.stringTable.getInstance();
+        this.tileMapRenderer.b();
+        if (this.npcList != null) {
+            for (int i = 0; i < this.npcList.length; ++i) {
+                NpcEntity a2 = this.npcList[i];
                 a2.e();
                 if (a2.b != null) {
                     a2.b.a.a();
@@ -1465,9 +1465,9 @@ extends BaseScreen {
                     a2.H = null;
                 }
                 a2.I = (short)-1;
-                this.d[i] = null;
+                this.npcList[i] = null;
             }
-            this.d = null;
+            this.npcList = null;
         }
         m = null;
         ad = null;
@@ -1506,7 +1506,7 @@ extends BaseScreen {
                         this.S.d();
                     }
                 }
-                this.c.b((byte)0, this.c.n);
+                this.player.b((byte)0, this.player.n);
                 break;
             }
             case 1: {
@@ -1515,11 +1515,11 @@ extends BaseScreen {
                 break;
             }
             case 2: {
-                if (u != -1 && this.d[u] != null && this.d[game.WorldManager.u].a.a == 24) {
+                if (u != -1 && this.npcList[u] != null && this.npcList[game.WorldManager.u].a.a == 24) {
                     this.S.a(4, (byte)0);
                     break;
                 }
-                if (u == -1 || this.d[u] == null || this.d[game.WorldManager.u].a.a != 20) break;
+                if (u == -1 || this.npcList[u] == null || this.npcList[game.WorldManager.u].a.a != 20) break;
                 this.S.a(3, (byte)2);
                 break;
             }
@@ -1616,16 +1616,16 @@ extends BaseScreen {
                     this.S.a("", this.az, -1);
                     break;
                 }
-                if (this.d == null) break;
-                if (this.d[game.WorldManager.u].a.a == 68) {
-                    this.S.a(aj[this.d[game.WorldManager.u].y], "Muốn lên thuyền đi đâu?", 1);
+                if (this.npcList == null) break;
+                if (this.npcList[game.WorldManager.u].a.a == 68) {
+                    this.S.a(aj[this.npcList[game.WorldManager.u].y], "Muốn lên thuyền đi đâu?", 1);
                     break;
                 }
-                if (this.d[game.WorldManager.u].x < 0) {
-                    this.S.a(aj[this.d[game.WorldManager.u].y], N[0], 1);
+                if (this.npcList[game.WorldManager.u].x < 0) {
+                    this.S.a(aj[this.npcList[game.WorldManager.u].y], N[0], 1);
                     break;
                 }
-                this.S.a(aj[this.d[game.WorldManager.u].y], N[this.d[game.WorldManager.u].x], 1);
+                this.S.a(aj[this.npcList[game.WorldManager.u].y], N[this.npcList[game.WorldManager.u].x], 1);
                 break;
             }
             case 27: {
@@ -1643,24 +1643,24 @@ extends BaseScreen {
                 this.aW = n2;
                 if (this.aW) {
                     if (this.aU == this.aT.length - 1) {
-                        this.S.a(aj[this.d[game.WorldManager.u].y], game.WorldManager.f(613), 1);
+                        this.S.a(aj[this.npcList[game.WorldManager.u].y], game.WorldManager.f(613), 1);
                         break;
                     }
                     if (this.aU == this.aT.length - 2) {
-                        this.S.a(aj[this.d[game.WorldManager.u].y], game.WorldManager.f(612), 1);
+                        this.S.a(aj[this.npcList[game.WorldManager.u].y], game.WorldManager.f(612), 1);
                         break;
                     }
                     object = new int[]{this.aT[this.aU], this.aT[this.aU + 1]};
-                    this.S.a(aj[this.d[game.WorldManager.u].y], game.WorldManager.a(611, (int[])object), 1);
+                    this.S.a(aj[this.npcList[game.WorldManager.u].y], game.WorldManager.a(611, (int[])object), 1);
                     break;
                 }
                 if (this.aU < this.aT.length) {
                     byte by2 = this.aT[this.aU];
                     n2 = BaseScreen.f(614).indexOf("%s");
-                    this.S.a(aj[this.d[game.WorldManager.u].y], n2 == -1 ? BaseScreen.f(614) : BaseScreen.f(614).substring(0, n2) + by2 + BaseScreen.f(614).substring(n2 + 2), 1);
+                    this.S.a(aj[this.npcList[game.WorldManager.u].y], n2 == -1 ? BaseScreen.f(614) : BaseScreen.f(614).substring(0, n2) + by2 + BaseScreen.f(614).substring(n2 + 2), 1);
                     break;
                 }
-                this.S.a(aj[this.d[game.WorldManager.u].y], game.WorldManager.f(615), 1);
+                this.S.a(aj[this.npcList[game.WorldManager.u].y], game.WorldManager.f(615), 1);
                 break;
             }
             case 24: {
@@ -1817,8 +1817,8 @@ extends BaseScreen {
                                     super.c((int)var4_13);
                                 }
                             }
-                            game.BattleScreen.getInstance().c = Image.createImage(BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
-                            var4_14 = game.BattleScreen.getInstance().c.getGraphics();
+                            game.BattleScreen.getInstance().battleBgImage = Image.createImage(BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
+                            var4_14 = game.BattleScreen.getInstance().battleBgImage.getGraphics();
                             var2_5.c.b((byte)0, var2_5.c.n);
                             var2_5.b.b(var4_14);
                             var2_5.a((byte)4);
@@ -1855,7 +1855,7 @@ extends BaseScreen {
                 var2_7 = var1_1;
                 if (!var2_7.c.D()) ** GOTO lbl195
                 var3_9 = var2_7;
-                var4_15 = MapEngine.getInstance().b(game.Player.getInstance().i, game.Player.getInstance().j);
+                var4_15 = MapEngine.getInstance().b(game.Player.getInstance().posX, game.Player.getInstance().posY);
                 var5_19 = null;
                 game.WorldManager.O = var4_15;
                 switch (var4_15) {
@@ -1922,9 +1922,9 @@ lbl167:
                     v1 = game.BattleScreen.getInstance();
                     game.BattleScreen.getInstance().getClass();
                     v1.a = 0;
-                    game.BattleScreen.getInstance().b = 0;
-                    game.BattleScreen.getInstance().c = Image.createImage(BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
-                    var4_17 = game.BattleScreen.getInstance().c.getGraphics();
+                    game.BattleScreen.getInstance().battleMode = 0;
+                    game.BattleScreen.getInstance().battleBgImage = Image.createImage(BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
+                    var4_17 = game.BattleScreen.getInstance().battleBgImage.getGraphics();
                     var3_9.b.b(var4_17);
                     var3_9.c.b((byte)0, var3_9.c.n);
                     var3_9.c.v = var3_9.c.C();
@@ -1968,11 +1968,11 @@ lbl195:
                 break;
             }
             case 2: {
-                if (game.WorldManager.u != -1 && this.d[game.WorldManager.u] != null && this.d[game.WorldManager.u].a.a == 24 || this.eventManager.c == 0) {
+                if (game.WorldManager.u != -1 && this.npcList[game.WorldManager.u] != null && this.npcList[game.WorldManager.u].a.a == 24 || this.eventManager.c == 0) {
                     this.S.a((byte)4, (byte)0);
                     break;
                 }
-                if ((game.WorldManager.u == -1 || this.d[game.WorldManager.u] == null || this.d[game.WorldManager.u].a.a != 20) && this.eventManager.c != 1) break;
+                if ((game.WorldManager.u == -1 || this.npcList[game.WorldManager.u] == null || this.npcList[game.WorldManager.u].a.a != 20) && this.eventManager.c != 1) break;
                 this.S.a((byte)3, (byte)2);
                 break;
             }
@@ -2019,7 +2019,7 @@ lbl195:
                             this.aF -= this.aL;
                         }
                     } else if (this.k(262145)) {
-                        game.BattleScreen.getInstance().c = null;
+                        game.BattleScreen.getInstance().battleBgImage = null;
                         this.a((byte)0);
                     }
                 }
@@ -2242,8 +2242,8 @@ lbl358:
 
     public static void a(Graphics g, int n2, int n3, int n4, int n5) {
         g.setColor(game.WorldManager.C());
-        int n6 = (n2 << 4) - MapEngine.getInstance().a;
-        int n7 = (n3 << 4) - MapEngine.getInstance().b;
+        int n6 = (n2 << 4) - MapEngine.getInstance().cameraX;
+        int n7 = (n3 << 4) - MapEngine.getInstance().cameraY;
         g.fillRect(n6, n7, n4 - n2 << 4, n5 - n3 << 4);
     }
 
@@ -2290,7 +2290,7 @@ lbl358:
                 int n3;
                 Graphics graphics2 = g;
                 WorldManager k2 = this;
-                graphics2.drawImage(game.BattleScreen.getInstance().c, 0, 0, 20);
+                graphics2.drawImage(game.BattleScreen.getInstance().battleBgImage, 0, 0, 20);
                 for (n3 = 0; n3 < k2.aP[k2.aA].length / 7; ++n3) {
                     if (k2.f == k2.aP[k2.aA][n3 * 7 + 2] && k2.g == k2.aP[k2.aA][n3 * 7 + 3]) {
                         graphics2.setColor(188, 122, 255);
@@ -2309,8 +2309,8 @@ lbl358:
                 }
                 graphics2.setColor(65280);
                 for (int i = 0; i < k2.e.size(); ++i) {
-                    n3 = (((NpcEntity)k2.e.elementAt((int)i)).i * k2.aP[k2.aA][k2.aD * 7 + 5] << 4) / MapEngine.getInstance().c + (k2.aP[k2.aA][k2.aD * 7] << 4) + k2.aE;
-                    n2 = (((NpcEntity)k2.e.elementAt((int)i)).j * k2.aP[k2.aA][k2.aD * 7 + 6] << 3) / MapEngine.getInstance().d + (k2.aP[k2.aA][k2.aD * 7 + 1] << 3) + k2.aF;
+                    n3 = (((NpcEntity)k2.e.elementAt((int)i)).i * k2.aP[k2.aA][k2.aD * 7 + 5] << 4) / MapEngine.getInstance().mapTileWidth + (k2.aP[k2.aA][k2.aD * 7] << 4) + k2.aE;
+                    n2 = (((NpcEntity)k2.e.elementAt((int)i)).j * k2.aP[k2.aA][k2.aD * 7 + 6] << 3) / MapEngine.getInstance().mapTileHeight + (k2.aP[k2.aA][k2.aD * 7 + 1] << 3) + k2.aF;
                     if (((NpcEntity)k2.e.elementAt(i)).h() == 0 || ((NpcEntity)k2.e.elementAt(i)).h() == 1) {
                         graphics2.fillRect(n3, n2 - 2, 9, 3);
                         continue;
@@ -2318,14 +2318,14 @@ lbl358:
                     graphics2.fillRect(n3, n2 - 5, 3, 9);
                 }
                 if (k2.aB != -1) {
-                    n3 = (k2.aM[(k2.aB << 2) + 2] * k2.aP[k2.aA][k2.aD * 7 + 5] << 4) / MapEngine.getInstance().c + (k2.aP[k2.aA][k2.aD * 7] << 4) + k2.aE;
-                    n2 = (k2.aM[(k2.aB << 2) + 3] * k2.aP[k2.aA][k2.aD * 7 + 6] << 3) / MapEngine.getInstance().d + (k2.aP[k2.aA][k2.aD * 7 + 1] << 3) + k2.aF;
+                    n3 = (k2.aM[(k2.aB << 2) + 2] * k2.aP[k2.aA][k2.aD * 7 + 5] << 4) / MapEngine.getInstance().mapTileWidth + (k2.aP[k2.aA][k2.aD * 7] << 4) + k2.aE;
+                    n2 = (k2.aM[(k2.aB << 2) + 3] * k2.aP[k2.aA][k2.aD * 7 + 6] << 3) / MapEngine.getInstance().mapTileHeight + (k2.aP[k2.aA][k2.aD * 7 + 1] << 3) + k2.aF;
                     graphics2.setColor(0xFF0000);
                     graphics2.fillRect(n3, n2, 6, 6);
                 }
                 if (k2.aC != -1) {
-                    n3 = (k2.aN[(k2.aC << 2) + 2] * k2.aP[k2.aA][k2.aD * 7 + 5] << 4) / MapEngine.getInstance().c + (k2.aP[k2.aA][k2.aD * 7] << 4) + k2.aE;
-                    n2 = (k2.aN[(k2.aC << 2) + 3] * k2.aP[k2.aA][k2.aD * 7 + 6] << 3) / MapEngine.getInstance().d + (k2.aP[k2.aA][k2.aD * 7 + 1] << 3) + k2.aF;
+                    n3 = (k2.aN[(k2.aC << 2) + 2] * k2.aP[k2.aA][k2.aD * 7 + 5] << 4) / MapEngine.getInstance().mapTileWidth + (k2.aP[k2.aA][k2.aD * 7] << 4) + k2.aE;
+                    n2 = (k2.aN[(k2.aC << 2) + 3] * k2.aP[k2.aA][k2.aD * 7 + 6] << 3) / MapEngine.getInstance().mapTileHeight + (k2.aP[k2.aA][k2.aD * 7 + 1] << 3) + k2.aF;
                     graphics2.setColor(2758133);
                     graphics2.fillRect(n3, n2, 6, 6);
                 }
@@ -2343,7 +2343,7 @@ lbl358:
                 return;
             }
             if (this.P == 0 || this.P == 23 || this.S.g) {
-                this.b.a(g);
+                this.stringTable.a(g);
                 ScreenView.getInstance().c(g);
                 if (this.S.g) {
                     this.S.g = false;
@@ -2351,9 +2351,9 @@ lbl358:
             }
             if (ScreenView.getInstance().d != -1) {
                 if (this.aa.p instanceof Player) {
-                    ScreenView.getInstance().b(this.aa.i - MapEngine.getInstance().a, this.aa.j - MapEngine.getInstance().b - this.ar[this.c.t + 1]);
+                    ScreenView.getInstance().b(this.aa.i - MapEngine.getInstance().cameraX, this.aa.j - MapEngine.getInstance().cameraY - this.ar[this.player.t + 1]);
                 } else {
-                    ScreenView.getInstance().b(this.aa.i - MapEngine.getInstance().a, this.aa.j - MapEngine.getInstance().b - 20);
+                    ScreenView.getInstance().b(this.aa.i - MapEngine.getInstance().cameraX, this.aa.j - MapEngine.getInstance().cameraY - 20);
                 }
                 ScreenView.getInstance().b(g);
             }
@@ -2424,14 +2424,14 @@ lbl358:
 
     public final boolean b(int n2) {
         for (int i = 0; i < this.as.length / 4; ++i) {
-            if (this.as[i << 2] != this.sceneId || this.as[(i << 2) + 1] != this.roomId || n2 != this.as[(i << 2) + 2] || this.c.B[this.as[(i << 2) + 3]][0] != 2) continue;
+            if (this.as[i << 2] != this.sceneId || this.as[(i << 2) + 1] != this.roomId || n2 != this.as[(i << 2) + 2] || this.player.B[this.as[(i << 2) + 3]][0] != 2) continue;
             return true;
         }
         return false;
     }
 
     public final boolean r() {
-        return this.c.I == 0 && q >= 10 || this.c.I > 0 && q >= 30;
+        return this.player.I == 0 && q >= 10 || this.player.I > 0 && q >= 30;
     }
 
     private void al() {
@@ -2444,7 +2444,7 @@ lbl358:
         }
         n2 = 0;
         for (int i2 = this.aT.length - 1; i2 >= 0; --i2) {
-            if (this.c.F < this.aT[i2]) continue;
+            if (this.player.F < this.aT[i2]) continue;
             this.aV = (byte)i2;
             n2 = 1;
             break;
@@ -2475,7 +2475,7 @@ lbl358:
                 }
                 if (V == 3) {
                     game.WorldManager.c(1, 0);
-                    String string = game.WorldManager.f(GameDatabase.gameDatabase[0][this.c.z[BaseScreen.K()].q()][0]);
+                    String string = game.WorldManager.f(GameDatabase.gameDatabase[0][this.player.z[BaseScreen.K()].q()][0]);
                     V = (byte)(V + 1);
                     this.S.c("Hãy lựa chọn #2" + string);
                     return;
@@ -2545,13 +2545,13 @@ lbl358:
             case 4: {
                 if (V == 0) {
                     game.WorldManager.c(0, 1);
-                    for (int i = 0; i < this.c.A; ++i) {
-                        if (this.c.z[i].s() != L[0] || this.c.z[i].q() != L[1]) continue;
+                    for (int i = 0; i < this.player.A; ++i) {
+                        if (this.player.z[i].s() != L[0] || this.player.z[i].q() != L[1]) continue;
                         game.WorldManager.c(1, i);
                         break;
                     }
                     V = (byte)(V + 1);
-                    String string = game.WorldManager.f(GameDatabase.spriteTable((byte)0, (short)this.c.z[BaseScreen.K()].q(), (byte)0));
+                    String string = game.WorldManager.f(GameDatabase.spriteTable((byte)0, (short)this.player.z[BaseScreen.K()].q(), (byte)0));
                     this.S.c("Hãy lựa chọn #2" + string + "#0 tiến hành tiến hóa");
                     return;
                 }
@@ -2671,10 +2671,10 @@ lbl358:
             }
             case 6: {
                 if (V == 3) {
-                    for (int i = 0; i < this.c.J.size() + this.c.K.size(); ++i) {
-                        if (i < this.c.K.size()) continue;
-                        if (this.c.J.size() <= 0) break;
-                        if (((int[])this.c.J.elementAt(i - this.c.K.size()))[0] != 14) continue;
+                    for (int i = 0; i < this.player.J.size() + this.player.K.size(); ++i) {
+                        if (i < this.player.K.size()) continue;
+                        if (this.player.J.size() <= 0) break;
+                        if (((int[])this.player.J.elementAt(i - this.player.K.size()))[0] != 14) continue;
                         game.WorldManager.c(1, i);
                         break;
                     }
@@ -2758,7 +2758,7 @@ lbl358:
                 int[] intArray = this.aP[this.aA];
                 int n3 = intArray.length;
                 int n4 = this.aD * 7;
-                g.drawImage(game.BattleScreen.getInstance().c, 0, 0, 20);
+                g.drawImage(game.BattleScreen.getInstance().battleBgImage, 0, 0, 20);
                 int n5 = 0;
                 while (n5 < n3) {
                     if (this.sceneId == intArray[n5 + 2] && this.roomId == intArray[n5 + 3]) {
@@ -2786,8 +2786,8 @@ lbl358:
                 n2 = 0;
                 while (n2 < this.e.size()) {
                     NpcEntity a2 = (NpcEntity)this.e.elementAt(n2);
-                    n5 = (a2.i * intArray[n4 + 5] << 4) / MapEngine.getInstance().c + (intArray[n4] << 4) + this.aE;
-                    int n7 = (a2.j * intArray[n4 + 6] << 3) / MapEngine.getInstance().d + (intArray[n4 + 1] << 3) + this.aF;
+                    n5 = (a2.i * intArray[n4 + 5] << 4) / MapEngine.getInstance().mapTileWidth + (intArray[n4] << 4) + this.aE;
+                    int n7 = (a2.j * intArray[n4 + 6] << 3) / MapEngine.getInstance().mapTileHeight + (intArray[n4 + 1] << 3) + this.aF;
                     if (a2.h() == 0 || a2.h() == 1) {
                         g.fillRect(n5, n7 - 2, 9, 3);
                     } else {
@@ -2796,14 +2796,14 @@ lbl358:
                     ++n2;
                 }
                 if (this.aB != -1) {
-                    n5 = (this.aM[(this.aB << 2) + 2] * intArray[n4 + 5] << 4) / MapEngine.getInstance().c + (intArray[n4] << 4) + this.aE;
-                    int n8 = (this.aM[(this.aB << 2) + 3] * intArray[n4 + 6] << 3) / MapEngine.getInstance().d + (intArray[n4 + 1] << 3) + this.aF;
+                    n5 = (this.aM[(this.aB << 2) + 2] * intArray[n4 + 5] << 4) / MapEngine.getInstance().mapTileWidth + (intArray[n4] << 4) + this.aE;
+                    int n8 = (this.aM[(this.aB << 2) + 3] * intArray[n4 + 6] << 3) / MapEngine.getInstance().mapTileHeight + (intArray[n4 + 1] << 3) + this.aF;
                     g.setColor(0xFF0000);
                     g.fillRect(n5, n8, 6, 6);
                 }
                 if (this.aC != -1) {
-                    n5 = (this.aN[(this.aC << 2) + 2] * intArray[n4 + 5] << 4) / MapEngine.getInstance().c + (intArray[n4] << 4) + this.aE;
-                    int n9 = (this.aN[(this.aC << 2) + 3] * intArray[n4 + 6] << 3) / MapEngine.getInstance().d + (intArray[n4 + 1] << 3) + this.aF;
+                    n5 = (this.aN[(this.aC << 2) + 2] * intArray[n4 + 5] << 4) / MapEngine.getInstance().mapTileWidth + (intArray[n4] << 4) + this.aE;
+                    int n9 = (this.aN[(this.aC << 2) + 3] * intArray[n4 + 6] << 3) / MapEngine.getInstance().mapTileHeight + (intArray[n4 + 1] << 3) + this.aF;
                     g.setColor(2758133);
                     g.fillRect(n5, n9, 6, 6);
                 }

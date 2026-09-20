@@ -31,7 +31,7 @@ public final class TileMapRenderer {
     private int s;
     public static boolean b = false;
     private byte t;
-    private static TileMapRenderer u;
+    private static TileMapRenderer instance;
     private boolean v;
     private int w;
     private int[][] x;
@@ -66,10 +66,10 @@ public final class TileMapRenderer {
     }
 
     public static TileMapRenderer getInstance() {
-        if (u == null) {
-            u = new TileMapRenderer();
+        if (instance == null) {
+            instance = new TileMapRenderer();
         }
-        return u;
+        return instance;
     }
 
     public final void b() {

@@ -9,46 +9,46 @@ import javax.microedition.lcdui.Graphics;
  */
 public class WorldEntity
 extends BaseEntity {
-    public SpriteRenderer a = new SpriteRenderer();
-    public WorldEntity b = null;
+    public SpriteRenderer spriteRenderer = new SpriteRenderer();
+    public WorldEntity targetEntity = null;
 
     public boolean a(int n2, boolean flag2) {
-        return this.a.a(n2, flag2);
+        return this.spriteRenderer.a(n2, flag2);
     }
 
     public final void a(int n2, int n3) {
-        this.a.a(n2, n3, true);
+        this.spriteRenderer.a(n2, n3, true);
     }
 
     public final boolean a(byte val, byte val2, boolean flag3) {
-        return this.a.a(val, val2, flag3);
+        return this.spriteRenderer.a(val, val2, flag3);
     }
 
     public final void a(byte val, byte val2) {
-        this.a.a(val, (byte)-1);
-        this.n = val = val2;
+        this.spriteRenderer.a(val, (byte)-1);
+        this.facingDirection = val = val2;
     }
 
     public final boolean a() {
         if (!this.f) {
             return false;
         }
-        return this.a.onPointerEvent();
+        return this.spriteRenderer.onPointerEvent();
     }
 
     public final boolean b() {
-        return this.a.e();
+        return this.spriteRenderer.e();
     }
 
     public final void a(Graphics g, int n2, int n3) {
         if (!this.f) {
             return;
         }
-        if (this.n == 3) {
-            this.a.a(g, this.i - n2, this.j - n3, (byte)1);
+        if (this.facingDirection == 3) {
+            this.spriteRenderer.a(g, this.posX - n2, this.posY - n3, (byte)1);
             return;
         }
-        this.a.a(g, this.i - n2, this.j - n3, (byte)0);
+        this.spriteRenderer.a(g, this.posX - n2, this.posY - n3, (byte)0);
     }
 
     public void c() {
@@ -64,54 +64,54 @@ extends BaseEntity {
     }
 
     public final void e() {
-        if (this.b != null) {
-            this.b.d();
+        if (this.targetEntity != null) {
+            this.targetEntity.d();
         }
     }
 
     public void a(int n2) {
-        switch (this.n) {
+        switch (this.facingDirection) {
             case 3: {
-                this.d(-n2);
+                this.movePosX(-n2);
                 break;
             }
             case 1: {
-                this.d(n2);
+                this.movePosX(n2);
                 break;
             }
             case 2: {
-                this.e(-n2);
+                this.movePosY(-n2);
                 break;
             }
             case 0: {
-                this.e(n2);
+                this.movePosY(n2);
             }
         }
-        if (this.b != null) {
-            this.b.b(this.i, this.j);
+        if (this.targetEntity != null) {
+            this.targetEntity.setPosition(this.posX, this.posY);
         }
     }
 
     public final void b(int n2) {
         switch (n2) {
             case 3: {
-                this.d(-4);
+                this.movePosX(-4);
                 break;
             }
             case 1: {
-                this.d(4);
+                this.movePosX(4);
                 break;
             }
             case 2: {
-                this.e(-4);
+                this.movePosY(-4);
                 break;
             }
             case 0: {
-                this.e(4);
+                this.movePosY(4);
             }
         }
-        if (this.b != null) {
-            this.b.b(this.i, this.j);
+        if (this.targetEntity != null) {
+            this.targetEntity.setPosition(this.posX, this.posY);
         }
     }
 
@@ -119,11 +119,11 @@ extends BaseEntity {
         if (!this.f) {
             return;
         }
-        if (this.a.onKeyPressed()) {
+        if (this.spriteRenderer.onKeyPressed()) {
             this.c(true);
             return;
         }
-        if (EngineUtils.a(game.WorldManager.getInstance().a.a, game.WorldManager.getInstance().a.b, (int)BaseScreen.getScreenWidth(), (int)BaseScreen.getScreenHeight(), this.i, this.j, this.a.onKeyReleased())) {
+        if (EngineUtils.a(MapEngine.getInstance().cameraX, MapEngine.getInstance().cameraY, (int)BaseScreen.getScreenWidth(), (int)BaseScreen.getScreenHeight(), this.posX, this.posY, this.spriteRenderer.onKeyReleased())) {
             this.c(true);
             return;
         }
@@ -131,7 +131,7 @@ extends BaseEntity {
     }
 
     public final void c(int n2) {
-        this.a.a(n2);
+        this.spriteRenderer.a(n2);
     }
 }
 

@@ -45,17 +45,17 @@ extends WorldEntity {
     public final void a(short[] shortArray, int n2) {
         this.I = (short)n2;
         this.t = (byte)shortArray[0];
-        this.a.a((int)shortArray[1], false);
+        this.spriteRenderer.a((int)shortArray[1], false);
         NpcEntity a2 = this;
         a2.a.c();
         this.v = (byte)shortArray[6];
         if (this.t == 0 && (this.v == 1 || this.v == 18)) {
             byte by;
-            this.n = by = (byte)(shortArray[2] % 3);
+            this.facingDirection = by = (byte)(shortArray[2] % 3);
         }
         this.d((byte)shortArray[2]);
-        this.i = shortArray[3];
-        this.j = shortArray[4];
+        this.posX = shortArray[3];
+        this.posY = shortArray[4];
         if (shortArray[5] == 1) {
             this.b(true);
         } else {
@@ -83,33 +83,33 @@ extends WorldEntity {
                 this.L = EngineUtils.randomRange(20, 40);
                 this.z = 0;
                 if (this.v == 12) {
-                    this.n = 0;
+                    this.facingDirection = 0;
                 } else if (this.v == 13) {
-                    this.n = 1;
+                    this.facingDirection = 1;
                 }
                 if (this.v == 3) {
                     if (this.h == 4) {
-                        this.n = 1;
+                        this.facingDirection = 1;
                     }
                 } else if (this.v == 2) {
                     if (this.h == 5) {
-                        this.n = (byte)2;
+                        this.facingDirection = (byte)2;
                     } else if (this.h == 3) {
-                        this.n = 0;
+                        this.facingDirection = 0;
                     }
                 }
                 if ((this.v != 1 || this.a.a == 226) && this.v != 2 && this.v != 3 && this.v != 17) break;
-                if (this.b == null) {
-                    this.b = new WorldEntity();
-                    this.b.a(337, false);
+                if (this.targetEntity == null) {
+                    this.targetEntity = new WorldEntity();
+                    this.targetEntity.a(337, false);
                 }
-                this.b.b(this.i, this.j);
+                this.targetEntity.b(this.posX, this.posY);
                 if (this.a.a == 4) {
-                    this.b.a((byte)0, (byte)0, this.Q);
+                    this.targetEntity.a((byte)0, (byte)0, this.Q);
                 } else {
-                    this.b.a((byte)1, (byte)0, this.Q);
+                    this.targetEntity.a((byte)1, (byte)0, this.Q);
                 }
-                this.b.c();
+                this.targetEntity.c();
                 break;
             }
             case 1: {
@@ -175,19 +175,19 @@ extends WorldEntity {
                 if (this.v == 1 || this.v == 18) {
                     this.h = (byte)(val / 3);
                     if (this.h == 0) {
-                        if (this.n == 3) {
+                        if (this.facingDirection == 3) {
                             this.a((byte)1, (byte)-1, false);
                             return;
                         }
-                        this.a(this.n, (byte)-1, false);
+                        this.a(this.facingDirection, (byte)-1, false);
                         return;
                     }
                     if (this.h != 1) break;
-                    if (this.n == 3) {
+                    if (this.facingDirection == 3) {
                         this.a((byte)(this.h * 3 + 1), (byte)-1, false);
                         return;
                     }
-                    this.a((byte)(this.h * 3 + this.n), (byte)-1, false);
+                    this.a((byte)(this.h * 3 + this.facingDirection), (byte)-1, false);
                     return;
                 }
                 this.a(val, (byte)-1, false);
@@ -347,7 +347,7 @@ extends WorldEntity {
                     }
                     case 12: {
                         if (!((BaseEntity)object).j()) break;
-                        if (EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, ((NpcEntity)object).i, ((NpcEntity)object).j, ((NpcEntity)object).a.k())) {
+                        if (EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, ((NpcEntity)object).i, ((NpcEntity)object).j, ((NpcEntity)object).a.k())) {
                             if (game.Player.getInstance().h() == 8) break;
                             game.Player.getInstance().b((byte)8, ((NpcEntity)object).n);
                             break;
@@ -365,7 +365,7 @@ extends WorldEntity {
                     }
                     case 13: {
                         if (!((BaseEntity)object).j()) break;
-                        if (EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, ((NpcEntity)object).i, ((NpcEntity)object).j, ((NpcEntity)object).a.k())) {
+                        if (EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, ((NpcEntity)object).i, ((NpcEntity)object).j, ((NpcEntity)object).a.k())) {
                             if (game.Player.getInstance().h() == 8) break;
                             game.Player.getInstance().b((byte)8, ((NpcEntity)object).n);
                             break;
@@ -382,8 +382,8 @@ extends WorldEntity {
                         break;
                     }
                     case 16: {
-                        if (!EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, ((NpcEntity)object).i, ((NpcEntity)object).j, ((NpcEntity)object).a.k()) || game.Player.getInstance().h() == 5) break;
-                        game.Player.getInstance().b((byte)5, game.Player.getInstance().n);
+                        if (!EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, ((NpcEntity)object).i, ((NpcEntity)object).j, ((NpcEntity)object).a.k()) || game.Player.getInstance().h() == 5) break;
+                        game.Player.getInstance().b((byte)5, game.Player.getInstance().facingDirection);
                         break;
                     }
                     case 14: {
@@ -424,21 +424,21 @@ extends WorldEntity {
             }
             case 1: {
                 if (this.v == 0) {
-                    if (this.h == 0 && EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, this.i, this.j, game.Player.getInstance().a.k(), this.a.k())) {
+                    if (this.h == 0 && EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, this.posX, this.posY, game.Player.getInstance().a.k(), this.a.k())) {
                         this.d((byte)1);
-                    } else if (this.h == 2 && !EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, this.i, this.j, game.Player.getInstance().a.k(), this.a.k())) {
+                    } else if (this.h == 2 && !EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, this.posX, this.posY, game.Player.getInstance().a.k(), this.a.k())) {
                         this.d((byte)3);
-                    } else if (this.h == 1 && this.a.e()) {
+                    } else if (this.h == 1 && this.spriteRenderer.e()) {
                         this.d((byte)2);
-                    } else if (this.h == 3 && this.a.e()) {
+                    } else if (this.h == 3 && this.spriteRenderer.e()) {
                         this.d((byte)0);
                     }
                 }
-                if (this.v == 0 && this.a.e() || this.v == 1 || this.v == 3 && this.h() == 2) {
+                if (this.v == 0 && this.spriteRenderer.e() || this.v == 1 || this.v == 3 && this.h() == 2) {
                     if (this.a.a == 320 && !this.j()) {
                         return;
                     }
-                    if ((game.Player.getInstance().o != this.R[this.C] || this.a.a == 320 || this.a.a == 310) && this.a.a != 320 && this.a.a != 310 || !EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, this.i, this.j, game.Player.getInstance().a.k(), this.a.onKeyReleased())) break;
+                    if ((game.Player.getInstance().o != this.R[this.C] || this.a.a == 320 || this.a.a == 310) && this.a.a != 320 && this.a.a != 310 || !EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, this.posX, this.posY, game.Player.getInstance().a.k(), this.spriteRenderer.onKeyReleased())) break;
                     game.WorldManager.getInstance().f = this.N;
                     game.WorldManager.getInstance().g = this.O;
                     game.WorldManager.getInstance().j = this.P;
@@ -446,11 +446,11 @@ extends WorldEntity {
                     break;
                 }
                 if (this.v == 2) {
-                    if ((game.Player.getInstance().o != this.R[this.C] || this.a.a == 320) && this.a.a != 320 || !EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, this.i, this.j, game.Player.getInstance().a.k(), this.a.onKeyReleased())) break;
+                    if ((game.Player.getInstance().o != this.R[this.C] || this.a.a == 320) && this.a.a != 320 || !EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, this.posX, this.posY, game.Player.getInstance().a.k(), this.spriteRenderer.onKeyReleased())) break;
                     for (int i = 0; i < this.T.length / 6; ++i) {
                         if (this.T[i * 6] != this.I || this.T[i * 6 + 1] != game.WorldManager.getInstance().f || this.T[i * 6 + 2] != game.WorldManager.getInstance().g) continue;
-                        game.WorldManager.getInstance().h = this.T[i * 6 + 3];
-                        game.WorldManager.getInstance().i = this.T[i * 6 + 4];
+                        game.WorldManager.getInstance().playerSpawnX = this.T[i * 6 + 3];
+                        game.WorldManager.getInstance().playerSpawnY = this.T[i * 6 + 4];
                         game.WorldManager.w = (byte)this.T[i * 6 + 5];
                         break;
                     }
@@ -460,10 +460,10 @@ extends WorldEntity {
                     game.GameStateController.getInstance().a((byte)9);
                     break;
                 }
-                if (this.v != 4 || game.Player.getInstance().h() == 9 || game.Player.getInstance().h() == 10 || !EngineUtils.a(game.Player.getInstance().i, game.Player.getInstance().j, this.i, this.j, game.Player.getInstance().a.k(), this.a.onKeyReleased())) break;
-                game.Player.getInstance().b(this.i, this.j);
-                game.Player.getInstance().b.b(this.i, this.j);
-                game.Player.getInstance().b((byte)9, this.n);
+                if (this.v != 4 || game.Player.getInstance().h() == 9 || game.Player.getInstance().h() == 10 || !EngineUtils.a(game.Player.getInstance().posX, game.Player.getInstance().posY, this.posX, this.posY, game.Player.getInstance().a.k(), this.spriteRenderer.onKeyReleased())) break;
+                game.Player.getInstance().b(this.posX, this.posY);
+                game.Player.getInstance().b.b(this.posX, this.posY);
+                game.Player.getInstance().b((byte)9, this.facingDirection);
                 game.WorldManager.getInstance().j = this.P;
             }
         }
@@ -473,16 +473,16 @@ extends WorldEntity {
     public final void p() {
         if (this.v == 9) {
             this.d((byte)1);
-            this.n = (this.a.a == 302 || this.a.a == 298) && this.a((byte)1, 4, (byte)1) ? (byte)1 : (this.a((byte)1, 4, (byte)2) ? (byte)1 : (byte)3);
+            this.facingDirection = (this.a.a == 302 || this.a.a == 298) && this.a((byte)1, 4, (byte)1) ? (byte)1 : (this.a((byte)1, 4, (byte)2) ? (byte)1 : (byte)3);
         } else if ((this.a.a == 302 || this.a.a == 298) && this.a((byte)2, 4, (byte)1)) {
             this.d((byte)2);
-            this.n = (byte)2;
+            this.facingDirection = (byte)2;
         } else if (this.a((byte)2, 4, (byte)2)) {
             this.d((byte)2);
-            this.n = (byte)2;
+            this.facingDirection = (byte)2;
         } else {
             this.d((byte)1);
-            this.n = 0;
+            this.facingDirection = 0;
         }
         this.z = 1;
     }
@@ -502,40 +502,40 @@ extends WorldEntity {
             switch (n3) {
                 case 2: {
                     by = MapEngine.getInstance().b(a2.i, a2.j - n2);
-                    for (n3 = 0; n3 < game.WorldManager.getInstance().d.length; ++n3) {
-                        if (game.WorldManager.getInstance().d[n3].v == a2.v || game.WorldManager.getInstance().d[n3].a.k() == null || !EngineUtils.a(a2.i, a2.j - n2, game.WorldManager.getInstance().d[n3].i, game.WorldManager.getInstance().d[n3].j, game.WorldManager.getInstance().d[n3].a.k())) continue;
+                    for (n3 = 0; n3 < game.WorldManager.getInstance().npcList.length; ++n3) {
+                        if (game.WorldManager.getInstance().npcList[n3].v == a2.v || game.WorldManager.getInstance().npcList[n3].a.k() == null || !EngineUtils.a(a2.i, a2.j - n2, game.WorldManager.getInstance().npcList[n3].i, game.WorldManager.getInstance().npcList[n3].j, game.WorldManager.getInstance().npcList[n3].a.k())) continue;
                         NpcEntity a3 = a2;
-                        game.WorldManager.getInstance().d[n3].p = a3;
+                        game.WorldManager.getInstance().npcList[n3].p = a3;
                         return;
                     }
                     break;
                 }
                 case 0: {
                     by = MapEngine.getInstance().b(a2.i, a2.j + n2);
-                    for (n3 = 0; n3 < game.WorldManager.getInstance().d.length; ++n3) {
-                        if (game.WorldManager.getInstance().d[n3].v == a2.v || game.WorldManager.getInstance().d[n3].a.k() == null || !EngineUtils.a(a2.i, a2.j + n2, game.WorldManager.getInstance().d[n3].i, game.WorldManager.getInstance().d[n3].j, game.WorldManager.getInstance().d[n3].a.k())) continue;
+                    for (n3 = 0; n3 < game.WorldManager.getInstance().npcList.length; ++n3) {
+                        if (game.WorldManager.getInstance().npcList[n3].v == a2.v || game.WorldManager.getInstance().npcList[n3].a.k() == null || !EngineUtils.a(a2.i, a2.j + n2, game.WorldManager.getInstance().npcList[n3].i, game.WorldManager.getInstance().npcList[n3].j, game.WorldManager.getInstance().npcList[n3].a.k())) continue;
                         NpcEntity a4 = a2;
-                        game.WorldManager.getInstance().d[n3].p = a4;
+                        game.WorldManager.getInstance().npcList[n3].p = a4;
                         return;
                     }
                     break;
                 }
                 case 3: {
                     by = MapEngine.getInstance().b(a2.i - n2, a2.j);
-                    for (n3 = 0; n3 < game.WorldManager.getInstance().d.length; ++n3) {
-                        if (game.WorldManager.getInstance().d[n3].v == a2.v || game.WorldManager.getInstance().d[n3].a.k() == null || !EngineUtils.a(a2.i - n2, a2.j, game.WorldManager.getInstance().d[n3].i, game.WorldManager.getInstance().d[n3].j, game.WorldManager.getInstance().d[n3].a.k())) continue;
+                    for (n3 = 0; n3 < game.WorldManager.getInstance().npcList.length; ++n3) {
+                        if (game.WorldManager.getInstance().npcList[n3].v == a2.v || game.WorldManager.getInstance().npcList[n3].a.k() == null || !EngineUtils.a(a2.i - n2, a2.j, game.WorldManager.getInstance().npcList[n3].i, game.WorldManager.getInstance().npcList[n3].j, game.WorldManager.getInstance().npcList[n3].a.k())) continue;
                         NpcEntity a5 = a2;
-                        game.WorldManager.getInstance().d[n3].p = a5;
+                        game.WorldManager.getInstance().npcList[n3].p = a5;
                         return;
                     }
                     break;
                 }
                 case 1: {
                     by = MapEngine.getInstance().b(a2.i + n2, a2.j);
-                    for (n3 = 0; n3 < game.WorldManager.getInstance().d.length; ++n3) {
-                        if (game.WorldManager.getInstance().d[n3].v == a2.v || game.WorldManager.getInstance().d[n3].a.k() == null || !EngineUtils.a(a2.i + n2, a2.j, game.WorldManager.getInstance().d[n3].i, game.WorldManager.getInstance().d[n3].j, game.WorldManager.getInstance().d[n3].a.k())) continue;
+                    for (n3 = 0; n3 < game.WorldManager.getInstance().npcList.length; ++n3) {
+                        if (game.WorldManager.getInstance().npcList[n3].v == a2.v || game.WorldManager.getInstance().npcList[n3].a.k() == null || !EngineUtils.a(a2.i + n2, a2.j, game.WorldManager.getInstance().npcList[n3].i, game.WorldManager.getInstance().npcList[n3].j, game.WorldManager.getInstance().npcList[n3].a.k())) continue;
                         NpcEntity a6 = a2;
-                        game.WorldManager.getInstance().d[n3].p = a6;
+                        game.WorldManager.getInstance().npcList[n3].p = a6;
                         return;
                     }
                 }
@@ -565,19 +565,19 @@ extends WorldEntity {
         byte by3 = 0;
         switch (val) {
             case 2: {
-                by3 = MapEngine.getInstance().b(this.i, this.j - this.a.k()[3] - n2);
+                by3 = MapEngine.getInstance().b(this.posX, this.posY - this.a.k()[3] - n2);
                 break;
             }
             case 0: {
-                by3 = MapEngine.getInstance().b(this.i, this.j + n2);
+                by3 = MapEngine.getInstance().b(this.posX, this.posY + n2);
                 break;
             }
             case 3: {
-                by3 = MapEngine.getInstance().b(this.i - n2 - this.a.k()[2] / 2, this.j);
+                by3 = MapEngine.getInstance().b(this.posX - n2 - this.a.k()[2] / 2, this.posY);
                 break;
             }
             case 1: {
-                by3 = MapEngine.getInstance().b(this.i + n2 + this.a.k()[2] / 2, this.j);
+                by3 = MapEngine.getInstance().b(this.posX + n2 + this.a.k()[2] / 2, this.posY);
             }
         }
         return by3 == val3;
@@ -587,37 +587,37 @@ extends WorldEntity {
         switch (this.a.g()) {
             case 2: {
                 g.setColor(65280);
-                g.fillRect(this.i - n2 - (this.M + 5) / 2, this.j - this.a.onKeyReleased()[3] - n3 - (this.A << 4) + 8, this.M + 5, this.A << 4);
+                g.fillRect(this.posX - n2 - (this.M + 5) / 2, this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 - (this.A << 4) + 8, this.M + 5, this.A << 4);
                 g.setColor(0xFFFFFF);
-                g.fillRect(this.i - n2 - (this.M + 3) / 2, this.j - this.a.onKeyReleased()[3] - n3 - (this.A << 4) + 8, this.M + 3, this.A << 4);
+                g.fillRect(this.posX - n2 - (this.M + 3) / 2, this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 - (this.A << 4) + 8, this.M + 3, this.A << 4);
                 return;
             }
             case 0: {
                 g.setColor(65280);
-                g.fillRect(this.i - n2 - (this.M + 5) / 2, this.j - this.a.onKeyReleased()[3] - n3 + 20, this.M + 5, this.A + 1 << 4);
+                g.fillRect(this.posX - n2 - (this.M + 5) / 2, this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 + 20, this.M + 5, this.A + 1 << 4);
                 g.setColor(0xFFFFFF);
-                g.fillRect(this.i - n2 - (this.M + 3) / 2, this.j - this.a.onKeyReleased()[3] - n3 + 20, this.M + 3, this.A + 1 << 4);
+                g.fillRect(this.posX - n2 - (this.M + 3) / 2, this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 + 20, this.M + 3, this.A + 1 << 4);
                 return;
             }
             case 3: {
                 g.setColor(65280);
-                g.fillRect(this.i - n2 - 8 - (this.A << 4), this.j - this.a.onKeyReleased()[3] - n3 - (this.M + 5) / 2 + 13, this.A << 4, this.M + 5);
+                g.fillRect(this.posX - n2 - 8 - (this.A << 4), this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 - (this.M + 5) / 2 + 13, this.A << 4, this.M + 5);
                 g.setColor(0xFFFFFF);
-                g.fillRect(this.i - n2 - 8 - (this.A << 4), this.j - this.a.onKeyReleased()[3] - n3 - (this.M + 3) / 2 + 13, this.A << 4, this.M + 3);
+                g.fillRect(this.posX - n2 - 8 - (this.A << 4), this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 - (this.M + 3) / 2 + 13, this.A << 4, this.M + 3);
                 return;
             }
             case 1: {
                 g.setColor(65280);
-                g.fillRect(this.i - n2 + 7, this.j - this.a.onKeyReleased()[3] - n3 - (this.M + 5) / 2 + 13, this.A << 4, this.M + 5);
+                g.fillRect(this.posX - n2 + 7, this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 - (this.M + 5) / 2 + 13, this.A << 4, this.M + 5);
                 g.setColor(0xFFFFFF);
-                g.fillRect(this.i - n2 + 7, this.j - this.a.onKeyReleased()[3] - n3 - (this.M + 3) / 2 + 13, this.A << 4, this.M + 3);
+                g.fillRect(this.posX - n2 + 7, this.posY - this.spriteRenderer.onKeyReleased()[3] - n3 - (this.M + 3) / 2 + 13, this.A << 4, this.M + 3);
             }
         }
     }
 
     public final void r() {
-        game.WorldManager.getInstance().a((int)this.I, 0, this.i);
-        game.WorldManager.getInstance().a((int)this.I, 1, this.j);
+        game.WorldManager.getInstance().a((int)this.I, 0, this.posX);
+        game.WorldManager.getInstance().a((int)this.I, 1, this.posY);
     }
 
     public final void s() {
@@ -627,7 +627,7 @@ extends WorldEntity {
         }
         game.WorldManager.getInstance().a(this.I, 1, by, true);
         game.WorldManager.getInstance().a(this.I, 0, this.h, true);
-        game.WorldManager.getInstance().a(this.I, 2, this.n, true);
+        game.WorldManager.getInstance().a(this.I, 2, this.facingDirection, true);
     }
 
     public final void a(int n2) {
@@ -647,7 +647,7 @@ extends WorldEntity {
             this.H = new WorldEntity();
             this.H.a(259, false);
             this.H.a((byte)7, (byte)-1, true);
-            this.H.b(this.i, this.j - n2);
+            this.H.b(this.posX, this.posY - n2);
             NpcEntity a2 = this;
             this.H.p = a2;
         }
@@ -690,8 +690,8 @@ extends WorldEntity {
 
     public final void b(int n2, int n3) {
         super.b(n2, n3);
-        if (this.b != null && this.b.j()) {
-            this.b.b(n2, n3);
+        if (this.targetEntity != null && this.targetEntity.j()) {
+            this.targetEntity.b(n2, n3);
         }
     }
 }

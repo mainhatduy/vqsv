@@ -20,22 +20,22 @@ import javax.microedition.lcdui.Image;
 public final class BattleScreen
 extends BaseScreen {
     private final byte[] n = new byte[]{2, 4};
-    private static BattleScreen o;
-    private static Player p;
+    private static BattleScreen instance;
+    private static Player player;
     private byte q = 0;
-    public int a;
-    public byte b;
-    private byte r;
-    public Image c;
+    public int battleType;
+    public byte battleMode;
+    private byte battleResult;
+    public Image battleBgImage;
     private int[][] s;
-    public Pet[] d;
+    public Pet[] enemyPets;
     private byte[] t;
     public byte[] e;
     public byte[] f;
     private byte[] u;
     public byte g = 0;
-    public Pet h;
-    private Vector v;
+    public Pet activePlayerPet;
+    private Vector actionQueue;
     public byte i;
     private boolean w;
     private static Vector x;
@@ -50,7 +50,7 @@ extends BaseScreen {
     private byte[] E;
     private byte F;
     private int G;
-    private SkillEffect H;
+    private SkillEffect activeSkillEffect;
     private byte I = 0;
     private byte J = 0;
     private byte K = 0;
@@ -85,7 +85,7 @@ extends BaseScreen {
     private int av;
     private int aw;
     private int ax;
-    private String ay = null;
+    private String battleMessage = null;
     private static Image[] az;
     private static short[][] aA;
     private Vector aB = new Vector();
@@ -98,10 +98,10 @@ extends BaseScreen {
     private byte[] aI;
 
     public static BattleScreen getInstance() {
-        if (o == null) {
-            o = new BattleScreen();
+        if (instance == null) {
+            instance = new BattleScreen();
         }
-        return o;
+        return instance;
     }
 
     public BattleScreen() {
@@ -113,8 +113,8 @@ extends BaseScreen {
         this.aG = new byte[]{10, 11, 12, 13, 15};
         this.aH = new byte[]{10, 12, 13, 14, 15, 16};
         this.aI = new byte[]{105, 100, 80, 60, 40, 20, 5};
-        if (this.v == null) {
-            this.v = new Vector();
+        if (this.actionQueue == null) {
+            this.actionQueue = new Vector();
         }
         if (x == null) {
             x = new Vector();
@@ -126,7 +126,7 @@ extends BaseScreen {
 
     public final void f() {
         int n2;
-        this.v.removeAllElements();
+        this.actionQueue.removeAllElements();
         for (n2 = 0; n2 < this.f.length; ++n2) {
             this.c(n2).C();
             this.c(n2).D();
@@ -138,10 +138,10 @@ extends BaseScreen {
         }
         x.removeAllElements();
         j.removeAllElements();
-        for (n2 = 0; n2 < this.d.length; ++n2) {
-            if (this.d[n2] == null) continue;
-            this.d[n2].d();
-            this.d[n2] = null;
+        for (n2 = 0; n2 < this.enemyPets.length; ++n2) {
+            if (this.enemyPets[n2] == null) continue;
+            this.enemyPets[n2].d();
+            this.enemyPets[n2] = null;
         }
         for (n2 = 0; n2 < az.length; ++n2) {
             if (az[n2] == null) continue;
@@ -162,12 +162,12 @@ extends BaseScreen {
         this.u = null;
         this.i = 0;
         this.G = 0;
-        this.h = null;
+        this.activePlayerPet = null;
         this.w = false;
         this.y = false;
-        this.H = null;
-        this.d = null;
-        this.c = null;
+        this.activeSkillEffect = null;
+        this.enemyPets = null;
+        this.battleBgImage = null;
         this.t = null;
         this.e = null;
         this.D = null;
@@ -194,7 +194,7 @@ extends BaseScreen {
         int n3;
         this.s();
         this.u = new byte[2];
-        p = game.Player.getInstance();
+        player = game.Player.getInstance();
         this.f = new byte[game.BattleScreen.p.A];
         int n4 = 0;
         for (n3 = 0; n3 < game.BattleScreen.p.A; ++n3) {
@@ -204,7 +204,7 @@ extends BaseScreen {
             }
             this.c(n3).j(this.c(n3).z());
         }
-        this.d = n4 == 1 && this.a == 1 ? new Pet[3] : new Pet[this.n[this.a]];
+        this.enemyPets = n4 == 1 && this.battleType == 1 ? new Pet[3] : new Pet[this.n[this.battleType]];
         try {
             inputStream = null;
             am = EngineUtils.a(EngineUtils.a("/data/script/pos.mid"));
@@ -226,33 +226,33 @@ extends BaseScreen {
             inputStream = null;
             iOException.printStackTrace();
         }
-        this.r = this.a == 0 ? (this.b == 1 ? (byte)2 : (byte)0) : (byte)1;
-        this.al = new WorldEntity[this.d.length + 2];
+        this.battleResult = this.battleType == 0 ? (this.battleMode == 1 ? (byte)2 : (byte)0) : (byte)1;
+        this.al = new WorldEntity[this.enemyPets.length + 2];
         for (n3 = 0; n3 < this.al.length; ++n3) {
             this.al[n3] = new WorldEntity();
             this.al[n3].a(294, false);
-            if (n3 == this.d.length + 1) {
+            if (n3 == this.enemyPets.length + 1) {
                 this.al[n3].a((byte)2, (byte)-1, false);
-                if (this.a != 0) continue;
+                if (this.battleType != 0) continue;
                 this.al[n3].c();
                 continue;
             }
-            if (n3 == this.d.length) {
+            if (n3 == this.enemyPets.length) {
                 this.al[n3].a((byte)1, (byte)-1, false);
                 this.al[n3].c();
                 this.al[n3].b(false);
                 continue;
             }
             this.al[n3].a((byte)0, (byte)-1, false);
-            this.al[n3].b(an[this.r][n3][2], an[this.r][n3][3]);
+            this.al[n3].b(an[this.battleResult][n3][2], an[this.battleResult][n3][3]);
             this.al[n3].c();
         }
-        this.D = new byte[this.d.length];
-        this.E = new byte[this.d.length];
-        this.n(this.d.length);
+        this.D = new byte[this.enemyPets.length];
+        this.E = new byte[this.enemyPets.length];
+        this.n(this.enemyPets.length);
         n3 = 0;
-        block13: for (n2 = 0; n2 < this.d.length; ++n2) {
-            if (this.a == 0) {
+        block13: for (n2 = 0; n2 < this.enemyPets.length; ++n2) {
+            if (this.battleType == 0) {
                 if (n2 > 0) {
                     while (!this.c((int)this.f[n3]).S()) {
                         ++n3;
@@ -262,7 +262,7 @@ extends BaseScreen {
                     this.e(0, n3);
                     continue;
                 }
-                switch (this.b) {
+                switch (this.battleMode) {
                     case 0: 
                     case 1: {
                         this.m(n2);
@@ -284,7 +284,7 @@ extends BaseScreen {
                 ++n3;
                 continue;
             }
-            switch (this.b) {
+            switch (this.battleMode) {
                 case 0: 
                 case 1: {
                     this.m(n2);
@@ -317,39 +317,39 @@ extends BaseScreen {
             }
             this.c(i).j(this.c(i).z());
         }
-        Pet[] bArray = this.a == 0 ? new Pet[1] : new Pet[2];
-        for (n2 = 0; n2 < this.d.length; n2 = (int)((byte)(n2 + 1))) {
-            if (this.d[n2].r() != 1) continue;
-            bArray[n2] = this.d[n2];
+        Pet[] bArray = this.battleType == 0 ? new Pet[1] : new Pet[2];
+        for (n2 = 0; n2 < this.enemyPets.length; n2 = (int)((byte)(n2 + 1))) {
+            if (this.enemyPets[n2].r() != 1) continue;
+            bArray[n2] = this.enemyPets[n2];
         }
-        this.d = n3 == 1 && this.a == 1 ? new Pet[3] : new Pet[this.n[this.a]];
-        this.al = new WorldEntity[this.d.length + 2];
+        this.enemyPets = n3 == 1 && this.battleType == 1 ? new Pet[3] : new Pet[this.n[this.battleType]];
+        this.al = new WorldEntity[this.enemyPets.length + 2];
         for (n2 = 0; n2 < this.al.length; ++n2) {
             this.al[n2] = new WorldEntity();
             this.al[n2].a(294, false);
-            if (n2 == this.d.length + 1) {
+            if (n2 == this.enemyPets.length + 1) {
                 this.al[n2].a((byte)2, (byte)-1, false);
-                if (this.a != 0) continue;
+                if (this.battleType != 0) continue;
                 this.al[n2].c();
                 continue;
             }
-            if (n2 == this.d.length) {
+            if (n2 == this.enemyPets.length) {
                 this.al[n2].a((byte)1, (byte)-1, false);
                 this.al[n2].c();
                 this.al[n2].b(false);
                 continue;
             }
             this.al[n2].a((byte)0, (byte)-1, false);
-            this.al[n2].b(an[this.r][n2][2], an[this.r][n2][3]);
+            this.al[n2].b(an[this.battleResult][n2][2], an[this.battleResult][n2][3]);
             this.al[n2].c();
         }
-        this.D = new byte[this.d.length];
-        this.E = new byte[this.d.length];
+        this.D = new byte[this.enemyPets.length];
+        this.E = new byte[this.enemyPets.length];
         this.G = 0;
-        this.n(this.d.length);
+        this.n(this.enemyPets.length);
         n2 = 0;
-        for (n3 = 0; n3 < this.d.length; ++n3) {
-            if (this.a == 0) {
+        for (n3 = 0; n3 < this.enemyPets.length; ++n3) {
+            if (this.battleType == 0) {
                 if (n3 > 0) {
                     while (!this.c((int)this.f[n2]).S()) {
                         ++n2;
@@ -359,7 +359,7 @@ extends BaseScreen {
                     this.e(0, n2);
                     continue;
                 }
-                this.d[n3] = bArray[n3];
+                this.enemyPets[n3] = bArray[n3];
                 continue;
             }
             if (n3 > 1) {
@@ -372,22 +372,22 @@ extends BaseScreen {
                 ++n2;
                 continue;
             }
-            this.d[n3] = bArray[n3];
+            this.enemyPets[n3] = bArray[n3];
         }
         this.T();
     }
 
     public final void e() {
-        if (this.a == 1) {
+        if (this.battleType == 1) {
             int n2 = 0;
-            while (((Pet)this.v.elementAt(n2)).r() != 0 || ((Pet)this.v.elementAt(n2)).r() == 0 && !((Pet)this.v.elementAt(n2)).S()) {
+            while (((Pet)this.actionQueue.elementAt(n2)).r() != 0 || ((Pet)this.actionQueue.elementAt(n2)).r() == 0 && !((Pet)this.actionQueue.elementAt(n2)).S()) {
                 ++n2;
             }
-            if (this.d[0].S()) {
-                this.S.b(this.d[this.e[n2]], this.d[0]);
+            if (this.enemyPets[0].S()) {
+                this.S.b(this.enemyPets[this.e[n2]], this.enemyPets[0]);
                 return;
             }
-            this.S.b(this.d[this.e[n2]], this.d[1]);
+            this.S.b(this.enemyPets[this.e[n2]], this.enemyPets[1]);
         }
     }
 
@@ -395,72 +395,72 @@ extends BaseScreen {
         this.S = game.ScriptEngine.getInstance();
         this.S.a(this);
         this.R = UIManager.getInstance();
-        if (this.a == 0) {
-            this.S.a(this.d[1], this.d[0]);
+        if (this.battleType == 0) {
+            this.S.a(this.enemyPets[1], this.enemyPets[0]);
             return;
         }
-        this.S.a(this.d[2], this.d[0]);
+        this.S.a(this.enemyPets[2], this.enemyPets[0]);
     }
 
     public final void a(int n2, int n3) {
-        this.d[n2] = this.c((int)this.f[n3]);
-        this.d[n2].d(true);
-        this.d[n2].f(0);
-        this.d[n2].n = 0;
-        this.d[n2].b(an[this.r][n2][0], an[this.r][n2][1]);
-        this.d[n2].c();
+        this.enemyPets[n2] = this.c((int)this.f[n3]);
+        this.enemyPets[n2].d(true);
+        this.enemyPets[n2].f(0);
+        this.enemyPets[n2].n = 0;
+        this.enemyPets[n2].b(an[this.battleResult][n2][0], an[this.battleResult][n2][1]);
+        this.enemyPets[n2].c();
     }
 
     private void m(int n2) {
-        this.d[n2] = new Pet();
-        this.d[n2].a(this.s[this.u[0]][0], this.s[this.u[0]][1], (short)-1, (byte)2, (short)this.s[this.u[0]][2], (byte)-1);
-        this.d[n2].f(1);
-        this.d[n2].n = 1;
-        this.d[n2].b(an[this.r][n2][0], an[this.r][n2][1]);
+        this.enemyPets[n2] = new Pet();
+        this.enemyPets[n2].a(this.s[this.u[0]][0], this.s[this.u[0]][1], (short)-1, (byte)2, (short)this.s[this.u[0]][2], (byte)-1);
+        this.enemyPets[n2].f(1);
+        this.enemyPets[n2].n = 1;
+        this.enemyPets[n2].b(an[this.battleResult][n2][0], an[this.battleResult][n2][1]);
         short s2 = GameDatabase.gameDatabase[0][this.s[this.u[0]][0]][1];
-        this.d[n2].g((byte)(s2 * 10));
-        this.d[n2].G();
-        this.d[n2].c();
-        p.a((byte)this.d[n2].j((byte)1), this.d[n2].q(), (byte)1);
+        this.enemyPets[n2].g((byte)(s2 * 10));
+        this.enemyPets[n2].G();
+        this.enemyPets[n2].c();
+        p.a((byte)this.enemyPets[n2].j((byte)1), this.enemyPets[n2].getPetId(), (byte)1);
         this.u[0] = (byte)(this.u[0] + 1);
     }
 
     private void n() {
         this.J = this.I;
-        this.O = ao[this.h.D];
+        this.O = ao[this.activePlayerPet.D];
         if (this.O[this.J * 7 + 1] == 1) {
             short s2;
             short s3;
             short s4;
             short s5;
             short s6;
-            this.H = new SkillEffect();
+            this.activeSkillEffect = new SkillEffect();
             if (this.O[this.J * 7] == 0) {
-                s6 = (short)((Pet)this.h.p).i;
-                s5 = (short)((Pet)this.h.p).j;
-                s4 = (short)((Pet)this.h.p).q();
+                s6 = (short)((Pet)this.activePlayerPet.p).i;
+                s5 = (short)((Pet)this.activePlayerPet.p).j;
+                s4 = (short)((Pet)this.activePlayerPet.p).q();
                 s4 = GameDatabase.gameDatabase[0][s4][17];
-                s3 = ((Pet)this.h.p).p();
-                s2 = ((Pet)this.h.p).n;
+                s3 = ((Pet)this.activePlayerPet.p).p();
+                s2 = ((Pet)this.activePlayerPet.p).n;
             } else {
-                s6 = (short)this.h.i;
-                s5 = (short)this.h.j;
-                s4 = (short)this.h.q();
+                s6 = (short)this.activePlayerPet.i;
+                s5 = (short)this.activePlayerPet.j;
+                s4 = (short)this.activePlayerPet.getPetId();
                 s4 = GameDatabase.gameDatabase[0][s4][17];
-                s3 = this.h.p();
-                s2 = this.h.n;
+                s3 = this.activePlayerPet.p();
+                s2 = this.activePlayerPet.n;
             }
             short[] shortArray = m[this.O[this.J * 7 + 2]];
             short[] shortArray2 = new short[shortArray.length + 5];
             System.arraycopy(shortArray, 1, shortArray2, 6, shortArray.length - 1);
             short[] sArray3 = new short[]{shortArray[0], s6, s5, s4, s3, s2};
             System.arraycopy(sArray3, 0, shortArray2, 0, sArray3.length);
-            this.H.a(shortArray2);
-            this.H.c(true);
+            this.activeSkillEffect.a(shortArray2);
+            this.activeSkillEffect.c(true);
         } else if (this.O[this.J * 7] == 0) {
-            ((Pet)this.h.p).a((short)this.O[this.J * 7 + 2], this.O[this.J * 7 + 3]);
+            ((Pet)this.activePlayerPet.p).a((short)this.O[this.J * 7 + 2], this.O[this.J * 7 + 3]);
         } else {
-            this.h.a((short)this.O[this.J * 7 + 2], this.O[this.J * 7 + 3]);
+            this.activePlayerPet.a((short)this.O[this.J * 7 + 2], this.O[this.J * 7 + 3]);
         }
         this.I = (byte)(this.I + 1);
     }
@@ -491,11 +491,11 @@ extends BaseScreen {
     }
 
     private void o() {
-        Pet b2 = (Pet)this.v.elementAt(this.i);
+        Pet b2 = (Pet)this.actionQueue.elementAt(this.i);
         this.ac = this.ab;
         this.ae = this.af[this.ad];
         if (this.ae[this.ac << 2] == 1) {
-            this.H = new SkillEffect();
+            this.activeSkillEffect = new SkillEffect();
             short s2 = (short)b2.i;
             short s3 = (short)b2.j;
             short s4 = (short)b2.q();
@@ -507,8 +507,8 @@ extends BaseScreen {
             System.arraycopy(shortArray, 1, shortArray2, 6, shortArray.length - 1);
             short[] sArray3 = new short[]{shortArray[0], s2, s3, s4, s5, s6};
             System.arraycopy(sArray3, 0, shortArray2, 0, sArray3.length);
-            this.H.a(shortArray2);
-            this.H.c(true);
+            this.activeSkillEffect.a(shortArray2);
+            this.activeSkillEffect.c(true);
         } else {
             b2.a((short)this.ae[(this.ac << 2) + 1], this.ae[(this.ac << 2) + 2]);
         }
@@ -529,9 +529,9 @@ extends BaseScreen {
             return;
         }
         if (!b2.S()) {
-            for (n2 = 0; n2 < this.d.length; ++n2) {
-                if (!this.d[n2].m(11) || !this.d[this.d[n2].v[11][1]].equals(b2)) continue;
-                this.d[n2].n(11);
+            for (n2 = 0; n2 < this.enemyPets.length; ++n2) {
+                if (!this.enemyPets[n2].m(11) || !this.enemyPets[this.enemyPets[n2].v[11][1]].equals(b2)) continue;
+                this.enemyPets[n2].n(11);
             }
             if (this.u[0] < this.s.length) {
                 this.m(this.e[this.i]);
@@ -557,9 +557,9 @@ extends BaseScreen {
             return;
         }
         if (!b2.S()) {
-            for (n2 = 0; n2 < this.d.length; ++n2) {
-                if (!this.d[n2].m(11) || !this.d[this.d[n2].v[11][1]].equals(b2)) continue;
-                this.d[n2].n(11);
+            for (n2 = 0; n2 < this.enemyPets.length; ++n2) {
+                if (!this.enemyPets[n2].m(11) || !this.enemyPets[this.enemyPets[n2].v[11][1]].equals(b2)) continue;
+                this.enemyPets[n2].n(11);
             }
             b2.C();
             b2.D();
@@ -595,7 +595,7 @@ extends BaseScreen {
             this.af = null;
             this.ag = null;
             this.ah = null;
-            this.H = null;
+            this.activeSkillEffect = null;
             if (this.battlePhase == 12) {
                 this.a(b2, true);
             } else if (this.battlePhase == 13) {
@@ -652,13 +652,13 @@ extends BaseScreen {
                 break;
             }
             case 1: {
-                this.d[0].b(false);
-                short s2 = GameDatabase.gameDatabase[0][((Pet)this.h.p).q()][17];
-                short[] shortArray = new short[]{8, (short)((Pet)this.h.p).i, (short)((Pet)this.h.p).j, s2, 0, ((Pet)this.h.p).n, 0, 9, 1, 3, 0, 10, 0, 0, 7, 0, -10, 4, 0, -20};
-                this.H = new SkillEffect();
-                this.H.a(shortArray);
-                this.H.c(true);
-                this.H.a();
+                this.enemyPets[0].b(false);
+                short s2 = GameDatabase.gameDatabase[0][((Pet)this.activePlayerPet.p).q()][17];
+                short[] shortArray = new short[]{8, (short)((Pet)this.activePlayerPet.p).i, (short)((Pet)this.activePlayerPet.p).j, s2, 0, ((Pet)this.activePlayerPet.p).n, 0, 9, 1, 3, 0, 10, 0, 0, 7, 0, -10, 4, 0, -20};
+                this.activeSkillEffect = new SkillEffect();
+                this.activeSkillEffect.a(shortArray);
+                this.activeSkillEffect.c(true);
+                this.activeSkillEffect.a();
                 this.aj.a(val, (byte)-2, true);
                 break;
             }
@@ -671,12 +671,12 @@ extends BaseScreen {
                 break;
             }
             case 4: {
-                short s3 = GameDatabase.gameDatabase[0][((Pet)this.h.p).q()][17];
-                short[] shortArray = new short[]{8, (short)((Pet)this.h.p).i, (short)((Pet)this.h.p).j, s3, 0, ((Pet)this.h.p).n, 0, 8, 1, 4, 1, 4, 0, -20, 6, 0, -12, 8, 0, -4, 10, 0, 0};
-                this.H = new SkillEffect();
-                this.H.a(shortArray);
-                this.H.c(true);
-                this.H.a();
+                short s3 = GameDatabase.gameDatabase[0][((Pet)this.activePlayerPet.p).q()][17];
+                short[] shortArray = new short[]{8, (short)((Pet)this.activePlayerPet.p).i, (short)((Pet)this.activePlayerPet.p).j, s3, 0, ((Pet)this.activePlayerPet.p).n, 0, 8, 1, 4, 1, 4, 0, -20, 6, 0, -12, 8, 0, -4, 10, 0, 0};
+                this.activeSkillEffect = new SkillEffect();
+                this.activeSkillEffect.a(shortArray);
+                this.activeSkillEffect.c(true);
+                this.activeSkillEffect.a();
                 this.aj.a((byte)1, (byte)-2, true);
             }
         }
@@ -684,13 +684,13 @@ extends BaseScreen {
     }
 
     private void a(int n2, boolean flag2) {
-        this.al[this.d.length + 1].b(flag2);
-        this.al[this.d.length + 1].b(am[this.a][(n2 << 2) + 2], am[this.a][(n2 << 2) + 3]);
+        this.al[this.enemyPets.length + 1].b(flag2);
+        this.al[this.enemyPets.length + 1].b(am[this.battleType][(n2 << 2) + 2], am[this.battleType][(n2 << 2) + 3]);
     }
 
     private void b(int n2, boolean flag2) {
-        this.al[this.d.length].b(flag2);
-        this.al[this.d.length].b(am[this.a][(n2 << 2) + 2], am[this.a][(n2 << 2) + 3]);
+        this.al[this.enemyPets.length].b(flag2);
+        this.al[this.enemyPets.length].b(am[this.battleType][(n2 << 2) + 2], am[this.battleType][(n2 << 2) + 3]);
     }
 
     public final void a(byte val) {
@@ -699,7 +699,7 @@ extends BaseScreen {
         switch (val) {
             case 0: {
                 this.i = 0;
-                while (((Pet)this.v.elementAt(this.i)).r() != 0) {
+                while (((Pet)this.actionQueue.elementAt(this.i)).r() != 0) {
                     this.i = (byte)(this.i + 1);
                 }
                 break;
@@ -709,55 +709,55 @@ extends BaseScreen {
                 this.y = true;
                 this.G = this.g;
                 this.E[this.G] = 0;
-                this.v.setElementAt(this.d[this.g], this.t[this.g]);
-                this.d[this.g].J = true;
+                this.actionQueue.setElementAt(this.enemyPets[this.g], this.t[this.g]);
+                this.enemyPets[this.g].J = true;
                 this.b(this.g, false);
                 this.i = (byte)(this.i + 1);
                 return;
             }
             case 20: {
-                this.h = (Pet)this.v.elementAt(this.i);
-                for (val = 0; val < this.d.length; val = (byte)(val + 1)) {
-                    if (this.d[val].r() != 1 || !this.d[val].S()) continue;
-                    this.S.b(this.d[val], false);
-                    this.S.b(this.d[val]);
+                this.activePlayerPet = (Pet)this.actionQueue.elementAt(this.i);
+                for (val = 0; val < this.enemyPets.length; val = (byte)(val + 1)) {
+                    if (this.enemyPets[val].r() != 1 || !this.enemyPets[val].S()) continue;
+                    this.S.b(this.enemyPets[val], false);
+                    this.S.b(this.enemyPets[val]);
                 }
                 this.b(this.e[this.i], true);
-                this.S.c(this.h);
-                if (this.d[0].S()) {
-                    this.S.b(this.h, this.d[0]);
+                this.S.c(this.activePlayerPet);
+                if (this.enemyPets[0].S()) {
+                    this.S.b(this.activePlayerPet, this.enemyPets[0]);
                     return;
                 }
-                this.S.b(this.h, this.d[1]);
+                this.S.b(this.activePlayerPet, this.enemyPets[1]);
                 return;
             }
             case 1: {
-                if (this.i >= this.v.size()) {
+                if (this.i >= this.actionQueue.size()) {
                     this.i = 0;
                 }
-                this.h = (Pet)this.v.elementAt(this.i);
-                while (this.h.J || !this.h.S()) {
+                this.activePlayerPet = (Pet)this.actionQueue.elementAt(this.i);
+                while (this.activePlayerPet.J || !this.activePlayerPet.S()) {
                     this.i = (byte)(this.i + 1);
-                    if (this.h.J) {
-                        this.h.J = false;
+                    if (this.activePlayerPet.J) {
+                        this.activePlayerPet.J = false;
                     }
-                    if (this.i >= this.v.size()) {
+                    if (this.i >= this.actionQueue.size()) {
                         this.w = true;
                         this.i = 0;
                         break;
                     }
-                    this.h = (Pet)this.v.elementAt(this.i);
+                    this.activePlayerPet = (Pet)this.actionQueue.elementAt(this.i);
                 }
-                if (!this.h.p(2) || this.h.r() != 0) break;
+                if (!this.activePlayerPet.p(2) || this.activePlayerPet.r() != 0) break;
                 val = 0;
-                for (int i = 0; i < this.h.y.length; ++i) {
-                    if (this.h.y[i] == 0) continue;
+                for (int i = 0; i < this.activePlayerPet.y.length; ++i) {
+                    if (this.activePlayerPet.y[i] == 0) continue;
                     val = 1;
                 }
                 if (val == 0) {
                     this.S.c("Không còn tinh lực, không cách nào chiến đấu");
                     this.i = (byte)(this.i + 1);
-                    if (this.i >= this.v.size()) {
+                    if (this.i >= this.actionQueue.size()) {
                         this.w = true;
                         this.i = 0;
                         return;
@@ -768,14 +768,14 @@ extends BaseScreen {
             case 12: 
             case 13: {
                 int n2;
-                if (this.h.r() == 0) {
-                    this.S.a(this.h, false);
-                    this.S.a(this.h);
+                if (this.activePlayerPet.r() == 0) {
+                    this.S.a(this.activePlayerPet, false);
+                    this.S.a(this.activePlayerPet);
                 } else {
-                    this.S.b(this.h, false);
-                    this.S.b(this.h);
+                    this.S.b(this.activePlayerPet, false);
+                    this.S.b(this.activePlayerPet);
                 }
-                Pet b2 = (Pet)this.v.elementAt(this.i);
+                Pet b2 = (Pet)this.actionQueue.elementAt(this.i);
                 if (b2.m(13) || b2.m(14)) {
                     b2.C();
                 }
@@ -809,28 +809,28 @@ extends BaseScreen {
                 return;
             }
             case 7: {
-                if (this.h.r() == 0) {
-                    this.S.a(this.h, false);
-                    this.S.a(this.h);
+                if (this.activePlayerPet.r() == 0) {
+                    this.S.a(this.activePlayerPet, false);
+                    this.S.a(this.activePlayerPet);
                 } else {
-                    this.S.b(this.h, false);
-                    this.S.b(this.h);
+                    this.S.b(this.activePlayerPet, false);
+                    this.S.b(this.activePlayerPet);
                 }
-                if (((Pet)this.h.p).r() == 1) {
-                    this.S.b((Pet)this.h.p, false);
-                    this.S.b((Pet)this.h.p);
+                if (((Pet)this.activePlayerPet.p).r() == 1) {
+                    this.S.b((Pet)this.activePlayerPet.p, false);
+                    this.S.b((Pet)this.activePlayerPet.p);
                 } else {
-                    this.S.a((Pet)this.h.p, false);
-                    this.S.a((Pet)this.h.p);
+                    this.S.a((Pet)this.activePlayerPet.p, false);
+                    this.S.a((Pet)this.activePlayerPet.p);
                 }
                 this.z = false;
                 this.A = false;
                 this.n();
                 BattleScreen d2 = this;
                 if (d2.h.r() != ((Pet)d2.h.p).r() || d2.h.p(8)) {
-                    this.Z = this.h.b((Pet)this.h.p);
+                    this.Z = this.activePlayerPet.b((Pet)this.activePlayerPet.p);
                 }
-                switch (this.h.D) {
+                switch (this.activePlayerPet.D) {
                     case 52: 
                     case 58: {
                         if (EngineUtils.randomInt(100) > 30) {
@@ -843,14 +843,14 @@ extends BaseScreen {
                     }
                 }
                 if (this.O[this.J * 7] == 0) {
-                    this.h.d((byte)1);
+                    this.activePlayerPet.d((byte)1);
                     return;
                 }
-                this.h.d((byte)0);
+                this.activePlayerPet.d((byte)0);
                 return;
             }
             case 3: {
-                this.S.e((Pet)this.v.elementAt(this.i));
+                this.S.e((Pet)this.actionQueue.elementAt(this.i));
                 return;
             }
             case 4: {
@@ -859,10 +859,10 @@ extends BaseScreen {
             }
             case 6: {
                 this.C = 0;
-                this.S.b((Pet)this.h.G.elementAt(this.C), false);
-                this.S.b(this.h, (Pet)this.h.G.elementAt(this.C));
-                this.S.b((Pet)this.h.G.elementAt(this.C));
-                this.a(Integer.parseInt((String)this.h.H.elementAt(this.C)), true);
+                this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C), false);
+                this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
+                this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
+                this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), true);
                 return;
             }
             case 16: {
@@ -877,13 +877,13 @@ extends BaseScreen {
                 return;
             }
             case 17: {
-                Pet b3 = this.d[0];
-                this.h.p = b3;
+                Pet b3 = this.enemyPets[0];
+                this.activePlayerPet.p = b3;
                 if (this.aj == null) {
                     this.aj = new WorldEntity();
                     this.aj.a(269, false);
                 }
-                this.aj.b(this.h.i, this.h.j);
+                this.aj.b(this.activePlayerPet.i, this.activePlayerPet.j);
                 this.aj.c();
                 this.e((byte)0);
                 this.ak = false;
@@ -899,8 +899,8 @@ extends BaseScreen {
                 return;
             }
             case 21: {
-                Pet b4 = this.d[0];
-                this.h.p = b4;
+                Pet b4 = this.enemyPets[0];
+                this.activePlayerPet.p = b4;
                 this.S.ah();
                 return;
             }
@@ -981,35 +981,35 @@ extends BaseScreen {
             case 0: {
                 this.F = (byte)(this.F + 1);
                 this.D[this.G] = this.E[this.G];
-                this.d[this.G].b(game.BattleScreen.an[this.r][this.G][this.E[this.G] << 2], game.BattleScreen.an[this.r][this.G][(this.E[this.G] << 2) + 1]);
-                this.al[this.G].b(game.BattleScreen.an[this.r][this.G][(this.E[this.G] << 2) + 2], game.BattleScreen.an[this.r][this.G][(this.E[this.G] << 2) + 3]);
-                if (this.a == 1 && this.E[this.G] > game.BattleScreen.an[this.r][this.G].length / 4 - 3 && this.G % 2 == 0 && this.E.length > this.G + 1) {
+                this.enemyPets[this.G].b(game.BattleScreen.an[this.battleResult][this.G][this.E[this.G] << 2], game.BattleScreen.an[this.battleResult][this.G][(this.E[this.G] << 2) + 1]);
+                this.al[this.G].b(game.BattleScreen.an[this.battleResult][this.G][(this.E[this.G] << 2) + 2], game.BattleScreen.an[this.battleResult][this.G][(this.E[this.G] << 2) + 3]);
+                if (this.battleType == 1 && this.E[this.G] > game.BattleScreen.an[this.battleResult][this.G].length / 4 - 3 && this.G % 2 == 0 && this.E.length > this.G + 1) {
                     v0 = this.G + 1;
                     this.E[v0] = (byte)(this.E[v0] + 1);
                     this.D[this.G + 1] = this.E[this.G + 1];
-                    this.d[this.G + 1].b(game.BattleScreen.an[this.r][this.G + 1][this.E[this.G + 1] << 2], game.BattleScreen.an[this.r][this.G + 1][(this.E[this.G + 1] << 2) + 1]);
-                    this.al[this.G + 1].b(game.BattleScreen.an[this.r][this.G + 1][(this.E[this.G + 1] << 2) + 2], game.BattleScreen.an[this.r][this.G + 1][(this.E[this.G + 1] << 2) + 3]);
+                    this.enemyPets[this.G + 1].b(game.BattleScreen.an[this.battleResult][this.G + 1][this.E[this.G + 1] << 2], game.BattleScreen.an[this.battleResult][this.G + 1][(this.E[this.G + 1] << 2) + 1]);
+                    this.al[this.G + 1].b(game.BattleScreen.an[this.battleResult][this.G + 1][(this.E[this.G + 1] << 2) + 2], game.BattleScreen.an[this.battleResult][this.G + 1][(this.E[this.G + 1] << 2) + 3]);
                 }
-                if (this.a == 0) {
-                    this.S.a(this.d[1], this.d[0], this.d[this.G], this.E[this.G] + 1, game.BattleScreen.an[this.r][this.G].length / 4);
+                if (this.battleType == 0) {
+                    this.S.a(this.enemyPets[1], this.enemyPets[0], this.enemyPets[this.G], this.E[this.G] + 1, game.BattleScreen.an[this.battleResult][this.G].length / 4);
                 }
                 if (this.F > 1) {
                     v1 = this.G;
                     this.E[v1] = (byte)(this.E[v1] + 1);
                     this.F = 0;
                 }
-                if (this.E[this.G] <= game.BattleScreen.an[this.r][this.G].length / 4 - 1) break;
-                this.E[this.G] = (byte)(game.BattleScreen.an[this.r][this.G].length / 4 - 1);
+                if (this.E[this.G] <= game.BattleScreen.an[this.battleResult][this.G].length / 4 - 1) break;
+                this.E[this.G] = (byte)(game.BattleScreen.an[this.battleResult][this.G].length / 4 - 1);
                 this.D[this.G] = this.E[this.G];
                 ++this.G;
-                if (this.G <= this.d.length - 1) break;
-                this.G = this.d.length - 1;
+                if (this.G <= this.enemyPets.length - 1) break;
+                this.G = this.enemyPets.length - 1;
                 this.a((byte)20);
                 break;
             }
             case 15: {
-                if (this.a == 0) {
-                    this.S.a(this.d[1], this.d[0], this.E[this.G] + 1, game.BattleScreen.an[this.r][this.G].length / 4);
+                if (this.battleType == 0) {
+                    this.S.a(this.enemyPets[1], this.enemyPets[0], this.E[this.G] + 1, game.BattleScreen.an[this.battleResult][this.G].length / 4);
                 }
                 if (this.F > 0) {
                     v2 = this.G;
@@ -1017,22 +1017,22 @@ extends BaseScreen {
                     this.F = 0;
                 } else {
                     this.F = (byte)(this.F + 1);
-                    if (this.E[this.G] > game.BattleScreen.an[this.r][this.G].length / 4 - 3) {
+                    if (this.E[this.G] > game.BattleScreen.an[this.battleResult][this.G].length / 4 - 3) {
                         this.D[this.G] = this.E[this.G];
                     }
-                    this.d[this.G].b(game.BattleScreen.an[this.r][this.G][this.E[this.G] << 2], game.BattleScreen.an[this.r][this.G][(this.E[this.G] << 2) + 1]);
+                    this.enemyPets[this.G].b(game.BattleScreen.an[this.battleResult][this.G][this.E[this.G] << 2], game.BattleScreen.an[this.battleResult][this.G][(this.E[this.G] << 2) + 1]);
                 }
-                if (this.E[this.G] <= game.BattleScreen.an[this.r][this.G].length / 4 - 1) break;
-                this.D[this.G] = this.E[this.G] = (byte)(game.BattleScreen.an[this.r][this.G].length / 4 - 1);
+                if (this.E[this.G] <= game.BattleScreen.an[this.battleResult][this.G].length / 4 - 1) break;
+                this.D[this.G] = this.E[this.G] = (byte)(game.BattleScreen.an[this.battleResult][this.G].length / 4 - 1);
                 var1_1 = true;
                 if (!this.k) ** GOTO lbl60
-                while (!(this.i >= this.v.size() || ((Pet)this.v.elementAt(this.i)).S() && ((Pet)this.v.elementAt(this.i)).r() == 0)) {
+                while (!(this.i >= this.actionQueue.size() || ((Pet)this.actionQueue.elementAt(this.i)).S() && ((Pet)this.actionQueue.elementAt(this.i)).r() == 0)) {
                     this.i = (byte)(this.i + 1);
                 }
-                if (this.i >= this.v.size()) {
+                if (this.i >= this.actionQueue.size()) {
                     this.i = 0;
                     this.a((byte)1);
-                } else if (game.BattleScreen.d((Pet)this.v.elementAt(this.i))) {
+                } else if (game.BattleScreen.d((Pet)this.actionQueue.elementAt(this.i))) {
                     this.a((byte)13);
                 } else {
                     var1_1 = false;
@@ -1043,12 +1043,12 @@ extends BaseScreen {
 lbl60:
                 // 1 sources
 
-                if (this.a == 0) {
-                    this.i = (byte)this.v.size();
+                if (this.battleType == 0) {
+                    this.i = (byte)this.actionQueue.size();
                 }
-                if (this.i < this.v.size()) ** GOTO lbl107
-                for (var2_9 = 0; var2_9 < this.d.length; ++var2_9) {
-                    this.d[var2_9].J = false;
+                if (this.i < this.actionQueue.size()) ** GOTO lbl107
+                for (var2_9 = 0; var2_9 < this.enemyPets.length; ++var2_9) {
+                    this.enemyPets[var2_9].J = false;
                 }
                 if (this.y) {
                     this.T();
@@ -1056,10 +1056,10 @@ lbl60:
                 }
                 if (this.Q == 12 || this.Q == 13) {
                     this.i = 0;
-                    while (((Pet)this.v.elementAt(this.i)).r() != 0 || ((Pet)this.v.elementAt(this.i)).r() == 0 && !((Pet)this.v.elementAt(this.i)).S()) {
+                    while (((Pet)this.actionQueue.elementAt(this.i)).r() != 0 || ((Pet)this.actionQueue.elementAt(this.i)).r() == 0 && !((Pet)this.actionQueue.elementAt(this.i)).S()) {
                         this.i = (byte)(this.i + 1);
                     }
-                    if (game.BattleScreen.d((Pet)this.v.elementAt(this.i))) {
+                    if (game.BattleScreen.d((Pet)this.actionQueue.elementAt(this.i))) {
                         this.a((byte)13);
                     } else {
                         var1_1 = false;
@@ -1067,18 +1067,18 @@ lbl60:
                     }
                 } else {
                     var2_9 = 0;
-                    if (this.h.m(12) && this.h.K[12] == 2) {
-                        this.h.K[12] = (short)(this.h.K[12] - 1);
-                        if (!((Pet)this.h.p).S()) {
+                    if (this.activePlayerPet.m(12) && this.activePlayerPet.K[12] == 2) {
+                        this.activePlayerPet.K[12] = (short)(this.activePlayerPet.K[12] - 1);
+                        if (!((Pet)this.activePlayerPet.p).S()) {
                             var2_9 = 1;
-                            this.h.K[12] = (short)(this.h.K[12] - 1);
+                            this.activePlayerPet.K[12] = (short)(this.activePlayerPet.K[12] - 1);
                         } else {
                             this.i = (byte)(this.i - 1);
                             this.a((byte)2);
                         }
                     } else {
                         var3_15 = EngineUtils.randomInt(100);
-                        if ((this.h.D == 63 || this.h.D == 69) && var3_15 <= GameDatabase.gameDatabase[1][this.h.D][8] && ((Pet)this.h.p).S()) {
+                        if ((this.activePlayerPet.D == 63 || this.activePlayerPet.D == 69) && var3_15 <= GameDatabase.gameDatabase[1][this.activePlayerPet.D][8] && ((Pet)this.activePlayerPet.p).S()) {
                             this.i = (byte)(this.i - 1);
                             this.a((byte)2);
                         } else {
@@ -1087,10 +1087,10 @@ lbl60:
                     }
                     if (var2_9 != 0) {
                         this.i = 0;
-                        while (((Pet)this.v.elementAt(this.i)).r() != 0 || ((Pet)this.v.elementAt(this.i)).r() == 0 && !((Pet)this.v.elementAt(this.i)).S()) {
+                        while (((Pet)this.actionQueue.elementAt(this.i)).r() != 0 || ((Pet)this.actionQueue.elementAt(this.i)).r() == 0 && !((Pet)this.actionQueue.elementAt(this.i)).S()) {
                             this.i = (byte)(this.i + 1);
                         }
-                        if (game.BattleScreen.d((Pet)this.v.elementAt(this.i))) {
+                        if (game.BattleScreen.d((Pet)this.actionQueue.elementAt(this.i))) {
                             this.a((byte)13);
                         } else {
                             var1_1 = false;
@@ -1109,10 +1109,10 @@ lbl110:
                 // 1 sources
 
                 var2_9 = 0;
-                if (!this.h.m(12) || this.h.K[12] != 2) ** GOTO lbl119
-                this.h.K[12] = (short)(this.h.K[12] - 1);
-                if (((Pet)this.h.p).S()) ** GOTO lbl116
-                this.h.K[12] = (short)(this.h.K[12] - 1);
+                if (!this.activePlayerPet.m(12) || this.activePlayerPet.K[12] != 2) ** GOTO lbl119
+                this.activePlayerPet.K[12] = (short)(this.activePlayerPet.K[12] - 1);
+                if (((Pet)this.activePlayerPet.p).S()) ** GOTO lbl116
+                this.activePlayerPet.K[12] = (short)(this.activePlayerPet.K[12] - 1);
                 ** GOTO lbl-1000
 lbl116:
                 // 1 sources
@@ -1124,7 +1124,7 @@ lbl119:
                 // 1 sources
 
                 var3_15 = EngineUtils.randomInt(100);
-                if ((this.h.D == 63 || this.h.D == 69) && var3_15 <= GameDatabase.gameDatabase[1][this.h.D][8] && ((Pet)this.h.p).S()) {
+                if ((this.activePlayerPet.D == 63 || this.activePlayerPet.D == 69) && var3_15 <= GameDatabase.gameDatabase[1][this.activePlayerPet.D][8] && ((Pet)this.activePlayerPet.p).S()) {
                     this.i = (byte)(this.i - 1);
                     this.a((byte)2);
                 } else lbl-1000:
@@ -1144,18 +1144,18 @@ lbl127:
 
                 if (!var1_1) break;
                 this.e();
-                if (this.d[this.g].r() == 0) {
-                    this.S.a(this.d[this.g], false);
-                    this.S.a(this.d[this.g]);
+                if (this.enemyPets[this.g].r() == 0) {
+                    this.S.a(this.enemyPets[this.g], false);
+                    this.S.a(this.enemyPets[this.g]);
                     break;
                 }
-                this.S.b(this.d[this.g], false);
-                this.S.b(this.d[this.g]);
+                this.S.b(this.enemyPets[this.g], false);
+                this.S.b(this.enemyPets[this.g]);
                 break;
             }
             case 1: {
                 if (this.S.ay()) {
-                    if (this.h.r() == 1 && this.b == 0 && (this.h.q() == 33 || this.h.q() == 59) && this.h.d[1] < this.h.c[1]) {
+                    if (this.activePlayerPet.r() == 1 && this.battleMode == 0 && (this.activePlayerPet.getPetId() == 33 || this.activePlayerPet.getPetId() == 59) && this.activePlayerPet.d[1] < this.activePlayerPet.c[1]) {
                         this.a((byte)10);
                         return;
                     }
@@ -1166,17 +1166,17 @@ lbl127:
                             this.y = false;
                         }
                         this.i = 0;
-                        while (((Pet)this.v.elementAt(this.i)).r() != 0 || ((Pet)this.v.elementAt(this.i)).r() == 0 && !((Pet)this.v.elementAt(this.i)).S()) {
+                        while (((Pet)this.actionQueue.elementAt(this.i)).r() != 0 || ((Pet)this.actionQueue.elementAt(this.i)).r() == 0 && !((Pet)this.actionQueue.elementAt(this.i)).S()) {
                             this.i = (byte)(this.i + 1);
                         }
-                        if (game.BattleScreen.d((Pet)this.v.elementAt(this.i))) {
+                        if (game.BattleScreen.d((Pet)this.actionQueue.elementAt(this.i))) {
                             this.a((byte)13);
                         } else {
                             this.a((byte)20);
                         }
                         this.w = false;
-                    } else if (this.h.r() == 1) {
-                        if (game.BattleScreen.d(this.h)) {
+                    } else if (this.activePlayerPet.r() == 1) {
+                        if (game.BattleScreen.d(this.activePlayerPet)) {
                             this.a((byte)12);
                         } else {
                             this.a((byte)2);
@@ -1186,12 +1186,12 @@ lbl127:
                     }
                 }
                 this.S.g();
-                this.al[this.d.length].a();
+                this.al[this.enemyPets.length].a();
                 break;
             }
             case 20: {
-                this.al[this.d.length].a();
-                this.S.d(this.h);
+                this.al[this.enemyPets.length].a();
+                this.S.d(this.activePlayerPet);
                 break;
             }
             case 12: 
@@ -1298,112 +1298,112 @@ lbl194:
                 break;
             }
             case 2: {
-                if (this.h.r() == 1) {
-                    var1_3 = (byte)game.BattleScreen.e(this.h);
-                    if (this.h.p(9)) {
-                        this.f(this.h);
+                if (this.activePlayerPet.r() == 1) {
+                    var1_3 = (byte)game.BattleScreen.e(this.activePlayerPet);
+                    if (this.activePlayerPet.p(9)) {
+                        this.f(this.activePlayerPet);
                     } else {
                         var2_11 = 1;
-                        if (game.Pet.b(var1_3, (byte)9) == 0 && this.h.p(8) && EngineUtils.randomInt(100) > GameDatabase.spriteTable((byte)1, var1_3, (byte)8)) {
-                            this.f(this.h);
+                        if (game.Pet.b(var1_3, (byte)9) == 0 && this.activePlayerPet.p(8) && EngineUtils.randomInt(100) > GameDatabase.spriteTable((byte)1, var1_3, (byte)8)) {
+                            this.f(this.activePlayerPet);
                             var2_11 = 0;
                         }
                         if (var2_11 != 0) {
                             this.b(var1_3);
                         }
                     }
-                    var2_11 = EngineUtils.a(this.h.G.size());
-                    var3_17 = (Pet)this.h.G.elementAt(var2_11);
-                    this.h.I = Byte.parseByte((String)this.h.H.elementAt(var2_11));
-                    this.S.b(this.h, var3_17);
-                    this.h.a(var1_3, var3_17);
+                    var2_11 = EngineUtils.a(this.activePlayerPet.G.size());
+                    var3_17 = (Pet)this.activePlayerPet.G.elementAt(var2_11);
+                    this.activePlayerPet.I = Byte.parseByte((String)this.activePlayerPet.H.elementAt(var2_11));
+                    this.S.b(this.activePlayerPet, var3_17);
+                    this.activePlayerPet.a(var1_3, var3_17);
                     this.a((byte)7);
                     break;
                 }
-                if (this.h.p(9)) {
-                    this.f(this.h);
-                    var1_4 = EngineUtils.a(this.h.G.size());
-                    var2_12 = (Pet)this.h.G.elementAt(var1_4);
-                    this.h.I = Byte.parseByte((String)this.h.H.elementAt(var1_4));
-                    var3_18 = (byte)game.BattleScreen.e(this.h);
-                    this.h.a(var3_18, var2_12);
-                    this.S.b(this.h, var2_12);
+                if (this.activePlayerPet.p(9)) {
+                    this.f(this.activePlayerPet);
+                    var1_4 = EngineUtils.a(this.activePlayerPet.G.size());
+                    var2_12 = (Pet)this.activePlayerPet.G.elementAt(var1_4);
+                    this.activePlayerPet.I = Byte.parseByte((String)this.activePlayerPet.H.elementAt(var1_4));
+                    var3_18 = (byte)game.BattleScreen.e(this.activePlayerPet);
+                    this.activePlayerPet.a(var3_18, var2_12);
+                    this.S.b(this.activePlayerPet, var2_12);
                     this.a((byte)7);
                     break;
                 }
                 var1_5 = true;
-                if (game.Pet.b(this.h.H(), (byte)9) == 0 && this.h.p(8) && EngineUtils.randomInt(100) > GameDatabase.spriteTable((byte)1, this.h.H(), (byte)8)) {
-                    this.f(this.h);
+                if (game.Pet.b(this.activePlayerPet.H(), (byte)9) == 0 && this.activePlayerPet.p(8) && EngineUtils.randomInt(100) > GameDatabase.spriteTable((byte)1, this.activePlayerPet.H(), (byte)8)) {
+                    this.f(this.activePlayerPet);
                     var1_5 = false;
                 }
                 if (var1_5) {
-                    if ((Pet)this.h.p != null && !((Pet)this.h.p).S()) {
-                        for (var2_13 = 0; var2_13 < this.h.G.size(); ++var2_13) {
-                            if (!((Pet)this.h.G.elementAt(var2_13)).S()) continue;
-                            this.h.I = Byte.parseByte((String)this.h.H.elementAt(var2_13));
-                            this.h.a(this.h.H(), (Pet)this.h.G.elementAt(var2_13));
+                    if ((Pet)this.activePlayerPet.p != null && !((Pet)this.activePlayerPet.p).S()) {
+                        for (var2_13 = 0; var2_13 < this.activePlayerPet.G.size(); ++var2_13) {
+                            if (!((Pet)this.activePlayerPet.G.elementAt(var2_13)).S()) continue;
+                            this.activePlayerPet.I = Byte.parseByte((String)this.activePlayerPet.H.elementAt(var2_13));
+                            this.activePlayerPet.a(this.activePlayerPet.H(), (Pet)this.activePlayerPet.G.elementAt(var2_13));
                         }
                     } else {
-                        this.h.a(this.h.H(), (Pet)this.h.p);
+                        this.activePlayerPet.a(this.activePlayerPet.H(), (Pet)this.activePlayerPet.p);
                     }
                 }
-                this.S.b(this.h, (Pet)this.h.p);
+                this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.p);
                 this.a((byte)7);
                 break;
             }
             case 7: {
-                if (this.h.u != null) {
-                    if (this.h.p() == 0) {
-                        if (this.h.u.i()) {
-                            if (this.h.u.a.e()) {
-                                this.h.u.b();
-                                this.h.u = null;
+                if (this.activePlayerPet.currentSpellEffect != null) {
+                    if (this.activePlayerPet.p() == 0) {
+                        if (this.activePlayerPet.currentSpellEffect.i()) {
+                            if (this.activePlayerPet.currentSpellEffect.a.e()) {
+                                this.activePlayerPet.currentSpellEffect.b();
+                                this.activePlayerPet.currentSpellEffect = null;
                                 if (this.I > this.O.length / 7 - 1 || this.W()) {
                                     this.A = true;
                                     this.B = true;
                                 } else {
                                     this.n();
-                                    if (this.h.u != null) {
-                                        this.h.u.a();
+                                    if (this.activePlayerPet.currentSpellEffect != null) {
+                                        this.activePlayerPet.currentSpellEffect.a();
                                     }
-                                    if (this.H != null) {
+                                    if (this.activeSkillEffect != null) {
                                         this.M = true;
                                     }
                                 }
-                            } else if (this.O[this.J * 7 + 4] != -1 && this.h.u.a((int)this.O[this.J * 7 + 4])) {
-                                this.h.u.b();
+                            } else if (this.O[this.J * 7 + 4] != -1 && this.activePlayerPet.currentSpellEffect.a((int)this.O[this.J * 7 + 4])) {
+                                this.activePlayerPet.currentSpellEffect.b();
                                 if (this.I < this.O.length / 7 - 1 || this.W()) {
                                     this.n();
-                                    if (this.H != null) {
+                                    if (this.activeSkillEffect != null) {
                                         this.M = true;
                                     }
                                 }
-                            } else if (this.O[this.J * 7 + 5] != -1 && this.h.u.a((int)this.O[this.J * 7 + 5])) {
-                                this.h.d(this.O[this.J * 7 + 6]);
+                            } else if (this.O[this.J * 7 + 5] != -1 && this.activePlayerPet.currentSpellEffect.a((int)this.O[this.J * 7 + 5])) {
+                                this.activePlayerPet.d(this.O[this.J * 7 + 6]);
                             }
                         } else {
                             this.N = false;
-                            this.h.u.a();
+                            this.activePlayerPet.currentSpellEffect.a();
                         }
-                    } else if (this.h.p() == 1 && this.h.a.e()) {
-                        this.h.d((byte)0);
+                    } else if (this.activePlayerPet.p() == 1 && this.activePlayerPet.a.e()) {
+                        this.activePlayerPet.d((byte)0);
                     }
-                } else if (((Pet)this.h.p).u != null) {
-                    if (((Pet)this.h.p).u.i()) {
-                        if (((Pet)this.h.p).u.d()) {
-                            ((Pet)this.h.p).u.b();
+                } else if (((Pet)this.activePlayerPet.p).u != null) {
+                    if (((Pet)this.activePlayerPet.p).u.i()) {
+                        if (((Pet)this.activePlayerPet.p).u.d()) {
+                            ((Pet)this.activePlayerPet.p).u.b();
                             if (this.I > this.O.length / 7 - 1 || this.W()) {
-                                ((Pet)this.h.p).d((byte)2);
+                                ((Pet)this.activePlayerPet.p).d((byte)2);
                             } else if (this.O[this.I * 7] == 1) {
-                                ((Pet)this.h.p).d((byte)2);
+                                ((Pet)this.activePlayerPet.p).d((byte)2);
                             } else {
                                 this.K = 0;
-                                ((Pet)this.h.p).u = null;
+                                ((Pet)this.activePlayerPet.p).u = null;
                                 this.n();
-                                if (((Pet)this.h.p).u != null) {
-                                    ((Pet)this.h.p).u.a();
+                                if (((Pet)this.activePlayerPet.p).u != null) {
+                                    ((Pet)this.activePlayerPet.p).u.a();
                                 }
-                                if (this.H != null) {
+                                if (this.activeSkillEffect != null) {
                                     this.M = true;
                                 }
                             }
@@ -1411,56 +1411,56 @@ lbl194:
                             if (this.O[this.J * 7 + 5] != -1) {
                                 this.K = this.J;
                             }
-                            if (this.O[this.K * 7 + 5] != -1 && ((Pet)this.h.p).u.a((int)this.O[this.K * 7 + 5])) {
-                                ((Pet)this.h.p).d(this.O[this.K * 7 + 6]);
+                            if (this.O[this.K * 7 + 5] != -1 && ((Pet)this.activePlayerPet.p).u.a((int)this.O[this.K * 7 + 5])) {
+                                ((Pet)this.activePlayerPet.p).d(this.O[this.K * 7 + 6]);
                                 this.K = 0;
                             }
-                            if (this.O[this.J * 7 + 4] != -1 && ((Pet)this.h.p).u.a((int)this.O[this.J * 7 + 4])) {
+                            if (this.O[this.J * 7 + 4] != -1 && ((Pet)this.activePlayerPet.p).u.a((int)this.O[this.J * 7 + 4])) {
                                 this.n();
-                                if (this.H != null) {
+                                if (this.activeSkillEffect != null) {
                                     this.M = true;
                                 }
                             }
                         }
-                    } else if (this.h.p() == 1 && this.h.b() || this.N) {
-                        this.h.d((byte)0);
-                        ((Pet)this.h.p).u.a();
+                    } else if (this.activePlayerPet.p() == 1 && this.activePlayerPet.b() || this.N) {
+                        this.activePlayerPet.d((byte)0);
+                        ((Pet)this.activePlayerPet.p).u.a();
                         this.N = false;
-                    } else if (((Pet)this.h.p).p() == 2 && ((Pet)this.h.p).b()) {
+                    } else if (((Pet)this.activePlayerPet.p).p() == 2 && ((Pet)this.activePlayerPet.p).b()) {
                         this.z = true;
-                        ((Pet)this.h.p).u = null;
+                        ((Pet)this.activePlayerPet.p).u = null;
                         if (this.I > this.O.length / 7 - 1 || this.W()) {
                             this.A = true;
                         } else {
                             this.n();
-                            if (this.H != null) {
+                            if (this.activeSkillEffect != null) {
                                 this.M = true;
                             }
                         }
                     }
                 }
-                if (this.H != null && !this.H.i() && (this.h.p() == 1 && this.h.b() || this.M || this.h.p() == 0)) {
+                if (this.activeSkillEffect != null && !this.activeSkillEffect.i() && (this.activePlayerPet.p() == 1 && this.activePlayerPet.b() || this.M || this.activePlayerPet.p() == 0)) {
                     if (this.J == 0) {
                         this.N = true;
                     }
-                    this.h.d((byte)0);
-                    this.H.a();
+                    this.activePlayerPet.d((byte)0);
+                    this.activeSkillEffect.a();
                     this.L = this.J;
                     if (this.O[this.J * 7] == 0) {
-                        ((Pet)this.h.p).b(false);
+                        ((Pet)this.activePlayerPet.p).b(false);
                     } else {
-                        this.h.b(false);
+                        this.activePlayerPet.b(false);
                     }
                 }
-                if (this.H != null && this.H.i() && !this.H.e()) {
-                    this.H = null;
+                if (this.activeSkillEffect != null && this.activeSkillEffect.i() && !this.activeSkillEffect.e()) {
+                    this.activeSkillEffect = null;
                     this.M = false;
                     if (this.O[this.L * 7] == 0) {
-                        ((Pet)this.h.p).b(true);
+                        ((Pet)this.activePlayerPet.p).b(true);
                     } else {
-                        this.h.b(true);
+                        this.activePlayerPet.b(true);
                     }
-                    if (((Pet)this.h.p).u == null && this.h.u == null) {
+                    if (((Pet)this.activePlayerPet.p).u == null && this.activePlayerPet.currentSpellEffect == null) {
                         if (this.I > this.O.length / 7 - 1 || this.W()) {
                             if (this.O[this.J * 7] == 0) {
                                 this.z = true;
@@ -1472,7 +1472,7 @@ lbl194:
                                 this.z = true;
                             }
                             this.n();
-                            if (this.H != null) {
+                            if (this.activeSkillEffect != null) {
                                 this.M = true;
                             }
                         }
@@ -1562,7 +1562,7 @@ lbl456:
 lbl462:
                 // 5 sources
 
-                if (v3 && (((Pet)this.h.p).S() || this.c((Pet)this.h.p, true))) {
+                if (v3 && (((Pet)this.activePlayerPet.p).S() || this.c((Pet)this.activePlayerPet.p, true))) {
                     this.B = true;
                     this.z = false;
                 }
@@ -1575,7 +1575,7 @@ lbl465:
                 break;
             }
             case 3: {
-                this.S.f((Pet)this.v.elementAt(this.i));
+                this.S.f((Pet)this.actionQueue.elementAt(this.i));
                 break;
             }
             case 4: {
@@ -1587,7 +1587,7 @@ lbl465:
                     if (this.q == 0 && this.aj.b()) {
                         this.e((byte)1);
                     } else if (this.q == 1 && this.aj.b()) {
-                        if (!this.H.e()) {
+                        if (!this.activeSkillEffect.e()) {
                             this.e((byte)2);
                         }
                     } else if (this.q == 2 && this.aj.b()) {
@@ -1600,21 +1600,21 @@ lbl465:
                         var1_7 = game.BattleScreen.p.y();
                         if (var1_7 == 0) {
                             this.S.f = 1;
-                            this.S.b("Bắt thành công #2" + BaseScreen.f(GameDatabase.gameDatabase[0][((Pet)this.h.p).q()][0]));
-                            game.BattleScreen.p.a(((Pet)this.h.p).P());
+                            this.S.b("Bắt thành công #2" + BaseScreen.f(GameDatabase.gameDatabase[0][((Pet)this.activePlayerPet.p).q()][0]));
+                            game.BattleScreen.p.a(((Pet)this.activePlayerPet.p).P());
                         } else if (var1_7 == 1) {
                             this.S.f = 2;
-                            this.S.b("Bắt thành công #2" + BaseScreen.f(GameDatabase.gameDatabase[0][((Pet)this.h.p).q()][0]));
-                            game.BattleScreen.p.b(((Pet)this.h.p).P());
+                            this.S.b("Bắt thành công #2" + BaseScreen.f(GameDatabase.gameDatabase[0][((Pet)this.activePlayerPet.p).q()][0]));
+                            game.BattleScreen.p.b(((Pet)this.activePlayerPet.p).P());
                         } else {
                             this.S.f = 1;
                             this.S.b("Không còn không gian, sủng vật này đã phóng sinh");
                         }
-                    } else if (this.q == 4 && this.aj.b() && !this.H.e()) {
-                        this.H = null;
-                        this.d[0].b(true);
+                    } else if (this.q == 4 && this.aj.b() && !this.activeSkillEffect.e()) {
+                        this.activeSkillEffect = null;
+                        this.enemyPets[0].b(true);
                         this.aj.d();
-                        this.h.J = true;
+                        this.activePlayerPet.J = true;
                         if (this.ak) {
                             this.S.b("Ngân hàng và Ba lô đều đã đầy");
                             this.S.f = 3;
@@ -1629,7 +1629,7 @@ lbl465:
                 if (this.S.ax()) {
                     if (this.S.f == 3) {
                         this.S.f = 0;
-                        this.h.J = true;
+                        this.activePlayerPet.J = true;
                         this.i = (byte)(this.i + 1);
                         this.a((byte)1);
                     } else if (this.S.f == 2) {
@@ -1663,57 +1663,57 @@ lbl465:
             }
             case 6: {
                 if (this.k(4100)) {
-                    if (this.a == 1) {
+                    if (this.battleType == 1) {
                         this.C = (byte)(this.C - 1);
                         if (this.C <= 0) {
                             this.C = 0;
                         }
-                        this.a(Integer.parseInt((String)this.h.H.elementAt(this.C)), true);
-                        this.S.b((Pet)this.h.G.elementAt(this.C), false);
-                        this.S.b(this.h, (Pet)this.h.G.elementAt(this.C));
-                        this.S.b((Pet)this.h.G.elementAt(this.C));
+                        this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), true);
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C), false);
+                        this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
                 } else if (this.k(8448)) {
-                    if (this.a == 1) {
+                    if (this.battleType == 1) {
                         this.C = (byte)(this.C + 1);
-                        if (this.C >= this.h.G.size() - 1) {
-                            this.C = (byte)(this.h.G.size() - 1);
+                        if (this.C >= this.activePlayerPet.G.size() - 1) {
+                            this.C = (byte)(this.activePlayerPet.G.size() - 1);
                         }
-                        this.a(Integer.parseInt((String)this.h.H.elementAt(this.C)), true);
-                        this.S.b((Pet)this.h.G.elementAt(this.C), false);
-                        this.S.b(this.h, (Pet)this.h.G.elementAt(this.C));
-                        this.S.b((Pet)this.h.G.elementAt(this.C));
+                        this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), true);
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C), false);
+                        this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
                 } else if (this.k(16400)) {
-                    if (this.a == 1) {
+                    if (this.battleType == 1) {
                         this.C = (byte)(this.C - 1);
                         if (this.C <= 0) {
                             this.C = 0;
                         }
-                        this.a(Integer.parseInt((String)this.h.H.elementAt(this.C)), true);
-                        this.S.b((Pet)this.h.G.elementAt(this.C), false);
-                        this.S.b(this.h, (Pet)this.h.G.elementAt(this.C));
-                        this.S.b((Pet)this.h.G.elementAt(this.C));
+                        this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), true);
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C), false);
+                        this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
                 } else if (this.k(32832)) {
-                    if (this.a == 1) {
+                    if (this.battleType == 1) {
                         this.C = (byte)(this.C + 1);
-                        if (this.C >= this.h.G.size() - 1) {
-                            this.C = (byte)(this.h.G.size() - 1);
+                        if (this.C >= this.activePlayerPet.G.size() - 1) {
+                            this.C = (byte)(this.activePlayerPet.G.size() - 1);
                         }
-                        this.a(Integer.parseInt((String)this.h.H.elementAt(this.C)), true);
-                        this.S.b((Pet)this.h.G.elementAt(this.C), false);
-                        this.S.b(this.h, (Pet)this.h.G.elementAt(this.C));
-                        this.S.b((Pet)this.h.G.elementAt(this.C));
+                        this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), true);
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C), false);
+                        this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
+                        this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
                 } else if (this.k(196640)) {
                     this.i();
                 } else if (this.k(786432)) {
-                    this.a(Integer.parseInt((String)this.h.H.elementAt(this.C)), false);
+                    this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), false);
                     this.a((byte)3);
                 }
-                this.al[this.d.length].a();
-                this.al[this.d.length + 1].a();
+                this.al[this.enemyPets.length].a();
+                this.al[this.enemyPets.length + 1].a();
                 break;
             }
             case 21: {
@@ -1721,8 +1721,8 @@ lbl465:
                 break;
             }
             case 10: {
-                if (!this.S.j() && this.c(this.h, false)) {
-                    this.S.c(game.BattleScreen.f(GameDatabase.gameDatabase[0][this.h.q()][0]) + "Chạy trốn");
+                if (!this.S.j() && this.c(this.activePlayerPet, false)) {
+                    this.S.c(game.BattleScreen.f(GameDatabase.gameDatabase[0][this.activePlayerPet.getPetId()][0]) + "Chạy trốn");
                 }
                 if (!this.S.g()) break;
                 game.GameStateController.getInstance().a((byte)10);
@@ -1760,40 +1760,40 @@ lbl465:
                 this.S.aM();
             }
         }
-        for (var1_8 = 0; var1_8 < this.d.length; ++var1_8) {
-            this.d[var1_8].o();
+        for (var1_8 = 0; var1_8 < this.enemyPets.length; ++var1_8) {
+            this.enemyPets[var1_8].o();
         }
         this.R.c();
     }
 
     private void a(Graphics g) {
         g.setColor(0xFFFFFF);
-        for (int i = 0; i < this.d.length; ++i) {
-            this.d[i].a(g);
+        for (int i = 0; i < this.enemyPets.length; ++i) {
+            this.enemyPets[i].a(g);
         }
     }
 
     private void a(Graphics g, boolean flag2) {
-        for (int i = 0; i < this.d.length; ++i) {
+        for (int i = 0; i < this.enemyPets.length; ++i) {
             this.al[i].a(g, 0, 0);
         }
         if (flag2) {
-            this.al[this.d.length].a(g, 0, 0);
-            if (this.a == 1) {
-                this.al[this.d.length + 1].a(g, 0, 0);
+            this.al[this.enemyPets.length].a(g, 0, 0);
+            if (this.battleType == 1) {
+                this.al[this.enemyPets.length + 1].a(g, 0, 0);
             }
         }
     }
 
     private void a(String text, byte val2, int n2, int n3, int n4, int n5, int n6, int n7) {
-        this.ay = text;
+        this.battleMessage = text;
         this.as = n4;
         this.at = n5;
         this.aw = n2;
         this.ax = n3;
         this.au = n6;
         this.av = n7;
-        this.aC.addElement(this.ay);
+        this.aC.addElement(this.battleMessage);
         this.aB.addElement(new int[]{val2, this.aw, this.ax, -1, this.au, this.av});
     }
 
@@ -1825,8 +1825,8 @@ lbl465:
         if (!this.Y) {
             return;
         }
-        if (this.c != null) {
-            g.drawImage(this.c, 0, 0, 20);
+        if (this.battleBgImage != null) {
+            g.drawImage(this.battleBgImage, 0, 0, 20);
         } else {
             g.setColor(0);
             g.fillRect(0, 0, BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
@@ -1840,8 +1840,8 @@ lbl465:
             case 12: 
             case 13: {
                 this.a(g, false);
-                if (this.H != null) {
-                    this.H.a(g);
+                if (this.activeSkillEffect != null) {
+                    this.activeSkillEffect.a(g);
                 }
                 this.a(g);
                 this.c(g);
@@ -1865,8 +1865,8 @@ lbl465:
             }
             case 7: {
                 this.a(g, false);
-                if (this.H != null) {
-                    this.H.a(g);
+                if (this.activeSkillEffect != null) {
+                    this.activeSkillEffect.a(g);
                 }
                 this.a(g);
                 this.c(g);
@@ -1893,8 +1893,8 @@ lbl465:
             case 17: {
                 this.a(g, false);
                 this.a(g);
-                if (this.H != null && this.H.c()) {
-                    this.H.a(g);
+                if (this.activeSkillEffect != null && this.activeSkillEffect.c()) {
+                    this.activeSkillEffect.a(g);
                     this.aj.a(g, 0, 0);
                     break;
                 }
@@ -1908,7 +1908,7 @@ lbl465:
                 break;
             }
             case 6: {
-                if (this.a == 1) {
+                if (this.battleType == 1) {
                     this.a(g, true);
                 } else {
                     this.a(g, false);
@@ -1927,17 +1927,17 @@ lbl465:
 
     public final void h() {
         this.i = (byte)(this.i + 1);
-        if (this.i < this.v.size()) {
-            while (((Pet)this.v.elementAt(this.i)).r() != 0 || ((Pet)this.v.elementAt(this.i)).r() == 0 && !((Pet)this.v.elementAt(this.i)).S()) {
+        if (this.i < this.actionQueue.size()) {
+            while (((Pet)this.actionQueue.elementAt(this.i)).r() != 0 || ((Pet)this.actionQueue.elementAt(this.i)).r() == 0 && !((Pet)this.actionQueue.elementAt(this.i)).S()) {
                 this.i = (byte)(this.i + 1);
-                if (this.i < this.v.size()) continue;
+                if (this.i < this.actionQueue.size()) continue;
             }
         }
-        if (this.i >= this.v.size()) {
+        if (this.i >= this.actionQueue.size()) {
             this.a((byte)1);
             return;
         }
-        if (game.BattleScreen.d((Pet)this.v.elementAt(this.i))) {
+        if (game.BattleScreen.d((Pet)this.actionQueue.elementAt(this.i))) {
             this.a((byte)13);
             return;
         }
@@ -1945,19 +1945,19 @@ lbl465:
     }
 
     private void p() {
-        if (this.i >= this.v.size()) {
+        if (this.i >= this.actionQueue.size()) {
             if (this.y) {
                 this.T();
                 this.y = false;
             }
-            for (int i = 0; i < this.v.size(); ++i) {
-                ((Pet)this.v.elementAt((int)i)).J = false;
+            for (int i = 0; i < this.actionQueue.size(); ++i) {
+                ((Pet)this.actionQueue.elementAt((int)i)).J = false;
             }
             this.i = 0;
-            while (((Pet)this.v.elementAt(this.i)).r() != 0 || ((Pet)this.v.elementAt(this.i)).r() == 0 && !((Pet)this.v.elementAt(this.i)).S()) {
+            while (((Pet)this.actionQueue.elementAt(this.i)).r() != 0 || ((Pet)this.actionQueue.elementAt(this.i)).r() == 0 && !((Pet)this.actionQueue.elementAt(this.i)).S()) {
                 this.i = (byte)(this.i + 1);
             }
-            if (game.BattleScreen.d((Pet)this.v.elementAt(this.i))) {
+            if (game.BattleScreen.d((Pet)this.actionQueue.elementAt(this.i))) {
                 this.a((byte)13);
                 return;
             }
@@ -2076,41 +2076,41 @@ lbl465:
             this.J = 0;
             for (n3 = 0; n3 < this.f.length && !this.c((int)this.f[n3]).S(); ++n3) {
             }
-            if (((Pet)this.h.p).r() == 1 && !((Pet)this.h.p).S() || this.h.r() == 1 && !this.h.S()) {
-                ((Pet)this.h.p).C();
-                ((Pet)this.h.p).D();
-                this.S.b((Pet)this.h.p);
-                this.h((Pet)this.h.p);
+            if (((Pet)this.activePlayerPet.p).r() == 1 && !((Pet)this.activePlayerPet.p).S() || this.activePlayerPet.r() == 1 && !this.activePlayerPet.S()) {
+                ((Pet)this.activePlayerPet.p).C();
+                ((Pet)this.activePlayerPet.p).D();
+                this.S.b((Pet)this.activePlayerPet.p);
+                this.h((Pet)this.activePlayerPet.p);
                 this.u[1] = (byte)(this.u[1] + 1);
-            } else if (((Pet)this.h.p).r() == 0 && !((Pet)this.h.p).S() || this.h.r() == 0 && !this.h.S()) {
-                ((Pet)this.h.p).C();
-                ((Pet)this.h.p).D();
-                this.S.a((Pet)this.h.p);
-                x.removeElement((Pet)this.h.p);
-                j.removeElement((Pet)this.h.p);
-                ((Pet)this.h.p).B = 0;
-                ((Pet)this.h.p).d(false);
-                ((Pet)this.h.p).F = 0;
+            } else if (((Pet)this.activePlayerPet.p).r() == 0 && !((Pet)this.activePlayerPet.p).S() || this.activePlayerPet.r() == 0 && !this.activePlayerPet.S()) {
+                ((Pet)this.activePlayerPet.p).C();
+                ((Pet)this.activePlayerPet.p).D();
+                this.S.a((Pet)this.activePlayerPet.p);
+                x.removeElement((Pet)this.activePlayerPet.p);
+                j.removeElement((Pet)this.activePlayerPet.p);
+                ((Pet)this.activePlayerPet.p).B = 0;
+                ((Pet)this.activePlayerPet.p).d(false);
+                ((Pet)this.activePlayerPet.p).F = 0;
             }
             int n5 = n3 >= this.f.length ? 2 : (this.u[1] >= this.s.length ? 1 : 0);
             switch (n5) {
                 case 0: {
                     n5 = 0;
-                    if (!((Pet)this.h.p).S() || !this.h.S()) {
-                        for (n2 = 0; n2 < this.d.length; ++n2) {
-                            if (!this.d[n2].m(11) || !this.d[this.d[n2].v[11][1]].equals((Pet)this.h.p)) continue;
-                            this.d[n2].n(11);
+                    if (!((Pet)this.activePlayerPet.p).S() || !this.activePlayerPet.S()) {
+                        for (n2 = 0; n2 < this.enemyPets.length; ++n2) {
+                            if (!this.enemyPets[n2].m(11) || !this.enemyPets[this.enemyPets[n2].v[11][1]].equals((Pet)this.activePlayerPet.p)) continue;
+                            this.enemyPets[n2].n(11);
                         }
-                        if (((Pet)this.h.p).r() == 1 && !((Pet)this.h.p).S() || this.h.r() == 1 && !this.h.S()) {
+                        if (((Pet)this.activePlayerPet.p).r() == 1 && !((Pet)this.activePlayerPet.p).S() || this.activePlayerPet.r() == 1 && !this.activePlayerPet.S()) {
                             if (this.u[0] < this.s.length) {
-                                this.g = this.h.r() == 1 && !this.h.S() ? this.e[this.i] : this.h.I;
+                                this.g = this.activePlayerPet.r() == 1 && !this.activePlayerPet.S() ? this.e[this.i] : this.activePlayerPet.I;
                                 this.m(this.g);
                                 this.a((byte)15);
                             } else {
                                 n5 = 1;
                             }
                         } else if (this.r()) {
-                            this.g = this.h.r() == 0 && !this.h.S() ? this.e[this.i] : this.h.I;
+                            this.g = this.activePlayerPet.r() == 0 && !this.activePlayerPet.S() ? this.e[this.i] : this.activePlayerPet.I;
                             this.a((byte)5);
                         } else {
                             n5 = 1;
@@ -2119,10 +2119,10 @@ lbl465:
                         n5 = 1;
                     }
                     if (n5 == 0) break;
-                    if (this.h.m(12) && this.h.K[12] == 2) {
-                        this.h.K[12] = (short)(this.h.K[12] - 1);
-                        if (!((Pet)this.h.p).S()) {
-                            this.h.K[12] = (short)(this.h.K[12] - 1);
+                    if (this.activePlayerPet.m(12) && this.activePlayerPet.K[12] == 2) {
+                        this.activePlayerPet.K[12] = (short)(this.activePlayerPet.K[12] - 1);
+                        if (!((Pet)this.activePlayerPet.p).S()) {
+                            this.activePlayerPet.K[12] = (short)(this.activePlayerPet.K[12] - 1);
                             this.i = (byte)(this.i + 1);
                             this.p();
                             break;
@@ -2131,9 +2131,9 @@ lbl465:
                         break;
                     }
                     n2 = EngineUtils.randomInt(100);
-                    if ((this.h.D == 63 || this.h.D == 69) && n2 <= GameDatabase.gameDatabase[1][this.h.D][8]) {
-                        if (!((Pet)this.h.p).S()) {
-                            this.h.K[12] = (short)(this.h.K[12] - 1);
+                    if ((this.activePlayerPet.D == 63 || this.activePlayerPet.D == 69) && n2 <= GameDatabase.gameDatabase[1][this.activePlayerPet.D][8]) {
+                        if (!((Pet)this.activePlayerPet.p).S()) {
+                            this.activePlayerPet.K[12] = (short)(this.activePlayerPet.K[12] - 1);
                         } else {
                             this.a((byte)2);
                             break;
@@ -2153,9 +2153,9 @@ lbl465:
                 }
             }
             if (p.c((byte)5, (byte)0) == 2 && p.c((byte)5, (byte)1) == 1) {
-                for (n5 = 0; n5 < this.d.length; ++n5) {
-                    if (this.d[n3].r() != 0 || !this.d[n3].S()) continue;
-                    this.d[n3].y();
+                for (n5 = 0; n5 < this.enemyPets.length; ++n5) {
+                    if (this.enemyPets[n3].r() != 0 || !this.enemyPets[n3].S()) continue;
+                    this.enemyPets[n3].y();
                 }
             }
             return true;
@@ -2179,22 +2179,22 @@ lbl465:
     }
 
     public final void b(byte val) {
-        this.h.G.removeAllElements();
-        this.h.H.removeAllElements();
+        this.activePlayerPet.G.removeAllElements();
+        this.activePlayerPet.H.removeAllElements();
         switch (game.Pet.b(val, (byte)9)) {
             case 1: {
-                for (val = 0; val < this.d.length; val = (byte)(val + 1)) {
-                    if (this.d[val].r() != this.h.r() || !this.d[val].S()) continue;
-                    this.h.G.addElement(this.d[val]);
-                    this.h.H.addElement("" + val);
+                for (val = 0; val < this.enemyPets.length; val = (byte)(val + 1)) {
+                    if (this.enemyPets[val].r() != this.activePlayerPet.r() || !this.enemyPets[val].S()) continue;
+                    this.activePlayerPet.G.addElement(this.enemyPets[val]);
+                    this.activePlayerPet.H.addElement("" + val);
                 }
                 return;
             }
             case 0: {
-                for (val = 0; val < this.d.length; val = (byte)(val + 1)) {
-                    if (this.d[val].r() == this.h.r() || !this.d[val].S()) continue;
-                    this.h.G.addElement(this.d[val]);
-                    this.h.H.addElement("" + val);
+                for (val = 0; val < this.enemyPets.length; val = (byte)(val + 1)) {
+                    if (this.enemyPets[val].r() == this.activePlayerPet.r() || !this.enemyPets[val].S()) continue;
+                    this.activePlayerPet.G.addElement(this.enemyPets[val]);
+                    this.activePlayerPet.H.addElement("" + val);
                 }
                 break;
             }
@@ -2204,19 +2204,19 @@ lbl465:
     private void f(Pet b2) {
         b2.G.removeAllElements();
         b2.H.removeAllElements();
-        for (int i = 0; i < this.d.length; ++i) {
-            if (!this.d[i].S() || this.d[i].equals(b2)) continue;
-            b2.G.addElement(this.d[i]);
+        for (int i = 0; i < this.enemyPets.length; ++i) {
+            if (!this.enemyPets[i].S() || this.enemyPets[i].equals(b2)) continue;
+            b2.G.addElement(this.enemyPets[i]);
             b2.H.addElement("" + i);
         }
     }
 
     public final void i() {
-        Pet b2 = (Pet)this.h.G.elementAt(this.C);
-        this.h.p = b2;
-        this.h.I = Byte.parseByte((String)this.h.H.elementAt(this.C));
-        this.h.h(((Pet)this.v.elementAt((int)this.i)).z[this.S.e]);
-        this.a(Integer.parseInt((String)this.h.H.elementAt(this.C)), false);
+        Pet b2 = (Pet)this.activePlayerPet.G.elementAt(this.C);
+        this.activePlayerPet.p = b2;
+        this.activePlayerPet.I = Byte.parseByte((String)this.activePlayerPet.H.elementAt(this.C));
+        this.activePlayerPet.h(((Pet)this.actionQueue.elementAt((int)this.i)).z[this.S.e]);
+        this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), false);
         this.h();
     }
 
@@ -2269,11 +2269,11 @@ lbl465:
         }
         this.c((int)this.f[0]).J = true;
         this.c((int)this.f[0]).d(true);
-        this.h.d(false);
-        this.h.F = 0;
-        for (n2 = 0; n2 < this.d.length; ++n2) {
-            if (!this.d[n2].m(11) || !this.d[this.d[n2].v[11][1]].equals(this.h)) continue;
-            this.d[n2].n(11);
+        this.activePlayerPet.d(false);
+        this.activePlayerPet.F = 0;
+        for (n2 = 0; n2 < this.enemyPets.length; ++n2) {
+            if (!this.enemyPets[n2].m(11) || !this.enemyPets[this.enemyPets[n2].v[11][1]].equals(this.activePlayerPet)) continue;
+            this.enemyPets[n2].n(11);
         }
         return -1;
     }
@@ -2281,18 +2281,18 @@ lbl465:
     private void T() {
         byte by;
         int n2;
-        this.v.removeAllElements();
+        this.actionQueue.removeAllElements();
         int n3 = -1;
         for (n2 = 0; n2 < this.t.length - 1; ++n2) {
             for (int i = n2 + 1; i < this.t.length; ++i) {
-                if (this.d[n2].c[4] >= this.d[i].c[4]) continue;
+                if (this.enemyPets[n2].c[4] >= this.enemyPets[i].c[4]) continue;
                 by = this.t[n2];
                 this.t[n2] = this.t[i];
                 this.t[i] = by;
             }
         }
         for (n2 = 0; n2 < this.t.length; ++n2) {
-            if (!this.d[n2].f((byte)7)) continue;
+            if (!this.enemyPets[n2].f((byte)7)) continue;
             n3 = n2;
             this.t[n2] = 0;
             break;
@@ -2309,7 +2309,7 @@ lbl465:
             }
             for (n4 = 0; n4 < intArray.length - 1; ++n4) {
                 for (n3 = n4 + 1; n3 < intArray.length; ++n3) {
-                    if (this.d[intArray[n4]].c[4] >= this.d[intArray[n3]].c[4]) continue;
+                    if (this.enemyPets[intArray[n4]].c[4] >= this.enemyPets[intArray[n3]].c[4]) continue;
                     by = this.t[intArray[n4]];
                     this.t[intArray[n4]] = this.t[intArray[n3]];
                     this.t[intArray[n3]] = by;
@@ -2320,24 +2320,24 @@ lbl465:
             this.e[this.t[n2]] = (byte)n2;
         }
         for (n2 = 0; n2 < this.e.length; ++n2) {
-            this.v.addElement(this.d[this.e[n2]]);
+            this.actionQueue.addElement(this.enemyPets[this.e[n2]]);
         }
     }
 
     private void U() {
-        if (this.h.f((byte)10) && ((Pet)this.h.p).d[1] <= GameDatabase.gameDatabase[3][10][5]) {
+        if (this.activePlayerPet.f((byte)10) && ((Pet)this.activePlayerPet.p).d[1] <= GameDatabase.gameDatabase[3][10][5]) {
             short s2;
-            ((Pet)this.h.p).d[1] = s2 = GameDatabase.gameDatabase[3][10][5];
+            ((Pet)this.activePlayerPet.p).d[1] = s2 = GameDatabase.gameDatabase[3][10][5];
         }
-        if (((Pet)this.h.p).d[1] <= 0) {
-            ((Pet)this.h.p).d((byte)3);
+        if (((Pet)this.activePlayerPet.p).d[1] <= 0) {
+            ((Pet)this.activePlayerPet.p).d((byte)3);
             return;
         }
-        ((Pet)this.h.p).d((byte)0);
+        ((Pet)this.activePlayerPet.p).d((byte)0);
     }
 
     private boolean c(Pet b2, boolean flag2) {
-        if (this.b == 0 && flag2) {
+        if (this.battleMode == 0 && flag2) {
             if (b2.L != null && !b2.L.i()) {
                 return true;
             }
@@ -2509,21 +2509,21 @@ lbl465:
             return 100;
         }
         int n3 = 0;
-        if (((Pet)this.h.p).m(1)) {
+        if (((Pet)this.activePlayerPet.p).m(1)) {
             n3 = 1;
         }
-        if (((Pet)this.h.p).m(2)) {
+        if (((Pet)this.activePlayerPet.p).m(2)) {
             n3 = 2;
         }
-        if (((Pet)this.h.p).m(10)) {
+        if (((Pet)this.activePlayerPet.p).m(10)) {
             n3 = 3;
         }
-        if (this.h.f((byte)11)) {
+        if (this.activePlayerPet.f((byte)11)) {
             n3 = 4;
         }
         int n4 = 1;
-        short s2 = ((Pet)this.h.p).d[1];
-        short s3 = ((Pet)this.h.p).c[1];
+        short s2 = ((Pet)this.activePlayerPet.p).d[1];
+        short s3 = ((Pet)this.activePlayerPet.p).c[1];
         if (s2 <= s3 * 15 / 100) {
             n4 = 85;
         } else if (s2 <= s3 * 50 / 100) {
@@ -2533,15 +2533,15 @@ lbl465:
         }
         n4 = n4 * GameDatabase.gameDatabase[4][n2][6] / 100;
         int[] intArray = new int[]{110, 100, 95, 80, 70};
-        n4 = n4 * intArray[((Pet)this.h.p).c[0] - 1] / 100;
+        n4 = n4 * intArray[((Pet)this.activePlayerPet.p).c[0] - 1] / 100;
         intArray = new int[]{10, 11, 12, 12, 12};
         n4 = n4 * intArray[n3] / 10;
-        if (this.h.f((byte)11)) {
+        if (this.activePlayerPet.f((byte)11)) {
             n4 = n4 * (100 + GameDatabase.gameDatabase[3][11][5]) / 100;
         }
         Object[] objectArray = new int[]{1000, 500, 1, 1000};
-        n4 = n4 * objectArray[GameDatabase.gameDatabase[0][((Pet)this.h.p).q()][22]] / 1000;
-        if (((Pet)this.h.p).s() >= 20 && n4 >= (objectArray = (Object[])new byte[]{0, 15, 35, 65})[n2]) {
+        n4 = n4 * objectArray[GameDatabase.gameDatabase[0][((Pet)this.activePlayerPet.p).q()][22]] / 1000;
+        if (((Pet)this.activePlayerPet.p).s() >= 20 && n4 >= (objectArray = (Object[])new byte[]{0, 15, 35, 65})[n2]) {
             n4 = objectArray[n2];
         }
         if (n4 >= 100) {
@@ -2582,9 +2582,9 @@ lbl465:
         switch (U) {
             case 0: {
                 if (V == 0) {
-                    if (this.h == null) break;
-                    int n2 = this.d[0].c[1] * 50 / 100;
-                    if (this.d[0].d[1] <= n2) {
+                    if (this.activePlayerPet == null) break;
+                    int n2 = this.enemyPets[0].c[1] * 50 / 100;
+                    if (this.enemyPets[0].d[1] <= n2) {
                         game.BattleScreen.c(0, 1);
                         V = (byte)(V + 1);
                         this.S.c("Di Lặc thỏ thỏ đã bị thương, nhanh sử dụng #2 phong ấn cầu #1 tiến hành bắt được a");
@@ -2639,7 +2639,7 @@ lbl465:
                     return;
                 }
                 if (V != 2) break;
-                if (this.h != null && this.d[0].d[1] <= (n3 = this.d[0].c[1] * 50 / 100 + 2)) {
+                if (this.activePlayerPet != null && this.enemyPets[0].d[1] <= (n3 = this.enemyPets[0].c[1] * 50 / 100 + 2)) {
                     V = (byte)(V - 1);
                     this.S.c("Lựa chọn #2Tất trúng cầu#1 để bắt sủng vật");
                 }

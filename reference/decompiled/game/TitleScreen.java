@@ -76,8 +76,8 @@ extends BaseScreen {
         if (game.WorldManager.getInstance().M != null) {
             game.WorldManager.getInstance().M.e();
         }
-        if (game.WorldManager.getInstance().c != null) {
-            game.WorldManager.getInstance().c.p();
+        if (game.WorldManager.getInstance().player != null) {
+            game.WorldManager.getInstance().player.p();
         }
         if (this.S != null) {
             this.S.b();
@@ -111,8 +111,8 @@ extends BaseScreen {
                                 if (game.WorldManager.getInstance().M != null) {
                                     game.WorldManager.getInstance().M.e();
                                 }
-                                if (game.WorldManager.getInstance().c != null) {
-                                    game.WorldManager.getInstance().c.p();
+                                if (game.WorldManager.getInstance().player != null) {
+                                    game.WorldManager.getInstance().player.p();
                                 }
                                 if (f3.S != null) {
                                     f3.S.b();

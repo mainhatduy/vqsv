@@ -22,12 +22,12 @@ import org.recompile.mobile.PlatformGraphics;
  */
 public final class GameStateController
 extends BaseScreen {
-    private static GameStateController h = null;
+    private static GameStateController instance = null;
     private byte currentState;
     private byte previousState;
     private int k;
     private Image l;
-    private BaseScreen m;
+    private BaseScreen currentScreen;
     private static int n = 0;
     private static int o = 10;
     private String[] p = new String[]{"Hỏa hệ khắc mộc hệ", "Mộc hệ khắc thổ hệ", "Thổ hệ khắc thủy hệ", "Thủy hệ khắc hỏa hệ", "Quỷ hệ khắc phong hệ", "Phong hệ khắc điện hệ", "Điện hệ khắc quỷ hệ"};
@@ -41,16 +41,16 @@ extends BaseScreen {
     private boolean r = false;
     private String s = "";
     public byte g = 0;
-    private Player t;
-    private VolumeControl u;
+    private Player mediaPlayer;
+    private VolumeControl volumeControl;
     private static String v = null;
 
     public static GameStateController getInstance() {
-        if (h == null) {
-            h = new GameStateController();
+        if (instance == null) {
+            instance = new GameStateController();
             v = "0";
         }
-        return h;
+        return instance;
     }
 
     public final void c(boolean flag) {
@@ -148,8 +148,8 @@ extends BaseScreen {
                 break;
             }
             case 2: {
-                if (game.WorldManager.getInstance().c == null) break;
-                game.WorldManager.getInstance().c.J();
+                if (game.WorldManager.getInstance().player == null) break;
+                game.WorldManager.getInstance().player.J();
             }
         }
         this.k = 0;
@@ -198,9 +198,9 @@ extends BaseScreen {
     }
 
     public final void f() {
-        if (this.m != null) {
-            this.m.f();
-            this.m = null;
+        if (this.currentScreen != null) {
+            this.currentScreen.f();
+            this.currentScreen = null;
         }
     }
 
@@ -264,8 +264,8 @@ extends BaseScreen {
             case 22: 
             case 23: {
                 this.f();
-                this.m = game.WorldManager.getInstance();
-                this.m.d();
+                this.currentScreen = game.WorldManager.getInstance();
+                this.currentScreen.d();
                 game.Player.U = false;
                 this.a((byte)11);
                 if (this.r) {
@@ -274,36 +274,36 @@ extends BaseScreen {
                         i2.a((byte)2);
                     }
                 }
-                this.a(this.m);
+                this.a(this.currentScreen);
                 break;
             }
             case 10: {
                 this.f();
-                this.m = game.WorldManager.getInstance();
-                ((WorldManager)this.m).p();
-                this.a(this.m);
+                this.currentScreen = game.WorldManager.getInstance();
+                ((WorldManager)this.currentScreen).p();
+                this.a(this.currentScreen);
                 this.a((byte)11);
                 break;
             }
             case 7: {
                 this.f();
-                this.m = game.TitleScreen.getInstance();
-                this.m.d();
-                this.a(this.m);
+                this.currentScreen = game.TitleScreen.getInstance();
+                this.currentScreen.d();
+                this.a(this.currentScreen);
                 this.a((byte)8);
                 break;
             }
             case 12: {
                 if (!game.GameStateController.v()) {
-                    this.m = null;
-                    this.m = game.BattleScreen.getInstance();
-                    this.m.d();
-                    this.a(this.m);
-                    if (((BattleScreen)this.m).b == 0) {
+                    this.currentScreen = null;
+                    this.currentScreen = game.BattleScreen.getInstance();
+                    this.currentScreen.d();
+                    this.a(this.currentScreen);
+                    if (((BattleScreen)this.currentScreen).b == 0) {
                         ScreenView.getInstance().c(-2013265920, 6);
-                    } else if (((BattleScreen)this.m).b == 2) {
+                    } else if (((BattleScreen)this.currentScreen).b == 2) {
                         ScreenView.getInstance().c(-2013265920, 8);
-                    } else if (((BattleScreen)this.m).b == 1) {
+                    } else if (((BattleScreen)this.currentScreen).b == 1) {
                         ScreenView.getInstance().c(-2013265920, 7);
                     }
                 }
@@ -312,7 +312,7 @@ extends BaseScreen {
                     game.Player.U = false;
                 }
                 if (!ScreenView.getInstance().b) break;
-                ((BattleScreen)this.m).g();
+                ((BattleScreen)this.currentScreen).g();
                 this.a((byte)13);
                 break;
             }
@@ -320,8 +320,8 @@ extends BaseScreen {
             case 11: 
             case 13: 
             case 20: {
-                if (this.m == null) break;
-                this.m.b();
+                if (this.currentScreen == null) break;
+                this.currentScreen.b();
             }
         }
         if (game.WorldManager.getInstance().f == 3 && game.WorldManager.getInstance().g == 7 && this.c == 0L && this.a != 0L) {
@@ -385,7 +385,7 @@ extends BaseScreen {
                 return;
             }
             case 12: {
-                game.WorldManager.getInstance().b.a((Graphics)g);
+                game.WorldManager.getInstance().stringTable.a((Graphics)g);
                 if (!game.GameStateController.v()) break;
                 ScreenView.getInstance().a((Graphics)g);
                 game.Player.U = false;
@@ -403,8 +403,8 @@ extends BaseScreen {
                     } else {
                         game.Player.getInstance().a((byte)(n % 4), (byte)-1, false);
                     }
-                    game.Player.getInstance().n = by = (byte)(n % 4);
-                    game.Player.getInstance().a(graphics, MapEngine.getInstance().a, MapEngine.getInstance().b - n);
+                    game.Player.getInstance().facingDirection = by = (byte)(n % 4);
+                    game.Player.getInstance().a(graphics, MapEngine.getInstance().cameraX, MapEngine.getInstance().cameraY - n);
                 } else {
                     graphics.setColor(0);
                     graphics.fillRect(0, 0, game.GameStateController.w(), game.GameStateController.x());
@@ -443,8 +443,8 @@ extends BaseScreen {
             case 11: 
             case 13: 
             case 20: {
-                if (this.m == null) break;
-                this.m.b((Graphics)g);
+                if (this.currentScreen == null) break;
+                this.currentScreen.b((Graphics)g);
             }
         }
     }
@@ -455,21 +455,21 @@ extends BaseScreen {
             return;
         }
         try {
-            if (this.t != null) {
+            if (this.mediaPlayer != null) {
                 if (this.o()) {
-                    this.t.start();
+                    this.mediaPlayer.start();
                     return;
                 }
             } else {
                 game.GameStateController.getInstance().getClass();
                 InputStream inputStream = ResourceStream.a("/data/sound/" + text + ".mid");
-                this.t = Manager.createPlayer(inputStream, "audio/midi");
-                this.t.realize();
-                this.u = (VolumeControl)this.t.getControl("VolumeControl");
-                this.u.setLevel(this.g * 30);
-                this.t.prefetch();
-                this.t.setLoopCount(-1);
-                this.t.start();
+                this.mediaPlayer = Manager.createPlayer(inputStream, "audio/midi");
+                this.mediaPlayer.realize();
+                this.volumeControl = (VolumeControl)this.mediaPlayer.getControl("VolumeControl");
+                this.volumeControl.setLevel(this.g * 30);
+                this.mediaPlayer.prefetch();
+                this.mediaPlayer.setLoopCount(-1);
+                this.mediaPlayer.start();
                 inputStream.close();
             }
             return;
@@ -485,18 +485,18 @@ extends BaseScreen {
     }
 
     private void n() {
-        if (this.t == null) {
+        if (this.mediaPlayer == null) {
             return;
         }
-        this.t.deallocate();
-        this.t.close();
-        this.t = null;
+        this.mediaPlayer.deallocate();
+        this.mediaPlayer.close();
+        this.mediaPlayer = null;
     }
 
     private boolean o() {
         try {
-            this.t.prefetch();
-            if (this.t.getState() == 300) {
+            this.mediaPlayer.prefetch();
+            if (this.mediaPlayer.getState() == 300) {
                 return true;
             }
         }
@@ -505,8 +505,8 @@ extends BaseScreen {
     }
 
     private void p() {
-        if (this.u != null) {
-            this.u.setLevel(this.g * 30);
+        if (this.volumeControl != null) {
+            this.volumeControl.setLevel(this.g * 30);
         }
     }
 

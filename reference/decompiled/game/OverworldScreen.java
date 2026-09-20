@@ -23,11 +23,11 @@ import javax.microedition.lcdui.Image;
  */
 public final class OverworldScreen
 extends BaseScreen {
-    private static OverworldScreen v = null;
-    private WorldManager w;
-    private Player x;
-    private BaseScreen y;
-    public ScriptSequence[] a;
+    private static OverworldScreen instance = null;
+    private WorldManager worldManager;
+    private Player player;
+    private BaseScreen parentScreen;
+    public ScriptSequence[] scriptSequences;
     private Vector z;
     private byte A = (byte)-1;
     public byte[][] b;
@@ -35,7 +35,7 @@ extends BaseScreen {
     public int c = -1;
     private static Vector C;
     public static Vector d;
-    private TileMapRenderer D = game.TileMapRenderer.getInstance();
+    private TileMapRenderer mapRenderer = game.TileMapRenderer.getInstance();
     public static boolean e;
     public static boolean f;
     public static boolean g;
@@ -79,11 +79,11 @@ extends BaseScreen {
     private static byte[][] al;
 
     public OverworldScreen() {
-        if (this.w == null) {
-            this.w = game.WorldManager.getInstance();
+        if (this.worldManager == null) {
+            this.worldManager = game.WorldManager.getInstance();
         }
-        if (this.x == null) {
-            this.x = game.Player.getInstance();
+        if (this.player == null) {
+            this.player = game.Player.getInstance();
         }
         if (this.b == null) {
             this.b = new byte[127][];
@@ -119,17 +119,17 @@ extends BaseScreen {
     }
 
     public static OverworldScreen getInstance() {
-        if (v == null) {
-            v = new OverworldScreen();
+        if (instance == null) {
+            instance = new OverworldScreen();
         }
-        return v;
+        return instance;
     }
 
     public final void a(BaseScreen an2) {
-        if (this.y != null) {
-            this.y = null;
+        if (this.parentScreen != null) {
+            this.parentScreen = null;
         }
-        this.y = an2;
+        this.parentScreen = an2;
     }
 
     /*
@@ -137,11 +137,11 @@ extends BaseScreen {
      * Could not resolve type clashes
      */
     public final void b() {
-        if (this.a == null) {
+        if (this.scriptSequences == null) {
             return;
         }
         ScreenView.getInstance().b();
-        this.D.d();
+        this.mapRenderer.d();
         var1_1 = this;
         for (var2_2 = 0; var2_2 < var1_1.a.length; ++var2_2) {
             if (var1_1.a[var2_2].a() != 0 && var1_1.a[var2_2].a() != 4) continue;
@@ -287,12 +287,12 @@ lbl109:
             for (n2 = 0; n2 < C.size(); ++n2) {
                 WorldEntity f2 = (WorldEntity)C.elementAt(n2);
                 f2.b(f2.p.i, f2.p.j - 40);
-                f2.a(g, MapEngine.getInstance().a, MapEngine.getInstance().b);
+                f2.a(g, MapEngine.getInstance().cameraX, MapEngine.getInstance().cameraY);
             }
         }
         if (d != null) {
             for (n2 = 0; n2 < d.size(); ++n2) {
-                ((WorldEntity)d.elementAt(n2)).a(g, MapEngine.getInstance().a, MapEngine.getInstance().b);
+                ((WorldEntity)d.elementAt(n2)).a(g, MapEngine.getInstance().cameraX, MapEngine.getInstance().cameraY);
             }
         }
     }
@@ -324,9 +324,9 @@ lbl109:
         Graphics graphics2 = g;
         OverworldScreen c2 = this;
         if (c2.ag != null && c2.ah == game.WorldManager.a(c2.w.f, c2.w.g)) {
-            c2.ag.a(graphics2, MapEngine.getInstance().a, MapEngine.getInstance().b);
+            c2.ag.a(graphics2, MapEngine.getInstance().cameraX, MapEngine.getInstance().cameraY);
         }
-        this.D.a(g);
+        this.mapRenderer.a(g);
     }
 
     public final boolean d() {
@@ -335,7 +335,7 @@ lbl109:
 
     public final boolean a(DataInputStream dataInputStream, int n2, int n3, int n4, String[] strArray) {
         try {
-            this.a = new ScriptSequence[n4];
+            this.scriptSequences = new ScriptSequence[n4];
             this.z = new Vector();
             C = new Vector();
             int n5 = n2 << 8 | n3;
@@ -343,9 +343,9 @@ lbl109:
                 this.b[game.WorldManager.l[n2] + n3] = new byte[n4];
             }
             for (byte by = 0; by < n4; by = (byte)(by + 1)) {
-                this.a[by] = new ScriptSequence();
-                this.a[by].a(dataInputStream, by, n5, strArray);
-                this.a[by].a(this.b[game.WorldManager.l[n2] + n3][by]);
+                this.scriptSequences[by] = new ScriptSequence();
+                this.scriptSequences[by].a(dataInputStream, by, n5, strArray);
+                this.scriptSequences[by].a(this.b[game.WorldManager.l[n2] + n3][by]);
             }
         }
         catch (IOException iOException) {
@@ -356,12 +356,12 @@ lbl109:
     }
 
     public final void e() {
-        this.x = null;
-        this.w = null;
+        this.player = null;
+        this.worldManager = null;
         this.b = null;
         s = null;
         this.ai = null;
-        v = null;
+        instance = null;
     }
 
     public final void f() {
@@ -373,7 +373,7 @@ lbl109:
             d.removeAllElements();
             d = null;
         }
-        this.a = null;
+        this.scriptSequences = null;
         this.E = null;
         this.F = null;
         this.G = null;
@@ -390,9 +390,9 @@ lbl109:
     }
 
     private byte a(int n2) {
-        for (int i = 0; i < this.a.length; ++i) {
+        for (int i = 0; i < this.scriptSequences.length; ++i) {
             ScriptCommand ad2;
-            if (this.a[i].a() == 3 || n2 == i || (ad2 = this.a[i].d()).a() != 44 || game.WorldManager.a((int)ad2.b()[2], (int)ad2.b()[3]) != game.WorldManager.a(this.w.f, this.w.g) || ad2.b()[4] != game.WorldManager.u || !this.b(ad2)) continue;
+            if (this.scriptSequences[i].a() == 3 || n2 == i || (ad2 = this.scriptSequences[i].d()).a() != 44 || game.WorldManager.a((int)ad2.b()[2], (int)ad2.b()[3]) != game.WorldManager.a(this.worldManager.f, this.worldManager.g) || ad2.b()[4] != game.WorldManager.u || !this.b(ad2)) continue;
             return (byte)i;
         }
         return -1;
@@ -429,65 +429,65 @@ lbl109:
                 case 1: {
                     if (var2_2.a() != 5) {
                         ScreenView.getInstance().c(0, 9);
-                        this.D.a(var3_3.b()[1], var3_3.b()[2]);
-                        this.D.a((byte)(var3_3.b()[0] / 10 - 1), var3_3.c()[0], var3_3.b()[0] % 10);
-                        this.D.a(true);
+                        this.mapRenderer.a(var3_3.b()[1], var3_3.b()[2]);
+                        this.mapRenderer.a((byte)(var3_3.b()[0] / 10 - 1), var3_3.c()[0], var3_3.b()[0] % 10);
+                        this.mapRenderer.a(true);
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!game.TileMapRenderer.a || !this.y.k(1)) break;
-                    this.D.b();
+                    if (!game.TileMapRenderer.a || !this.parentScreen.k(1)) break;
+                    this.mapRenderer.b();
                     if (game.TileMapRenderer.b) break;
                     ScreenView.getInstance().a = -1;
-                    this.D.c();
+                    this.mapRenderer.c();
                     ** GOTO lbl1044
                 }
                 case 2: {
                     if (var3_3.b()[0] == -1) {
-                        this.x.c();
-                        this.x.b((byte)0, EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[0]));
+                        this.player.c();
+                        this.player.b((byte)0, EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[0]));
                         break;
                     }
                     for (var4_4 = 0; var4_4 < var3_3.b()[0]; ++var4_4) {
-                        this.w.d[EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_4])].b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_4]));
-                        if (this.w.d[EngineUtils.c((String)EngineUtils.a((String)var3_3.c()[0], (char)',')[var4_4])].v == 1) {
-                            this.w.d[EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_4])].d((byte)0);
+                        this.worldManager.npcList[EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_4])].b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_4]));
+                        if (this.worldManager.npcList[EngineUtils.c((String)EngineUtils.a((String)var3_3.c()[0], (char)',')[var4_4])].v == 1) {
+                            this.worldManager.npcList[EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_4])].d((byte)0);
                         }
-                        this.w.d[EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_4])].c();
+                        this.worldManager.npcList[EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_4])].c();
                     }
                     break;
                 }
                 case 3: {
                     if (var3_3.b()[0] == -1) {
-                        this.x.d();
+                        this.player.d();
                         break;
                     }
                     for (var5_29 = 0; var5_29 < var3_3.b()[0]; ++var5_29) {
                         var4_5 = EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var5_29]);
-                        this.w.d[var4_5].d();
+                        this.worldManager.npcList[var4_5].d();
                     }
                     break;
                 }
                 case 4: {
                     if (var2_2.a() != 5) {
-                        this.x.b((byte)0, this.x.n);
-                        this.w.S.a(var3_3.c()[0], var3_3.c()[1], (int)var3_3.b()[1]);
+                        this.player.b((byte)0, this.player.n);
+                        this.worldManager.S.a(var3_3.c()[0], var3_3.c()[1], (int)var3_3.b()[1]);
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.w.S.c(var3_3.b()[1], -1) || !this.y.k(196640)) break;
+                    if (!this.worldManager.S.c(var3_3.b()[1], -1) || !this.parentScreen.k(196640)) break;
                     game.WorldManager.getInstance().e();
                     if (EngineUtils.b < EngineUtils.b()) {
                         EngineUtils.c();
-                        this.w.S.b(EngineUtils.b);
+                        this.worldManager.S.b(EngineUtils.b);
                         break;
                     }
-                    if (game.WorldManager.u != -1 && this.w.d[game.WorldManager.u].a.a <= 85 && this.w.d[game.WorldManager.u].u() == 0) {
-                        game.WorldManager.getInstance().a(game.WorldManager.getInstance().d[game.WorldManager.u].i, game.WorldManager.getInstance().d[game.WorldManager.u].j - 40, game.WorldManager.getInstance().d[game.WorldManager.u]);
+                    if (game.WorldManager.u != -1 && this.worldManager.npcList[game.WorldManager.u].a.a <= 85 && this.worldManager.npcList[game.WorldManager.u].u() == 0) {
+                        game.WorldManager.getInstance().a(game.WorldManager.getInstance().npcList[game.WorldManager.u].i, game.WorldManager.getInstance().npcList[game.WorldManager.u].j - 40, game.WorldManager.getInstance().npcList[game.WorldManager.u]);
                     }
                     game.OverworldScreen.g = false;
                     game.OverworldScreen.h = false;
-                    this.w.S.aC();
+                    this.worldManager.S.aC();
                     var2_2.a((byte)1);
                     break;
                 }
@@ -496,14 +496,14 @@ lbl109:
                     var4_6.a(259, false);
                     var4_6.a((byte)var3_3.b()[2], (byte)-1, true);
                     if (var3_3.b()[0] == 0) {
-                        var4_6.b(this.x.l(), this.x.m() - this.x.a.b(this.x.h(), this.x.n)[3]);
-                        var4_6.a(this.x);
+                        var4_6.b(this.player.getPosX(), this.player.getPosY() - this.player.a.b(this.player.h(), this.player.n)[3]);
+                        var4_6.a(this.player);
                     } else if (var3_3.b()[0] == 1) {
                         if (var3_3.b()[3] != 0 || var3_3.b()[4] != 0) {
                             var4_6.b(var3_3.b()[3], var3_3.b()[4]);
                         } else {
-                            var4_6.b(this.w.d[var3_3.b()[1]].l(), this.w.d[var3_3.b()[1]].m());
-                            var4_6.a(this.w.d[var3_3.b()[1]]);
+                            var4_6.b(this.worldManager.npcList[var3_3.b()[1]].l(), this.worldManager.npcList[var3_3.b()[1]].m());
+                            var4_6.a(this.worldManager.npcList[var3_3.b()[1]]);
                         }
                     }
                     var4_6.c();
@@ -511,10 +511,10 @@ lbl109:
                     break;
                 }
                 case 6: {
-                    this.b[game.WorldManager.l[this.w.f] + this.w.g][var2_2.b()] = 3;
+                    this.b[game.WorldManager.l[this.worldManager.f] + this.worldManager.g][var2_2.b()] = 3;
                     game.WorldManager.getInstance().f = var3_3.b()[0];
                     game.WorldManager.getInstance().g = var3_3.b()[1];
-                    this.w.j = var3_3.b()[3] == 1 ? var3_3.b()[2] : -1;
+                    this.worldManager.j = var3_3.b()[3] == 1 ? var3_3.b()[2] : -1;
                     game.GameStateController.getInstance().a((byte)22);
                     break;
                 }
@@ -525,11 +525,11 @@ lbl109:
                             this.E[var4_7] = EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_7]);
                             var5_30 = EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[var4_7]);
                             if (this.E[var4_7] == -1) {
-                                this.x.b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[0]), var5_30);
+                                this.player.b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[0]), var5_30);
                                 continue;
                             }
-                            this.w.d[this.E[var4_7]].b(var5_30);
-                            this.w.d[this.E[var4_7]].d(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_7]));
+                            this.worldManager.npcList[this.E[var4_7]].b(var5_30);
+                            this.worldManager.npcList[this.E[var4_7]].d(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_7]));
                         }
                         this.B = 0;
                         var2_2.a((byte)5);
@@ -537,13 +537,13 @@ lbl109:
                     }
                     for (var4_8 = 0; var4_8 < this.E.length; ++var4_8) {
                         if (this.E[var4_8] == -1) {
-                            if (!this.x.b()) continue;
-                            this.x.b((byte)0, this.x.n);
+                            if (!this.player.b()) continue;
+                            this.player.b((byte)0, this.player.n);
                             ++this.B;
                             continue;
                         }
-                        if (!this.w.d[this.E[var4_8]].b()) continue;
-                        this.w.d[this.E[var4_8]].d((byte)0);
+                        if (!this.worldManager.npcList[this.E[var4_8]].b()) continue;
+                        this.worldManager.npcList[this.E[var4_8]].d((byte)0);
                         ++this.B;
                     }
                     if (this.B < this.E.length) break;
@@ -551,11 +551,11 @@ lbl109:
                     ** GOTO lbl1044
                 }
                 case 8: {
-                    this.x.c();
+                    this.player.c();
                     game.WorldManager.u = (short)-1;
-                    this.x.b(var3_3.b()[0], var3_3.b()[1]);
-                    this.x.b.b(var3_3.b()[0], var3_3.b()[1]);
-                    this.x.b((byte)0, this.x.n);
+                    this.player.b(var3_3.b()[0], var3_3.b()[1]);
+                    this.player.b.b(var3_3.b()[0], var3_3.b()[1]);
+                    this.player.b((byte)0, this.player.n);
                     break;
                 }
                 case 9: {
@@ -607,9 +607,9 @@ lbl109:
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[0] == -1) {
                             this.F = new byte[1];
-                            this.x.b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[0]));
-                            this.x.b((byte)0, this.x.n);
-                            this.x.a((byte)0, (short)EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[0]));
+                            this.player.b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[0]));
+                            this.player.b((byte)0, this.player.n);
+                            this.player.a((byte)0, (short)EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[0]));
                             this.F[0] = EngineUtils.d(EngineUtils.a(var3_3.c()[3], ',')[0]);
                         } else {
                             this.E = new short[var3_3.b()[0]];
@@ -617,13 +617,13 @@ lbl109:
                             for (var4_10 = 0; var4_10 < this.E.length; ++var4_10) {
                                 this.E[var4_10] = EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var4_10]);
                                 if (this.E[var4_10] != -1) {
-                                    this.w.d[this.E[var4_10]].b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_10]));
-                                    this.w.d[this.E[var4_10]].a((byte)0, (short)EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[var4_10]));
-                                    this.w.d[this.E[var4_10]].d((byte)0);
+                                    this.worldManager.npcList[this.E[var4_10]].b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_10]));
+                                    this.worldManager.npcList[this.E[var4_10]].a((byte)0, (short)EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[var4_10]));
+                                    this.worldManager.npcList[this.E[var4_10]].d((byte)0);
                                 } else {
-                                    this.x.b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_10]));
-                                    this.x.a((byte)0, (short)EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[var4_10]));
-                                    this.x.b((byte)0, this.x.n);
+                                    this.player.b(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var4_10]));
+                                    this.player.a((byte)0, (short)EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[var4_10]));
+                                    this.player.b((byte)0, this.player.n);
                                 }
                                 this.F[var4_10] = EngineUtils.d(EngineUtils.a(var3_3.c()[3], ',')[var4_10]);
                             }
@@ -633,29 +633,29 @@ lbl109:
                         break;
                     }
                     if (var3_3.b()[0] == -1) {
-                        if (this.x.h() == 0) {
-                            this.x.b((byte)1, this.x.n);
+                        if (this.player.h() == 0) {
+                            this.player.b((byte)1, this.player.n);
                             break;
                         }
                         this.F[0] = (byte)(this.F[0] - 1);
                         if (this.F[0] > 0) break;
-                        this.x.b((byte)0, this.x.n);
-                        if (this.x.P[0] == 2 || this.x.P[1] == 2) {
-                            this.x.a((byte)0, (short)8);
+                        this.player.b((byte)0, this.player.n);
+                        if (this.player.P[0] == 2 || this.player.P[1] == 2) {
+                            this.player.a((byte)0, (short)8);
                         } else {
-                            this.x.a((byte)0, (short)4);
+                            this.player.a((byte)0, (short)4);
                         }
                         var2_2.a((byte)1);
                         break;
                     }
                     for (var4_11 = 0; var4_11 < this.E.length; ++var4_11) {
-                        if (this.E[var4_11] != -1 && this.w.d[this.E[var4_11]].h() == 0 || this.E[var4_11] == -1 && this.x.h() == 0) {
+                        if (this.E[var4_11] != -1 && this.worldManager.npcList[this.E[var4_11]].h() == 0 || this.E[var4_11] == -1 && this.player.h() == 0) {
                             if (this.F[var4_11] <= 0) continue;
                             if (this.E[var4_11] != -1) {
-                                this.w.d[this.E[var4_11]].d((byte)3);
+                                this.worldManager.npcList[this.E[var4_11]].d((byte)3);
                                 continue;
                             }
-                            this.x.b((byte)1, this.x.n);
+                            this.player.b((byte)1, this.player.n);
                             continue;
                         }
                         v0 = var4_11;
@@ -664,16 +664,16 @@ lbl109:
                         ++this.B;
                         this.F[var4_11] = 0;
                         if (this.E[var4_11] != -1) {
-                            this.w.d[this.E[var4_11]].d((byte)0);
-                            this.w.d[this.E[var4_11]].a((byte)0, (short)4);
+                            this.worldManager.npcList[this.E[var4_11]].d((byte)0);
+                            this.worldManager.npcList[this.E[var4_11]].a((byte)0, (short)4);
                             continue;
                         }
-                        this.x.b((byte)0, this.x.n);
-                        if (this.x.P[0] == 2 || this.x.P[1] == 2) {
-                            this.x.a((byte)0, (short)8);
+                        this.player.b((byte)0, this.player.n);
+                        if (this.player.P[0] == 2 || this.player.P[1] == 2) {
+                            this.player.a((byte)0, (short)8);
                             continue;
                         }
-                        this.x.a((byte)0, (short)4);
+                        this.player.a((byte)0, (short)4);
                     }
                     if (this.B < this.E.length) break;
                     ** GOTO lbl1044
@@ -697,16 +697,16 @@ lbl109:
                                 v4 = ParticleEffect.getInstance();
                                 var3_3.b();
                                 var3_3.b();
-                                v4.a(this.x, var4_12);
+                                v4.a(this.player, var4_12);
                             } else {
                                 v5 = ParticleEffect.getInstance();
-                                v6 = this.w.d[var3_3.b()[3]];
+                                v6 = this.worldManager.npcList[var3_3.b()[3]];
                                 var3_3.b();
                                 var3_3.b();
                                 v5.a(v6, var4_12);
                             }
                         }
-                        this.x.b((byte)0, this.x.n);
+                        this.player.b((byte)0, this.player.n);
                         var2_2.a((byte)5);
                         break;
                     }
@@ -724,9 +724,9 @@ lbl109:
                     ** GOTO lbl1044
                 }
                 case 13: {
-                    if (EngineUtils.a(var3_3.b()[0], (int)var3_3.b()[1], (int)var3_3.b()[2], (int)var3_3.b()[3], this.x.i, this.x.j, this.x.a.k())) {
+                    if (EngineUtils.a(var3_3.b()[0], (int)var3_3.b()[1], (int)var3_3.b()[2], (int)var3_3.b()[3], this.player.i, this.player.j, this.player.a.k())) {
                         var2_2.a((byte)1);
-                        this.x.b((byte)0, this.x.n);
+                        this.player.b((byte)0, this.player.n);
                         break;
                     }
                     var2_2.a((byte)6);
@@ -750,80 +750,80 @@ lbl109:
                 case 17: {
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[0] == 0) {
-                            if (this.x.a((int)var3_3.b()[1], (int)var3_3.b()[2], (byte)0)) {
+                            if (this.player.a((int)var3_3.b()[1], (int)var3_3.b()[2], (byte)0)) {
                                 var4_13 = GameDatabase.gameDatabase[4][var3_3.b()[1]][0];
-                                this.y.S.a("Đạt được: " + BaseScreen.f(var4_13), (int)var3_3.b()[2]);
-                                this.x.c(var3_3.b()[1], var3_3.b()[2], (byte)0);
+                                this.parentScreen.S.a("Đạt được: " + BaseScreen.f(var4_13), (int)var3_3.b()[2]);
+                                this.player.c(var3_3.b()[1], var3_3.b()[2], (byte)0);
                             } else {
-                                this.y.S.b("Ba lô đã đủ đạo cụ này");
+                                this.parentScreen.S.b("Ba lô đã đủ đạo cụ này");
                             }
-                        } else if (this.x.b((int)var3_3.b()[1], (int)var3_3.b()[2], (byte)0)) {
+                        } else if (this.player.b((int)var3_3.b()[1], (int)var3_3.b()[2], (byte)0)) {
                             var4_14 = GameDatabase.gameDatabase[4][var3_3.b()[1]][0];
-                            this.y.S.a("Mất: " + BaseScreen.f(var4_14), (int)var3_3.b()[2]);
-                            this.x.d(var3_3.b()[1], var3_3.b()[2], (byte)0);
+                            this.parentScreen.S.a("Mất: " + BaseScreen.f(var4_14), (int)var3_3.b()[2]);
+                            this.player.d(var3_3.b()[1], var3_3.b()[2], (byte)0);
                         }
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ax()) break;
+                    if (!this.parentScreen.S.ax()) break;
                     ** GOTO lbl1044
                 }
                 case 18: {
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[0] == 0) {
-                            if (this.x.a((int)var3_3.b()[1], (int)var3_3.b()[2], (byte)2)) {
+                            if (this.player.a((int)var3_3.b()[1], (int)var3_3.b()[2], (byte)2)) {
                                 var4_15 = GameDatabase.gameDatabase[3][var3_3.b()[1]][0];
-                                this.y.S.a("Đạt được: " + BaseScreen.f(var4_15), (int)var3_3.b()[2]);
-                                this.x.c(var3_3.b()[1], var3_3.b()[2], (byte)2);
+                                this.parentScreen.S.a("Đạt được: " + BaseScreen.f(var4_15), (int)var3_3.b()[2]);
+                                this.player.c(var3_3.b()[1], var3_3.b()[2], (byte)2);
                             } else {
-                                this.y.S.b("Ba lô đã đủ đạo cụ này");
+                                this.parentScreen.S.b("Ba lô đã đủ đạo cụ này");
                             }
                         } else if (var3_3.b()[0] == 1) {
                             var4_16 = GameDatabase.gameDatabase[3][var3_3.b()[1]][0];
-                            this.y.S.a("Mất: " + BaseScreen.f(var4_16), (int)var3_3.b()[2]);
-                            this.x.d(var3_3.b()[1], var3_3.b()[2], (byte)2);
+                            this.parentScreen.S.a("Mất: " + BaseScreen.f(var4_16), (int)var3_3.b()[2]);
+                            this.player.d(var3_3.b()[1], var3_3.b()[2], (byte)2);
                         }
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ax()) break;
+                    if (!this.parentScreen.S.ax()) break;
                     ** GOTO lbl1044
                 }
                 case 19: {
                     if (var2_2.a() != 5) {
                         var4_17 = GameDatabase.gameDatabase[5][var3_3.b()[0]][0];
-                        this.y.S.a("Đạt được: " + BaseScreen.f(var4_17), (int)var3_3.b()[1]);
-                        var5_35 = this.x.d(var3_3.b()[0], var3_3.b()[1]);
+                        this.parentScreen.S.a("Đạt được: " + BaseScreen.f(var4_17), (int)var3_3.b()[1]);
+                        var5_35 = this.player.d(var3_3.b()[0], var3_3.b()[1]);
                         if (var5_35 != -1) {
                             if (var5_35 == 1) {
-                                this.y.S.b("Ba lô đã đủ loại đạo cụ này");
+                                this.parentScreen.S.b("Ba lô đã đủ loại đạo cụ này");
                             } else {
-                                this.x.c(var3_3.b()[0], var3_3.b()[1]);
+                                this.player.c(var3_3.b()[0], var3_3.b()[1]);
                             }
                         } else if (var3_3.b()[0] == 0) {
-                            this.x.e(var3_3.b()[0], -1);
+                            this.player.e(var3_3.b()[0], -1);
                         } else {
-                            this.x.i(var3_3.b()[0]);
+                            this.player.i(var3_3.b()[0]);
                         }
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ax()) break;
+                    if (!this.parentScreen.S.ax()) break;
                     ** GOTO lbl1044
                 }
                 case 20: {
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[0] == 1) {
-                            this.y.S.b("Mất: " + var3_3.c()[0]);
-                            this.x.T[var3_3.b()[1]] = false;
+                            this.parentScreen.S.b("Mất: " + var3_3.c()[0]);
+                            this.player.T[var3_3.b()[1]] = false;
                         } else {
-                            this.y.S.b("Đạt được: " + var3_3.c()[0]);
-                            this.x.T[var3_3.b()[1]] = true;
+                            this.parentScreen.S.b("Đạt được: " + var3_3.c()[0]);
+                            this.player.T[var3_3.b()[1]] = true;
                         }
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ax()) break;
+                    if (!this.parentScreen.S.ax()) break;
                     ** GOTO lbl1044
                 }
                 case 21: {
@@ -839,8 +839,8 @@ lbl109:
                 case 22: {
                     game.WorldManager.x = true;
                     game.WorldManager.w = (byte)var3_3.b()[1];
-                    game.WorldManager.getInstance().h = var3_3.b()[2];
-                    game.WorldManager.getInstance().i = var3_3.b()[3];
+                    game.WorldManager.getInstance().playerSpawnX = var3_3.b()[2];
+                    game.WorldManager.getInstance().playerSpawnY = var3_3.b()[3];
                     game.WorldManager.B = var3_3.b()[4];
                     game.WorldManager.C = var3_3.b()[5];
                     game.WorldManager.getInstance().j = -1;
@@ -848,10 +848,10 @@ lbl109:
                 }
                 case 23: {
                     this.b[game.WorldManager.a((int)var3_3.b()[0], (int)var3_3.b()[1])][var3_3.b()[2]] = 3;
-                    if (var3_3.b()[0] != this.w.f || var3_3.b()[1] != this.w.g) break;
-                    this.a[var3_3.b()[2]].a((byte)3);
+                    if (var3_3.b()[0] != this.worldManager.f || var3_3.b()[1] != this.worldManager.g) break;
+                    this.scriptSequences[var3_3.b()[2]].a((byte)3);
                     if (this.z.size() <= 0) break;
-                    this.z.removeElement(this.a[var3_3.b()[2]]);
+                    this.z.removeElement(this.scriptSequences[var3_3.b()[2]]);
                     --var1_1;
                     break;
                 }
@@ -899,18 +899,18 @@ lbl109:
                         v8 = var7_59;
                         this.H[v8] = (short)(this.H[v8] - 1);
                         if (var3_3.b()[0] == -1) {
-                            var5_37 = this.x.l() + this.K[var7_59];
-                            var6_44 = this.x.m() + this.L[var7_59];
-                            this.x.b(var5_37, var6_44);
-                            if (this.x.b == null) continue;
-                            this.x.b.b(var5_37, var6_44);
+                            var5_37 = this.player.getPosX() + this.K[var7_59];
+                            var6_44 = this.player.getPosY() + this.L[var7_59];
+                            this.player.b(var5_37, var6_44);
+                            if (this.player.b == null) continue;
+                            this.player.b.b(var5_37, var6_44);
                             continue;
                         }
-                        var5_37 = this.w.d[this.E[var7_59]].l() + this.K[var7_59];
-                        var6_44 = this.w.d[this.E[var7_59]].m() + this.L[var7_59];
-                        this.w.d[this.E[var7_59]].b(var5_37, var6_44);
-                        if (this.w.d[this.E[var7_59]].b == null) continue;
-                        this.w.d[this.E[var7_59]].b.b(var5_37, var6_44);
+                        var5_37 = this.worldManager.npcList[this.E[var7_59]].l() + this.K[var7_59];
+                        var6_44 = this.worldManager.npcList[this.E[var7_59]].m() + this.L[var7_59];
+                        this.worldManager.npcList[this.E[var7_59]].b(var5_37, var6_44);
+                        if (this.worldManager.npcList[this.E[var7_59]].b == null) continue;
+                        this.worldManager.npcList[this.E[var7_59]].b.b(var5_37, var6_44);
                     }
                     if (!var4_19) break;
                     var2_2.a((byte)1);
@@ -944,7 +944,7 @@ lbl109:
                         break;
                     }
                     for (var4_21 = 0; var4_21 < this.E.length; ++var4_21) {
-                        this.w.d[this.E[var4_21]].b(this.I[var4_21][this.B], this.J[var4_21][this.B]);
+                        this.worldManager.npcList[this.E[var4_21]].b(this.I[var4_21][this.B], this.J[var4_21][this.B]);
                     }
                     ++this.B;
                     if (this.B < this.I[0].length) break;
@@ -954,35 +954,35 @@ lbl109:
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[0] == 0) {
                             if (var3_3.b()[1] == 0) {
-                                this.x.s(var3_3.b()[2]);
-                                this.y.S.b("Đạt được: " + var3_3.b()[2] + " kim tiền");
+                                this.player.s(var3_3.b()[2]);
+                                this.parentScreen.S.b("Đạt được: " + var3_3.b()[2] + " kim tiền");
                             } else if (var3_3.b()[1] == 1) {
-                                this.x.u(var3_3.b()[2]);
-                                this.y.S.b("Đạt được: " + var3_3.b()[2] + "Huy hiệu");
+                                this.player.u(var3_3.b()[2]);
+                                this.parentScreen.S.b("Đạt được: " + var3_3.b()[2] + "Huy hiệu");
                             }
                         } else if (var3_3.b()[0] == 1) {
                             if (var3_3.b()[1] == 0) {
-                                this.x.s(-var3_3.b()[2]);
-                                this.y.S.b("Mất: " + var3_3.b()[2] + " kim tiền");
+                                this.player.s(-var3_3.b()[2]);
+                                this.parentScreen.S.b("Mất: " + var3_3.b()[2] + " kim tiền");
                             } else if (var3_3.b()[1] == 1) {
-                                this.x.u(-var3_3.b()[2]);
-                                this.y.S.b("Mất: " + var3_3.b()[2] + " huy hiệu");
+                                this.player.u(-var3_3.b()[2]);
+                                this.parentScreen.S.b("Mất: " + var3_3.b()[2] + " huy hiệu");
                             }
                         }
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.w.S.ax()) break;
+                    if (!this.worldManager.S.ax()) break;
                     ** GOTO lbl1044
                 }
                 case 32: {
-                    this.w.e();
-                    game.BattleScreen.getInstance().a = var3_3.b()[0];
-                    game.BattleScreen.getInstance().b = (byte)var3_3.b()[1];
-                    game.BattleScreen.getInstance().c = Image.createImage(BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
-                    var4_22 = game.BattleScreen.getInstance().c.getGraphics();
-                    this.w.b.b(var4_22);
-                    this.x.b((byte)0, this.x.n);
+                    this.worldManager.e();
+                    game.BattleScreen.getInstance().battleType = var3_3.b()[0];
+                    game.BattleScreen.getInstance().battleMode = (byte)var3_3.b()[1];
+                    game.BattleScreen.getInstance().battleBgImage = Image.createImage(BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
+                    var4_22 = game.BattleScreen.getInstance().battleBgImage.getGraphics();
+                    this.worldManager.stringTable.b(var4_22);
+                    this.player.b((byte)0, this.player.n);
                     var2_2.a((byte)1);
                     game.GameStateController.getInstance().a((byte)12);
                     break;
@@ -1015,11 +1015,11 @@ lbl109:
                         for (var6_46 = 0; var6_46 < this.ab.length; ++var6_46) {
                             this.ab[var6_46] = EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var6_46]);
                         }
-                        this.y.S.a(this.aa, this.Z, this.ac, var5_40);
+                        this.parentScreen.S.a(this.aa, this.Z, this.ac, var5_40);
                         var2_2.a((byte)5);
                         break;
                     }
-                    var5_41 = this.y.S.c(this.aa);
+                    var5_41 = this.parentScreen.S.c(this.aa);
                     if (var5_41 == -1) break;
                     var2_2.b((byte)(this.ab[var5_41] - 2));
                     var2_2.a((byte)1);
@@ -1027,24 +1027,24 @@ lbl109:
                 }
                 case 36: {
                     if (var2_2.a() != 5) {
-                        var5_42 = this.x.y();
+                        var5_42 = this.player.getActivePetIndex();
                         if (var3_3.b()[0] == 0) {
                             if (var5_42 == 0) {
-                                this.x.a(var3_3.b()[1], var3_3.b()[2], (byte)var3_3.b()[4], (byte)var3_3.b()[3], new int[]{1, var3_3.b()[5], var3_3.b()[6]});
+                                this.player.a(var3_3.b()[1], var3_3.b()[2], (byte)var3_3.b()[4], (byte)var3_3.b()[3], new int[]{1, var3_3.b()[5], var3_3.b()[6]});
                             } else if (var5_42 == 1) {
-                                this.y.S.b("Ba lô đã đủ, đã để vào ngân hàng");
+                                this.parentScreen.S.b("Ba lô đã đủ, đã để vào ngân hàng");
                                 var6_47 = game.Pet.b(var3_3.b()[1], var3_3.b()[2], var3_3.b()[3]);
-                                this.x.a(var3_3.b()[1], var3_3.b()[2], (byte)var3_3.b()[4], (byte)var3_3.b()[3], var6_47, 0, new int[]{1, var3_3.b()[5], var3_3.b()[6]});
+                                this.player.a(var3_3.b()[1], var3_3.b()[2], (byte)var3_3.b()[4], (byte)var3_3.b()[3], var6_47, 0, new int[]{1, var3_3.b()[5], var3_3.b()[6]});
                             } else {
-                                this.y.S.b("Không có không gian, đã phóng sinh");
+                                this.parentScreen.S.b("Không có không gian, đã phóng sinh");
                             }
                         } else if (var3_3.b()[0] == 1) {
-                            this.x.n(var3_3.b()[1]);
+                            this.player.n(var3_3.b()[1]);
                         }
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ax()) break;
+                    if (!this.parentScreen.S.ax()) break;
                     ** GOTO lbl1044
                 }
                 case 37: {
@@ -1069,18 +1069,18 @@ lbl109:
                     break;
                 }
                 case 39: {
-                    for (var6_49 = 0; var6_49 < this.x.A; ++var6_49) {
-                        this.x.z[var6_49].I();
+                    for (var6_49 = 0; var6_49 < this.player.A; ++var6_49) {
+                        this.player.z[var6_49].I();
                     }
                     break;
                 }
                 case 40: {
                     if (var2_2.a() != 5) {
-                        this.y.S.c(var3_3.c()[0]);
+                        this.parentScreen.S.c(var3_3.c()[0]);
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ay()) break;
+                    if (!this.parentScreen.S.ay()) break;
                     ** GOTO lbl1044
                 }
                 case 41: {
@@ -1093,44 +1093,44 @@ lbl109:
                 }
                 case 45: {
                     if (var2_2.a() != 5) {
-                        this.y.S.c(var3_3.c()[0]);
+                        this.parentScreen.S.c(var3_3.c()[0]);
                         game.OverworldScreen.t = (byte)var3_3.b()[0];
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ay()) break;
+                    if (!this.parentScreen.S.ay()) break;
                     ** GOTO lbl1044
                 }
                 case 46: {
                     if (var2_2.a() != 5) {
-                        this.y.S.H();
-                        this.y.S.a(var3_3.c()[0]);
+                        this.parentScreen.S.H();
+                        this.parentScreen.S.a(var3_3.c()[0]);
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (this.y.S.f == 0) {
-                        if (this.y.k(196640)) {
-                            this.y.S.f = 1;
-                            this.y.S.a("Đang lưu...");
-                            this.y.S.J();
+                    if (this.parentScreen.S.f == 0) {
+                        if (this.parentScreen.k(196640)) {
+                            this.parentScreen.S.f = 1;
+                            this.parentScreen.S.a("Đang lưu...");
+                            this.parentScreen.S.J();
                             break;
                         }
-                        if (!this.y.k(262144 /* MASK_SOFT_RIGHT */)) break;
+                        if (!this.parentScreen.k(262144 /* MASK_SOFT_RIGHT */)) break;
                         var2_2.a((byte)1);
-                        this.y.S.I();
-                        this.y.S.f = 0;
+                        this.parentScreen.S.I();
+                        this.parentScreen.S.f = 0;
                         break;
                     }
-                    if (this.y.S.f == 1) {
-                        this.b[game.WorldManager.a((int)this.w.f, (int)this.w.g)][var2_2.b()] = 3;
-                        if (!((WorldManager)this.y).k()) break;
-                        this.y.S.a("Lưu thành công");
-                        this.y.S.f = 2;
+                    if (this.parentScreen.S.f == 1) {
+                        this.b[game.WorldManager.a((int)this.worldManager.f, (int)this.worldManager.g)][var2_2.b()] = 3;
+                        if (!((WorldManager)this.parentScreen).k()) break;
+                        this.parentScreen.S.a("Lưu thành công");
+                        this.parentScreen.S.f = 2;
                         break;
                     }
-                    if (this.y.S.f != 2) break;
-                    this.y.S.I();
-                    this.y.S.f = 0;
+                    if (this.parentScreen.S.f != 2) break;
+                    this.parentScreen.S.I();
+                    this.parentScreen.S.f = 0;
                     ** GOTO lbl1044
                 }
                 case 47: {
@@ -1140,21 +1140,21 @@ lbl109:
                 }
                 case 48: {
                     if (var2_2.a() != 5) {
-                        this.D.a(var3_3.b()[1], var3_3.b()[2]);
-                        this.D.a((byte)(var3_3.b()[0] / 10 - 1), var3_3.c()[0], var3_3.b()[0] % 10);
+                        this.mapRenderer.a(var3_3.b()[1], var3_3.b()[2]);
+                        this.mapRenderer.a((byte)(var3_3.b()[0] / 10 - 1), var3_3.c()[0], var3_3.b()[0] % 10);
                         if (var3_3.b()[5] == 1) {
-                            this.D.a(true);
+                            this.mapRenderer.a(true);
                         }
-                        this.D.b(var3_3.b()[3], var3_3.b()[4]);
+                        this.mapRenderer.b(var3_3.b()[3], var3_3.b()[4]);
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.D.e()) ** GOTO lbl663
-                    if (!game.TileMapRenderer.a || !this.y.k(1)) break;
-                    this.D.b();
+                    if (!this.mapRenderer.e()) ** GOTO lbl663
+                    if (!game.TileMapRenderer.a || !this.parentScreen.k(1)) break;
+                    this.mapRenderer.b();
                     if (game.TileMapRenderer.b) break;
                     ScreenView.getInstance().a = -1;
-                    this.D.c();
+                    this.mapRenderer.c();
                     ** GOTO lbl1044
 lbl663:
                     // 1 sources
@@ -1178,11 +1178,11 @@ lbl663:
                             this.ab[var6_50] = EngineUtils.d(EngineUtils.a(var3_3.c()[2], ',')[var6_50]);
                             this.ac[var6_50] = EngineUtils.a(var3_3.c()[3], ',')[var6_50];
                         }
-                        this.y.S.a(this.ad, this.ae, this.af, this.ac);
+                        this.parentScreen.S.a(this.ad, this.ae, this.af, this.ac);
                         var2_2.a((byte)5);
                         break;
                     }
-                    var6_51 = this.y.S.aD();
+                    var6_51 = this.parentScreen.S.aD();
                     if (var6_51 == -1) break;
                     if (var6_51 == 0 && var2_2.d().b()[1] == 1) {
                         game.OverworldScreen.s[game.OverworldScreen.u][1] = 1;
@@ -1194,17 +1194,17 @@ lbl663:
                 }
                 case 50: {
                     if (var3_3.b()[0] == 0) {
-                        this.x.u();
+                        this.player.u();
                         break;
                     }
-                    this.x.t();
+                    this.player.t();
                     break;
                 }
                 case 51: {
-                    this.w.S.aB();
-                    this.D.a(var3_3.b()[1], var3_3.b()[2]);
-                    this.D.a((byte)(var3_3.b()[0] / 10 - 1), var3_3.c()[0], var3_3.b()[0] % 10);
-                    this.D.b(var3_3.b()[3], var3_3.b()[4]);
+                    this.worldManager.S.aB();
+                    this.mapRenderer.a(var3_3.b()[1], var3_3.b()[2]);
+                    this.mapRenderer.a((byte)(var3_3.b()[0] / 10 - 1), var3_3.c()[0], var3_3.b()[0] % 10);
+                    this.mapRenderer.b(var3_3.b()[3], var3_3.b()[4]);
                     break;
                 }
                 case 52: {
@@ -1219,20 +1219,20 @@ lbl663:
                 case 53: {
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[1] == 0) {
-                            this.x.a((byte)var3_3.b()[0], (byte)var3_3.b()[1], (byte)2);
-                            for (var6_52 = 0; var6_52 < game.WorldManager.getInstance().d.length; ++var6_52) {
-                                if (game.WorldManager.getInstance().d[var6_52].t != 0 || game.WorldManager.getInstance().d[var6_52].v != 1) continue;
-                                game.WorldManager.getInstance().d[var6_52].v();
+                            this.player.a((byte)var3_3.b()[0], (byte)var3_3.b()[1], (byte)2);
+                            for (var6_52 = 0; var6_52 < game.WorldManager.getInstance().npcList.length; ++var6_52) {
+                                if (game.WorldManager.getInstance().npcList[var6_52].t != 0 || game.WorldManager.getInstance().npcList[var6_52].v != 1) continue;
+                                game.WorldManager.getInstance().npcList[var6_52].v();
                             }
                         } else if (var3_3.b()[1] == 1) {
-                            this.x.a((byte)var3_3.b()[0], (byte)var3_3.b()[1], (byte)1);
+                            this.player.a((byte)var3_3.b()[0], (byte)var3_3.b()[1], (byte)1);
                         }
-                        this.y.S.a(var3_3.b()[0]);
+                        this.parentScreen.S.a(var3_3.b()[0]);
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.w.k(1)) break;
-                    this.y.S.V();
+                    if (!this.worldManager.k(1)) break;
+                    this.parentScreen.S.V();
                     ** GOTO lbl1044
                 }
                 case 54: {
@@ -1269,36 +1269,36 @@ lbl663:
                         for (var7_62 = 0; var7_62 < var6_54; ++var7_62) {
                             var8_70 = EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var7_62]);
                             var4_23 = EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var7_62]);
-                            this.w.d[var8_70].b(var4_23);
-                            if (this.w.d[var8_70].v == 1) {
-                                this.w.d[var8_70].d((byte)0);
+                            this.worldManager.npcList[var8_70].b(var4_23);
+                            if (this.worldManager.npcList[var8_70].v == 1) {
+                                this.worldManager.npcList[var8_70].d((byte)0);
                             }
-                            this.w.d[var8_70].c();
-                            this.w.a(var8_70, 1, (byte)1, true);
-                            this.w.a(var8_70, 2, var4_23, true);
-                            this.w.d[var8_70].r();
+                            this.worldManager.npcList[var8_70].c();
+                            this.worldManager.a(var8_70, 1, (byte)1, true);
+                            this.worldManager.a(var8_70, 2, var4_23, true);
+                            this.worldManager.npcList[var8_70].r();
                         }
                     } else {
                         if (var3_3.b()[0] != 1) break;
                         for (var7_63 = 0; var7_63 < var6_54; ++var7_63) {
                             var8_71 = EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var7_63]);
-                            if (this.w.d[var8_71].v == 1) {
-                                this.w.d[var8_71].d((byte)0);
+                            if (this.worldManager.npcList[var8_71].v == 1) {
+                                this.worldManager.npcList[var8_71].d((byte)0);
                             }
-                            this.w.d[var8_71].d();
-                            this.w.a(var8_71, 1, (byte)0, true);
-                            this.w.d[var8_71].r();
+                            this.worldManager.npcList[var8_71].d();
+                            this.worldManager.a(var8_71, 1, (byte)0, true);
+                            this.worldManager.npcList[var8_71].r();
                         }
                     }
                     break;
                 }
                 case 58: {
-                    if (((NpcEntity)this.x.p).h() != 1 || !((NpcEntity)this.x.p).a.e()) break;
-                    ((NpcEntity)this.x.p).d((byte)0);
-                    this.w.d[var3_3.b()[0]].b(var3_3.b()[1], var3_3.b()[2]);
-                    if ((NpcEntity)this.w.d[var3_3.b()[0]].p == null) break;
-                    ((NpcEntity)this.w.d[var3_3.b()[0]].p).q();
-                    this.w.d[var3_3.b()[0]].a(null);
+                    if (((NpcEntity)this.player.p).h() != 1 || !((NpcEntity)this.player.p).a.e()) break;
+                    ((NpcEntity)this.player.p).d((byte)0);
+                    this.worldManager.npcList[var3_3.b()[0]].b(var3_3.b()[1], var3_3.b()[2]);
+                    if ((NpcEntity)this.worldManager.npcList[var3_3.b()[0]].p == null) break;
+                    ((NpcEntity)this.worldManager.npcList[var3_3.b()[0]].p).q();
+                    this.worldManager.npcList[var3_3.b()[0]].a(null);
                     break;
                 }
                 case 60: {
@@ -1306,16 +1306,16 @@ lbl663:
                         this.E = new short[var3_3.b()[0]];
                         for (var6_55 = 0; var6_55 < this.E.length; ++var6_55) {
                             this.E[var6_55] = EngineUtils.c(EngineUtils.a(var3_3.c()[0], ',')[var6_55]);
-                            this.w.d[this.E[var6_55]].d(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var6_55]));
-                            if (this.w.d[this.E[var6_55]].t != 0 || this.w.d[this.E[var6_55]].v != 6 || this.w.d[this.E[var6_55]].h() != 2) continue;
-                            game.WorldManager.getInstance().b.c(game.WorldManager.getInstance().d[this.E[var6_55]]);
+                            this.worldManager.npcList[this.E[var6_55]].d(EngineUtils.d(EngineUtils.a(var3_3.c()[1], ',')[var6_55]));
+                            if (this.worldManager.npcList[this.E[var6_55]].t != 0 || this.worldManager.npcList[this.E[var6_55]].v != 6 || this.worldManager.npcList[this.E[var6_55]].h() != 2) continue;
+                            game.WorldManager.getInstance().stringTable.c(game.WorldManager.getInstance().npcList[this.E[var6_55]]);
                         }
                         this.B = 0;
                         var2_2.a((byte)5);
                         break;
                     }
                     for (var6_56 = 0; var6_56 < this.E.length; ++var6_56) {
-                        if (!this.w.d[this.E[var6_56]].b()) continue;
+                        if (!this.worldManager.npcList[this.E[var6_56]].b()) continue;
                         ++this.B;
                     }
                     if (this.B < this.E.length) break;
@@ -1328,7 +1328,7 @@ lbl663:
                     var2_2.a((byte)6);
                     for (var7_64 = 0; var7_64 < var6_57.length; ++var7_64) {
                         var6_57[var7_64] = EngineUtils.b(EngineUtils.a(var3_3.c()[0], ',')[var7_64]);
-                        if (this.w.d[var6_57[var7_64]].h() != 2) continue;
+                        if (this.worldManager.npcList[var6_57[var7_64]].h() != 2) continue;
                         var8_72 = var6_57[var7_64];
                         break;
                     }
@@ -1345,29 +1345,29 @@ lbl818:
                 }
                 case 63: {
                     if (var3_3.b()[0] == 0) {
-                        this.x.h(var3_3.b()[1]);
+                        this.player.h(var3_3.b()[1]);
                     } else {
-                        this.x.s();
+                        this.player.s();
                     }
                     this.k = var3_3.b()[2] != 0;
                     break;
                 }
                 case 64: {
                     if (var3_3.b()[0] == 0) {
-                        this.w.a(var3_3.b()[1]);
+                        this.worldManager.a(var3_3.b()[1]);
                         if (var3_3.b()[2] == -1) {
-                            this.w.a((WorldEntity)this.x);
+                            this.worldManager.a((WorldEntity)this.player);
                             break;
                         }
-                        this.w.a(this.w.d[var3_3.b()[2]]);
+                        this.worldManager.a(this.worldManager.npcList[var3_3.b()[2]]);
                         break;
                     }
-                    this.w.g();
+                    this.worldManager.g();
                     break;
                 }
                 case 65: {
                     if (var2_2.a() != 5 && !game.OverworldScreen.X) {
-                        this.y.a((byte)100);
+                        this.parentScreen.a((byte)100);
                         var2_2.a((byte)5);
                         break;
                     }
@@ -1394,11 +1394,11 @@ lbl818:
                         switch (var3_3.b()[0]) {
                             case 0: 
                             case 1: {
-                                this.w.a((byte)1);
+                                this.worldManager.a((byte)1);
                                 break;
                             }
                             case 2: {
-                                this.w.a((byte)16);
+                                this.worldManager.a((byte)16);
                             }
                         }
                         var2_2.a((byte)5);
@@ -1409,7 +1409,7 @@ lbl818:
                     ** GOTO lbl1044
                 }
                 case 71: {
-                    if (this.x.F >= var3_3.b()[0]) {
+                    if (this.player.F >= var3_3.b()[0]) {
                         var2_2.b((byte)(var3_3.b()[1] - 2));
                         break;
                     }
@@ -1426,20 +1426,20 @@ lbl818:
                         if (EngineUtils.b(var6_58[var4_24]) == -1) {
                             var8_73[var4_24].a(EngineUtils.d(var7_65[var4_24]), (byte)-1, true);
                             var8_73[var4_24].c();
-                            var8_73[var4_24].b(this.x.l(), this.x.m() - 40);
-                            var8_73[var4_24].a(this.x);
+                            var8_73[var4_24].b(this.player.getPosX(), this.player.getPosY() - 40);
+                            var8_73[var4_24].a(this.player);
                         } else {
                             var8_73[var4_24].a(EngineUtils.d(var7_65[var4_24]), (byte)-1, true);
                             var8_73[var4_24].c();
-                            var8_73[var4_24].b(this.w.d[EngineUtils.b(var6_58[var4_24])].l(), this.w.d[EngineUtils.b(var6_58[var4_24])].m() - 40);
-                            var8_73[var4_24].a(this.w.d[EngineUtils.b(var6_58[var4_24])]);
+                            var8_73[var4_24].b(this.worldManager.npcList[EngineUtils.b(var6_58[var4_24])].l(), this.worldManager.npcList[EngineUtils.b(var6_58[var4_24])].m() - 40);
+                            var8_73[var4_24].a(this.worldManager.npcList[EngineUtils.b(var6_58[var4_24])]);
                         }
                         game.OverworldScreen.C.addElement(var8_73[var4_24]);
                     }
                     break;
                 }
                 case 74: {
-                    if (((int[])this.x.K.elementAt(0))[1] > 0) {
+                    if (((int[])this.player.K.elementAt(0))[1] > 0) {
                         var2_2.b((byte)(var3_3.b()[0] - 2));
                         break;
                     }
@@ -1447,17 +1447,17 @@ lbl818:
                     break;
                 }
                 case 76: {
-                    this.b[game.WorldManager.l[this.w.f] + this.w.g][var2_2.b()] = 3;
+                    this.b[game.WorldManager.l[this.worldManager.f] + this.worldManager.g][var2_2.b()] = 3;
                     game.WorldManager.getInstance().f = var3_3.b()[0];
                     game.WorldManager.getInstance().g = var3_3.b()[1];
                     game.WorldManager.getInstance().j = -1;
-                    this.w.a((byte)29);
+                    this.worldManager.a((byte)29);
                     break;
                 }
                 case 77: {
                     this.b[game.WorldManager.a((int)var3_3.b()[0], (int)var3_3.b()[1])][var3_3.b()[2]] = 4;
-                    if (var3_3.b()[0] != this.w.f || var3_3.b()[1] != this.w.g) break;
-                    this.a[var3_3.b()[2]].a((byte)4);
+                    if (var3_3.b()[0] != this.worldManager.f || var3_3.b()[1] != this.worldManager.g) break;
+                    this.scriptSequences[var3_3.b()[2]].a((byte)4);
                     break;
                 }
                 case 80: {
@@ -1469,26 +1469,26 @@ lbl818:
                             game.GameStateController.getInstance().c = game.GameStateController.getInstance().b;
                             var7_66 = game.GameStateController.getInstance().c - game.GameStateController.getInstance().a;
                             if (EngineUtils.randomInt(var7_66)[2] <= 70L) {
-                                var4_25 = this.x.y();
+                                var4_25 = this.player.getActivePetIndex();
                                 if (var4_25 == 0) {
-                                    this.y.S.b("Đạt được #2Lục hành điểu");
-                                    this.x.a(54, 5, (byte)2, (short)-1, new int[]{1, 30, 45});
+                                    this.parentScreen.S.b("Đạt được #2Lục hành điểu");
+                                    this.player.a(54, 5, (byte)2, (short)-1, new int[]{1, 30, 45});
                                 } else if (var4_25 == 1) {
-                                    this.y.S.b("Đạt được #2Lục hành điểu#0 ba lô đã đủ, đã để vào ngân hàng");
+                                    this.parentScreen.S.b("Đạt được #2Lục hành điểu#0 ba lô đã đủ, đã để vào ngân hàng");
                                     var4_25 = EngineUtils.b(GameDatabase.gameDatabase[0][54][3], (int)GameDatabase.gameDatabase[0][54][3]);
-                                    this.x.a(54, 5, (byte)2, (byte)var4_25, 0, 0, new int[]{1, 30, 45});
+                                    this.player.a(54, 5, (byte)2, (byte)var4_25, 0, 0, new int[]{1, 30, 45});
                                 } else {
-                                    this.y.S.b("Không có không gian, đã phóng sinh");
+                                    this.parentScreen.S.b("Không có không gian, đã phóng sinh");
                                 }
                             } else if (EngineUtils.randomInt(var7_66)[2] <= 80L) {
-                                this.x.s(1000);
-                                this.y.S.b("Thưởng 1000 kim");
+                                this.player.s(1000);
+                                this.parentScreen.S.b("Thưởng 1000 kim");
                             } else if (EngineUtils.randomInt(var7_66)[2] <= 130L) {
-                                this.x.s(750);
-                                this.y.S.b("Thưởng 750 kim");
+                                this.player.s(750);
+                                this.parentScreen.S.b("Thưởng 750 kim");
                             } else if (EngineUtils.randomInt(var7_66)[2] <= 200L) {
-                                this.x.s(600);
-                                this.y.S.b("Thưởng 600 kim");
+                                this.player.s(600);
+                                this.parentScreen.S.b("Thưởng 600 kim");
                             }
                             game.GameStateController.getInstance().b = 0L;
                             game.GameStateController.getInstance().a = 0L;
@@ -1507,7 +1507,7 @@ lbl818:
                         game.GameStateController.getInstance().b = game.GameStateController.getInstance().a = System.currentTimeMillis();
                         game.GameStateController.getInstance().c = 0L;
                     } else {
-                        if (var3_3.b()[0] != 1 || !this.y.S.ax()) break;
+                        if (var3_3.b()[0] != 1 || !this.parentScreen.S.ax()) break;
                         if (this.p == 0) {
                             this.aj = this.j();
                         }
@@ -1517,7 +1517,7 @@ lbl818:
                 }
                 case 81: {
                     if (var3_3.b()[0] == 0) {
-                        if (this.x.t(var3_3.b()[1])) {
+                        if (this.player.t(var3_3.b()[1])) {
                             var2_2.b((byte)(var3_3.b()[2] - 2));
                             break;
                         }
@@ -1525,7 +1525,7 @@ lbl818:
                         break;
                     }
                     if (var3_3.b()[0] != 1) break;
-                    if (this.x.v(var3_3.b()[1])) {
+                    if (this.player.v(var3_3.b()[1])) {
                         var2_2.b((byte)(var3_3.b()[2] - 2));
                         break;
                     }
@@ -1536,14 +1536,14 @@ lbl818:
                     var7_67 = var3_3.b()[0];
                     var8_74 = EngineUtils.e(var3_3.c()[0]);
                     for (var4_26 = 0; var4_26 < var7_67; ++var4_26) {
-                        this.w.d[var8_74[var4_26]].r();
-                        this.w.d[var8_74[var4_26]].s();
+                        this.worldManager.npcList[var8_74[var4_26]].r();
+                        this.worldManager.npcList[var8_74[var4_26]].s();
                     }
                     break;
                 }
                 case 83: {
                     if (var2_2.a() != 5) {
-                        this.y.a((byte)30);
+                        this.parentScreen.a((byte)30);
                         var2_2.a((byte)5);
                         break;
                     }
@@ -1556,26 +1556,26 @@ lbl818:
                         if (var3_3.b()[2] == 1) {
                             var4_27 = new int[]{this.p, 5 - this.p};
                         } else if (var3_3.b()[2] == 0) {
-                            var4_27 = new int[]{this.x.I, this.x.R.length - this.x.I};
+                            var4_27 = new int[]{this.player.I, this.player.R.length - this.player.I};
                         }
                         var4_27 = game.OverworldScreen.a(var3_3.c()[1], var4_27);
-                        this.w.S.a(var3_3.c()[0], (String)var4_27, (int)var3_3.b()[1]);
+                        this.worldManager.S.a(var3_3.c()[0], (String)var4_27, (int)var3_3.b()[1]);
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.w.S.c(var3_3.b()[1], -1) || !this.y.k(196640)) break;
+                    if (!this.worldManager.S.c(var3_3.b()[1], -1) || !this.parentScreen.k(196640)) break;
                     game.WorldManager.getInstance().e();
                     if (EngineUtils.b < EngineUtils.b()) {
                         EngineUtils.c();
-                        this.w.S.b(EngineUtils.b);
+                        this.worldManager.S.b(EngineUtils.b);
                         break;
                     }
-                    if (game.WorldManager.u != -1 && this.w.d[game.WorldManager.u].a.a <= 85 && this.w.d[game.WorldManager.u].u() == 0) {
-                        game.WorldManager.getInstance().a(game.WorldManager.getInstance().d[game.WorldManager.u].i, game.WorldManager.getInstance().d[game.WorldManager.u].j - 40, game.WorldManager.getInstance().d[game.WorldManager.u]);
+                    if (game.WorldManager.u != -1 && this.worldManager.npcList[game.WorldManager.u].a.a <= 85 && this.worldManager.npcList[game.WorldManager.u].u() == 0) {
+                        game.WorldManager.getInstance().a(game.WorldManager.getInstance().npcList[game.WorldManager.u].i, game.WorldManager.getInstance().npcList[game.WorldManager.u].j - 40, game.WorldManager.getInstance().npcList[game.WorldManager.u]);
                     }
                     game.OverworldScreen.g = false;
                     game.OverworldScreen.h = false;
-                    this.w.S.aC();
+                    this.worldManager.S.aC();
                     var2_2.a((byte)1);
                     break;
                 }
@@ -1590,18 +1590,18 @@ lbl818:
                 case 87: {
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[0] == 0) {
-                            this.x.a(var3_3.b()[7], var3_3.b()[1], var3_3.b()[2], (byte)var3_3.b()[4], (byte)var3_3.b()[3], new int[]{1, var3_3.b()[5], var3_3.b()[6]});
+                            this.player.a(var3_3.b()[7], var3_3.b()[1], var3_3.b()[2], (byte)var3_3.b()[4], (byte)var3_3.b()[3], new int[]{1, var3_3.b()[5], var3_3.b()[6]});
                         } else if (var3_3.b()[0] == 1) {
-                            this.x.n(var3_3.b()[1]);
+                            this.player.n(var3_3.b()[1]);
                         }
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.y.S.ax()) break;
+                    if (!this.parentScreen.S.ax()) break;
                     ** GOTO lbl1044
                 }
                 case 88: {
-                    if (this.x.y() == 2) {
+                    if (this.player.getActivePetIndex() == 2) {
                         var2_2.b((byte)(var3_3.b()[0] - 2));
                     } else {
                         var2_2.b((byte)(var3_3.b()[1] - 2));
@@ -1637,7 +1637,7 @@ lbl1044:
     }
 
     public final boolean h() {
-        if (this.a == null) {
+        if (this.scriptSequences == null) {
             return false;
         }
         for (int i = 0; i < this.z.size(); ++i) {
@@ -1660,7 +1660,7 @@ lbl1044:
         }
         switch (ad2.b()[8]) {
             case 0: {
-                if (!this.x.T[ad2.b()[9]]) return bl;
+                if (!this.player.T[ad2.b()[9]]) return bl;
                 break;
             }
             case 1: {
@@ -1668,26 +1668,26 @@ lbl1044:
             }
             case 2: {
                 int n2;
-                if (this.x.O.size() + this.x.A < ad2.b()[9]) return bl;
-                for (n2 = 0; n2 < this.x.A; ++n2) {
-                    if (this.x.z[n2].s() != ad2.b()[10]) continue;
+                if (this.player.O.size() + this.player.A < ad2.b()[9]) return bl;
+                for (n2 = 0; n2 < this.player.A; ++n2) {
+                    if (this.player.z[n2].s() != ad2.b()[10]) continue;
                     bl = true;
                     break;
                 }
                 if (bl) return bl;
                 n2 = 0;
-                while (n2 < this.x.O.size()) {
-                    if (((int[])this.x.O.elementAt(n2))[1] == ad2.b()[10]) return true;
+                while (n2 < this.player.O.size()) {
+                    if (((int[])this.player.O.elementAt(n2))[1] == ad2.b()[10]) return true;
                     ++n2;
                 }
                 return bl;
             }
             case 3: {
-                if (this.x.F < ad2.b()[9]) return bl;
+                if (this.player.F < ad2.b()[9]) return bl;
                 break;
             }
             case 4: {
-                if (this.x.a((byte)ad2.b()[9], (int)ad2.b()[10]) != 2) return bl;
+                if (this.player.a((byte)ad2.b()[9], (int)ad2.b()[10]) != 2) return bl;
                 break;
             }
             case 5: {
@@ -1706,12 +1706,12 @@ lbl1044:
         if (((ScriptCommand)object).b()[7] == -1 || ((ScriptCommand)object).b()[7] != -1 && this.b[game.WorldManager.a((int)((ScriptCommand)object).b()[5], (int)((ScriptCommand)object).b()[6])] != null && this.b[game.WorldManager.a((int)((ScriptCommand)object).b()[5], (int)((ScriptCommand)object).b()[6])][((ScriptCommand)object).b()[7]] == 3) {
             switch (((ScriptCommand)object).b()[8]) {
                 case 0: {
-                    if (this.x.a((byte)((ScriptCommand)object).b()[9], (int)((ScriptCommand)object).b()[10]) != 2) break;
+                    if (this.player.a((byte)((ScriptCommand)object).b()[9], (int)((ScriptCommand)object).b()[10]) != 2) break;
                     bl = true;
                     break;
                 }
                 case 1: {
-                    if (!this.x.T[((ScriptCommand)object).b()[9]]) break;
+                    if (!this.player.T[((ScriptCommand)object).b()[9]]) break;
                     bl = true;
                     break;
                 }
@@ -1722,21 +1722,21 @@ lbl1044:
                     break;
                 }
                 case 3: {
-                    if (!this.x.b((int)((ScriptCommand)object).b()[9], (int)((ScriptCommand)object).b()[10], (byte)0)) break;
+                    if (!this.player.b((int)((ScriptCommand)object).b()[9], (int)((ScriptCommand)object).b()[10], (byte)0)) break;
                     bl = true;
                     break;
                 }
                 case 5: {
-                    if (this.x.F < ((ScriptCommand)object).b()[9]) break;
+                    if (this.player.F < ((ScriptCommand)object).b()[9]) break;
                     bl = true;
                     break;
                 }
                 case 6: {
                     int n2;
                     object = new byte[]{0, 1, 2, 3};
-                    block8: for (n2 = 0; n2 < this.x.A; ++n2) {
+                    block8: for (n2 = 0; n2 < this.player.A; ++n2) {
                         for (int i = 0; i < ((Object)object).length; ++i) {
-                            if (object[i] == -1 || object[i] != GameDatabase.spriteTable((byte)0, (short)this.x.z[n2].q(), (byte)1)) continue;
+                            if (object[i] == -1 || object[i] != GameDatabase.spriteTable((byte)0, (short)this.player.z[n2].q(), (byte)1)) continue;
                             object[i] = -1;
                             continue block8;
                         }
@@ -1762,14 +1762,14 @@ lbl1044:
         d.removeAllElements();
         Vector<String> vector = new Vector<String>();
         for (n2 = 0; n2 < al.length; ++n2) {
-            if (game.WorldManager.a((int)al[n2][0], (int)al[n2][1]) != game.WorldManager.a(game.WorldManager.getInstance().f, game.WorldManager.getInstance().g) || this.a[al[n2][2]].a() != 0 && this.a[al[n2][2]].a() != 4 || vector.contains("" + (ad2 = this.a[al[n2][2]].d()).b()[4])) continue;
+            if (game.WorldManager.a((int)al[n2][0], (int)al[n2][1]) != game.WorldManager.a(game.WorldManager.getInstance().f, game.WorldManager.getInstance().g) || this.scriptSequences[al[n2][2]].a() != 0 && this.scriptSequences[al[n2][2]].a() != 4 || vector.contains("" + (ad2 = this.scriptSequences[al[n2][2]].d()).b()[4])) continue;
             if (this.b(ad2)) {
                 f2 = new WorldEntity();
                 f2.a(259, false);
                 f2.a((byte)1, (byte)-1, true);
-                f2.b(this.w.d[ad2.b()[4]].i, this.w.d[ad2.b()[4]].j - 40);
-                this.w.d[ad2.b()[4]].t();
-                a2 = this.w.d[ad2.b()[4]];
+                f2.b(this.worldManager.npcList[ad2.b()[4]].i, this.worldManager.npcList[ad2.b()[4]].j - 40);
+                this.worldManager.npcList[ad2.b()[4]].t();
+                a2 = this.worldManager.npcList[ad2.b()[4]];
                 f2.p = a2;
                 f2.c();
                 d.addElement(f2);
@@ -1781,22 +1781,22 @@ lbl1044:
             WorldEntity f3 = new WorldEntity();
             f3.a(259, false);
             f3.a((byte)15, (byte)-1, true);
-            f3.b(this.w.d[ad2.b()[4]].i, this.w.d[ad2.b()[4]].j - 40);
-            this.w.d[ad2.b()[4]].t();
-            a2 = this.w.d[ad2.b()[4]];
+            f3.b(this.worldManager.npcList[ad2.b()[4]].i, this.worldManager.npcList[ad2.b()[4]].j - 40);
+            this.worldManager.npcList[ad2.b()[4]].t();
+            a2 = this.worldManager.npcList[ad2.b()[4]];
             f3.p = a2;
             f3.c();
             d.addElement(f3);
             vector.addElement("" + ad2.b()[4]);
         }
         for (n2 = 0; n2 < ak.length; ++n2) {
-            if (game.WorldManager.a((int)ak[n2][0], (int)ak[n2][1]) != game.WorldManager.a(game.WorldManager.getInstance().f, game.WorldManager.getInstance().g) || this.a[ak[n2][2]].a() != 0 && this.a[ak[n2][2]].a() != 4 || vector.contains("" + (ad2 = this.a[ak[n2][2]].d()).b()[4]) || !this.a(ad2)) continue;
+            if (game.WorldManager.a((int)ak[n2][0], (int)ak[n2][1]) != game.WorldManager.a(game.WorldManager.getInstance().f, game.WorldManager.getInstance().g) || this.scriptSequences[ak[n2][2]].a() != 0 && this.scriptSequences[ak[n2][2]].a() != 4 || vector.contains("" + (ad2 = this.scriptSequences[ak[n2][2]].d()).b()[4]) || !this.a(ad2)) continue;
             f2 = new WorldEntity();
             f2.a(259, false);
             f2.a((byte)7, (byte)-1, true);
-            f2.b(this.w.d[ad2.b()[4]].i, this.w.d[ad2.b()[4]].j - 40);
-            this.w.d[ad2.b()[4]].t();
-            a2 = this.w.d[ad2.b()[4]];
+            f2.b(this.worldManager.npcList[ad2.b()[4]].i, this.worldManager.npcList[ad2.b()[4]].j - 40);
+            this.worldManager.npcList[ad2.b()[4]].t();
+            a2 = this.worldManager.npcList[ad2.b()[4]];
             f2.p = a2;
             f2.c();
             d.addElement(f2);
