@@ -5,6 +5,9 @@ package lavax.wireless.messaging;
 
 import javax.wireless.messaging.Message;
 
+/**
+ * MessageConnection - Simulated J2ME wireless messaging interface for offline execution.
+ */
 public class MessageConnection {
     public static void send(Message message) throws Exception {
         Thread.sleep(800L);
