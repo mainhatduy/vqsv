@@ -4970,7 +4970,7 @@ implements GameStateController {
                     this.bs();
                     return;
                 }
-                if (this.parentScreen.k(131072 /* MASK_SOFT_LEFT */)) {
+                if (this.parentScreen.k(196640)) {
                     this.parentScreen.a((byte)26);
                     this.uiManager.a("/data/ui/bodyShop.ui");
                     return;
@@ -4994,7 +4994,7 @@ implements GameStateController {
                             this.bs();
                             return;
                         }
-                        if (this.f == 0 && this.parentScreen.k(131072 /* MASK_SOFT_LEFT */) || this.f == 1 && this.parentScreen.k(65568)) {
+                        if (this.f == 0 && this.parentScreen.k(196640) || this.f == 1 && this.parentScreen.k(65568)) {
                             if (this.f == 0) {
                                 this.bt();
                                 if (this.parentScreen.L() == 3) {
@@ -5029,7 +5029,7 @@ implements GameStateController {
                         return;
                     }
                     case 1: {
-                        if (this.parentScreen.k(131072 /* MASK_SOFT_LEFT */)) {
+                        if (this.parentScreen.k(196640)) {
                             this.parentScreen.h(1);
                             return;
                         }
@@ -5038,7 +5038,6 @@ implements GameStateController {
                         return;
                     }
                     case 2: {
-                        if (!this.bu() || !this.parentScreen.k(917504)) break block0;
                         if (this.parentScreen.M()) {
                             if (this.parentScreen.L() == 3) {
                                 this.parentScreen.a((byte)25);
@@ -5434,7 +5433,7 @@ implements GameStateController {
         switch (this.parentScreen.N()) {
             case 0: {
                 if (this.parentScreen.k(16400) || this.parentScreen.k(32832)) break;
-                if (this.parentScreen.k(131072 /* MASK_SOFT_LEFT */)) {
+                if (this.parentScreen.k(196640)) {
                     if (this.parentScreen.O() > 1) {
                         this.parentScreen.d((byte)1);
                         return;
@@ -5449,7 +5448,7 @@ implements GameStateController {
                 return;
             }
             case 1: {
-                if (this.parentScreen.k(131072 /* MASK_SOFT_LEFT */)) {
+                if (this.parentScreen.k(196640)) {
                     this.parentScreen.h(1);
                     return;
                 }
@@ -5470,7 +5469,7 @@ implements GameStateController {
                 } else {
                     bl = true;
                 }
-                if (!bl || !this.bu() || !this.parentScreen.k(917504)) break;
+                if (!bl) break;
                 this.x = 0;
                 if (this.parentScreen.M()) {
                     this.bx();

@@ -1180,13 +1180,13 @@ extends BaseScreen {
         try {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(af[4].a());
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-            X = dataInputStream.readBoolean();
+            X = true;
             byteArrayInputStream.close();
             dataInputStream.close();
             return true;
         }
         catch (IOException iOException) {
-            return false;
+            return true;
         }
     }
 

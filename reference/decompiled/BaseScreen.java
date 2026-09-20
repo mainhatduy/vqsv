@@ -451,16 +451,6 @@ TimerCallback {
                     break;
                 }
                 case 2: {
-                    if (this.M()) {
-                        if (this.o == 0) {
-                            this.S.d(BaseScreen.f(515) + BaseScreen.f(633));
-                            break;
-                        }
-                        this.S.d(BaseScreen.f(515));
-                        break;
-                    }
-                    this.S.d(BaseScreen.f(516));
-                    System.out.println(" " + BaseScreen.f(516));
                     break;
                 }
                 case 3: {
@@ -499,11 +489,10 @@ TimerCallback {
         T = true;
         if (n2 == 1) {
             this.d((byte)4);
-            if (!this.a()) {
-                this.d((byte)3);
-                return;
-            }
-        } else if (n2 == 2) {
+            this.b(true);
+            return;
+        }
+        if (n2 == 2) {
             this.d((byte)5);
         }
     }
