@@ -386,7 +386,7 @@ lbl109:
         this.ac = null;
     }
 
-    public final void a(byte val) {
+    public final void setScreenMode(byte mode) {
     }
 
     private byte a(int n2) {
@@ -435,7 +435,7 @@ lbl109:
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!game.TileMapRenderer.a || !this.parentScreen.k(1)) break;
+                    if (!game.TileMapRenderer.a || !this.parentScreen.isKeyPressed(1)) break;
                     this.mapRenderer.b();
                     if (game.TileMapRenderer.b) break;
                     ScreenView.getInstance().a = -1;
@@ -475,7 +475,7 @@ lbl109:
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.worldManager.S.c(var3_3.b()[1], -1) || !this.parentScreen.k(196640)) break;
+                    if (!this.worldManager.S.c(var3_3.b()[1], -1) || !this.parentScreen.isKeyPressed(196640)) break;
                     game.WorldManager.getInstance().e();
                     if (EngineUtils.b < EngineUtils.b()) {
                         EngineUtils.c();
@@ -954,18 +954,18 @@ lbl109:
                     if (var2_2.a() != 5) {
                         if (var3_3.b()[0] == 0) {
                             if (var3_3.b()[1] == 0) {
-                                this.player.s(var3_3.b()[2]);
+                                this.player.addGold(var3_3.b()[2]);
                                 this.parentScreen.S.b("Đạt được: " + var3_3.b()[2] + " kim tiền");
                             } else if (var3_3.b()[1] == 1) {
-                                this.player.u(var3_3.b()[2]);
+                                this.player.addArenaPoints(var3_3.b()[2]);
                                 this.parentScreen.S.b("Đạt được: " + var3_3.b()[2] + "Huy hiệu");
                             }
                         } else if (var3_3.b()[0] == 1) {
                             if (var3_3.b()[1] == 0) {
-                                this.player.s(-var3_3.b()[2]);
+                                this.player.addGold(-var3_3.b()[2]);
                                 this.parentScreen.S.b("Mất: " + var3_3.b()[2] + " kim tiền");
                             } else if (var3_3.b()[1] == 1) {
-                                this.player.u(-var3_3.b()[2]);
+                                this.player.addArenaPoints(-var3_3.b()[2]);
                                 this.parentScreen.S.b("Mất: " + var3_3.b()[2] + " huy hiệu");
                             }
                         }
@@ -1069,8 +1069,8 @@ lbl109:
                     break;
                 }
                 case 39: {
-                    for (var6_49 = 0; var6_49 < this.player.A; ++var6_49) {
-                        this.player.z[var6_49].I();
+                    for (var6_49 = 0; var6_49 < this.player.partyPetCount; ++var6_49) {
+                        this.player.petParty[var6_49].I();
                     }
                     break;
                 }
@@ -1109,13 +1109,13 @@ lbl109:
                         break;
                     }
                     if (this.parentScreen.S.f == 0) {
-                        if (this.parentScreen.k(196640)) {
+                        if (this.parentScreen.isKeyPressed(196640)) {
                             this.parentScreen.S.f = 1;
                             this.parentScreen.S.a("Đang lưu...");
                             this.parentScreen.S.J();
                             break;
                         }
-                        if (!this.parentScreen.k(262144 /* MASK_SOFT_RIGHT */)) break;
+                        if (!this.parentScreen.isKeyPressed(262144 /* MASK_SOFT_RIGHT */)) break;
                         var2_2.a((byte)1);
                         this.parentScreen.S.I();
                         this.parentScreen.S.f = 0;
@@ -1150,7 +1150,7 @@ lbl109:
                         break;
                     }
                     if (!this.mapRenderer.e()) ** GOTO lbl663
-                    if (!game.TileMapRenderer.a || !this.parentScreen.k(1)) break;
+                    if (!game.TileMapRenderer.a || !this.parentScreen.isKeyPressed(1)) break;
                     this.mapRenderer.b();
                     if (game.TileMapRenderer.b) break;
                     ScreenView.getInstance().a = -1;
@@ -1197,7 +1197,7 @@ lbl663:
                         this.player.u();
                         break;
                     }
-                    this.player.t();
+                    this.player.hasGold();
                     break;
                 }
                 case 51: {
@@ -1347,7 +1347,7 @@ lbl818:
                     if (var3_3.b()[0] == 0) {
                         this.player.h(var3_3.b()[1]);
                     } else {
-                        this.player.s();
+                        this.player.dismount();
                     }
                     this.k = var3_3.b()[2] != 0;
                     break;
@@ -1367,7 +1367,7 @@ lbl818:
                 }
                 case 65: {
                     if (var2_2.a() != 5 && !game.OverworldScreen.X) {
-                        this.parentScreen.a((byte)100);
+                        this.parentScreen.setScreenMode((byte)100);
                         var2_2.a((byte)5);
                         break;
                     }
@@ -1481,13 +1481,13 @@ lbl818:
                                     this.parentScreen.S.b("Không có không gian, đã phóng sinh");
                                 }
                             } else if (EngineUtils.randomInt(var7_66)[2] <= 80L) {
-                                this.player.s(1000);
+                                this.player.addGold(1000);
                                 this.parentScreen.S.b("Thưởng 1000 kim");
                             } else if (EngineUtils.randomInt(var7_66)[2] <= 130L) {
-                                this.player.s(750);
+                                this.player.addGold(750);
                                 this.parentScreen.S.b("Thưởng 750 kim");
                             } else if (EngineUtils.randomInt(var7_66)[2] <= 200L) {
-                                this.player.s(600);
+                                this.player.addGold(600);
                                 this.parentScreen.S.b("Thưởng 600 kim");
                             }
                             game.GameStateController.getInstance().b = 0L;
@@ -1517,7 +1517,7 @@ lbl818:
                 }
                 case 81: {
                     if (var3_3.b()[0] == 0) {
-                        if (this.player.t(var3_3.b()[1])) {
+                        if (this.player.hasGold(var3_3.b()[1])) {
                             var2_2.b((byte)(var3_3.b()[2] - 2));
                             break;
                         }
@@ -1525,7 +1525,7 @@ lbl818:
                         break;
                     }
                     if (var3_3.b()[0] != 1) break;
-                    if (this.player.v(var3_3.b()[1])) {
+                    if (this.player.hasArenaPoints(var3_3.b()[1])) {
                         var2_2.b((byte)(var3_3.b()[2] - 2));
                         break;
                     }
@@ -1543,7 +1543,7 @@ lbl818:
                 }
                 case 83: {
                     if (var2_2.a() != 5) {
-                        this.parentScreen.a((byte)30);
+                        this.parentScreen.setScreenMode((byte)30);
                         var2_2.a((byte)5);
                         break;
                     }
@@ -1563,7 +1563,7 @@ lbl818:
                         var2_2.a((byte)5);
                         break;
                     }
-                    if (!this.worldManager.S.c(var3_3.b()[1], -1) || !this.parentScreen.k(196640)) break;
+                    if (!this.worldManager.S.c(var3_3.b()[1], -1) || !this.parentScreen.isKeyPressed(196640)) break;
                     game.WorldManager.getInstance().e();
                     if (EngineUtils.b < EngineUtils.b()) {
                         EngineUtils.c();
@@ -1668,9 +1668,9 @@ lbl1044:
             }
             case 2: {
                 int n2;
-                if (this.player.O.size() + this.player.A < ad2.b()[9]) return bl;
-                for (n2 = 0; n2 < this.player.A; ++n2) {
-                    if (this.player.z[n2].s() != ad2.b()[10]) continue;
+                if (this.player.O.size() + this.player.partyPetCount < ad2.b()[9]) return bl;
+                for (n2 = 0; n2 < this.player.partyPetCount; ++n2) {
+                    if (this.player.petParty[n2].getLevel() != ad2.b()[10]) continue;
                     bl = true;
                     break;
                 }
@@ -1734,9 +1734,9 @@ lbl1044:
                 case 6: {
                     int n2;
                     object = new byte[]{0, 1, 2, 3};
-                    block8: for (n2 = 0; n2 < this.player.A; ++n2) {
+                    block8: for (n2 = 0; n2 < this.player.partyPetCount; ++n2) {
                         for (int i = 0; i < ((Object)object).length; ++i) {
-                            if (object[i] == -1 || object[i] != GameDatabase.spriteTable((byte)0, (short)this.player.z[n2].q(), (byte)1)) continue;
+                            if (object[i] == -1 || object[i] != GameDatabase.spriteTable((byte)0, (short)this.player.petParty[n2].q(), (byte)1)) continue;
                             object[i] = -1;
                             continue block8;
                         }

@@ -693,7 +693,7 @@ extends BaseScreen {
         this.al[this.enemyPets.length].b(am[this.battleType][(n2 << 2) + 2], am[this.battleType][(n2 << 2) + 3]);
     }
 
-    public final void a(byte val) {
+    public final void setScreenMode(byte mode) {
         this.Q = this.battlePhase;
         this.battlePhase = val;
         switch (val) {
@@ -866,13 +866,13 @@ extends BaseScreen {
                 return;
             }
             case 16: {
-                this.S.c = 0;
+                this.S.selectedShopIndex = 0;
                 this.S.l = false;
                 this.S.W();
                 return;
             }
             case 5: {
-                this.S.c = 0;
+                this.S.selectedShopIndex = 0;
                 this.S.W();
                 return;
             }
@@ -892,7 +892,7 @@ extends BaseScreen {
                 if (U == 0 && V == 5) {
                     this.ak = false;
                 }
-                this.S.f = 0;
+                this.S.dialogSubState = 0;
                 return;
             }
             case 18: {
@@ -1583,7 +1583,7 @@ lbl465:
                 break;
             }
             case 17: {
-                if (this.S.f == 0) {
+                if (this.S.dialogSubState == 0) {
                     if (this.q == 0 && this.aj.b()) {
                         this.e((byte)1);
                     } else if (this.q == 1 && this.aj.b()) {
@@ -1599,15 +1599,15 @@ lbl465:
                     } else if (this.q == 3 && this.aj.b()) {
                         var1_7 = game.BattleScreen.p.y();
                         if (var1_7 == 0) {
-                            this.S.f = 1;
+                            this.S.dialogSubState = 1;
                             this.S.b("Bắt thành công #2" + BaseScreen.f(GameDatabase.gameDatabase[0][((Pet)this.activePlayerPet.p).q()][0]));
                             game.BattleScreen.p.a(((Pet)this.activePlayerPet.p).P());
                         } else if (var1_7 == 1) {
-                            this.S.f = 2;
+                            this.S.dialogSubState = 2;
                             this.S.b("Bắt thành công #2" + BaseScreen.f(GameDatabase.gameDatabase[0][((Pet)this.activePlayerPet.p).q()][0]));
                             game.BattleScreen.p.b(((Pet)this.activePlayerPet.p).P());
                         } else {
-                            this.S.f = 1;
+                            this.S.dialogSubState = 1;
                             this.S.b("Không còn không gian, sủng vật này đã phóng sinh");
                         }
                     } else if (this.q == 4 && this.aj.b() && !this.activeSkillEffect.e()) {
@@ -1617,7 +1617,7 @@ lbl465:
                         this.activePlayerPet.J = true;
                         if (this.ak) {
                             this.S.b("Ngân hàng và Ba lô đều đã đầy");
-                            this.S.f = 3;
+                            this.S.dialogSubState = 3;
                         } else {
                             this.i = (byte)(this.i + 1);
                             this.a((byte)1);
@@ -1627,18 +1627,18 @@ lbl465:
                     break;
                 }
                 if (this.S.ax()) {
-                    if (this.S.f == 3) {
-                        this.S.f = 0;
+                    if (this.S.dialogSubState == 3) {
+                        this.S.dialogSubState = 0;
                         this.activePlayerPet.J = true;
                         this.i = (byte)(this.i + 1);
                         this.a((byte)1);
-                    } else if (this.S.f == 2) {
+                    } else if (this.S.dialogSubState == 2) {
                         this.S.b("Sủng vật ba lô đã đủ, đã để vào ngân hàng");
-                        this.S.f = 4;
-                    } else if (this.S.f == 4 || this.S.f == 1) {
-                        this.S.f = 0;
+                        this.S.dialogSubState = 4;
+                    } else if (this.S.dialogSubState == 4 || this.S.dialogSubState == 1) {
+                        this.S.dialogSubState = 0;
                         game.WorldManager.getInstance().M.l = (byte)-1;
-                        this.l();
+                        this.isKeyHeld();
                         game.GameStateController.getInstance().a((byte)10);
                     }
                 }
@@ -1657,12 +1657,12 @@ lbl465:
                 break;
             }
             case 19: {
-                if (!this.k(786432)) break;
+                if (!this.isKeyPressed(786432)) break;
                 this.a((byte)18);
                 break;
             }
             case 6: {
-                if (this.k(4100)) {
+                if (this.isKeyPressed(4100)) {
                     if (this.battleType == 1) {
                         this.C = (byte)(this.C - 1);
                         if (this.C <= 0) {
@@ -1673,7 +1673,7 @@ lbl465:
                         this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
                         this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
-                } else if (this.k(8448)) {
+                } else if (this.isKeyPressed(8448)) {
                     if (this.battleType == 1) {
                         this.C = (byte)(this.C + 1);
                         if (this.C >= this.activePlayerPet.G.size() - 1) {
@@ -1684,7 +1684,7 @@ lbl465:
                         this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
                         this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
-                } else if (this.k(16400)) {
+                } else if (this.isKeyPressed(16400)) {
                     if (this.battleType == 1) {
                         this.C = (byte)(this.C - 1);
                         if (this.C <= 0) {
@@ -1695,7 +1695,7 @@ lbl465:
                         this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
                         this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
-                } else if (this.k(32832)) {
+                } else if (this.isKeyPressed(32832)) {
                     if (this.battleType == 1) {
                         this.C = (byte)(this.C + 1);
                         if (this.C >= this.activePlayerPet.G.size() - 1) {
@@ -1706,9 +1706,9 @@ lbl465:
                         this.S.b(this.activePlayerPet, (Pet)this.activePlayerPet.G.elementAt(this.C));
                         this.S.b((Pet)this.activePlayerPet.G.elementAt(this.C));
                     }
-                } else if (this.k(196640)) {
+                } else if (this.isKeyPressed(196640)) {
                     this.i();
-                } else if (this.k(786432)) {
+                } else if (this.isKeyPressed(786432)) {
                     this.a(Integer.parseInt((String)this.activePlayerPet.H.elementAt(this.C)), false);
                     this.a((byte)3);
                 }
@@ -1757,7 +1757,7 @@ lbl465:
             case 101: 
             case 102: 
             case 104: {
-                this.S.aM();
+                this.S.handleSmsTipInput();
             }
         }
         for (var1_8 = 0; var1_8 < this.enemyPets.length; ++var1_8) {
@@ -2618,7 +2618,7 @@ lbl465:
                     game.BattleScreen.c(1, 0);
                     this.S.a = 1;
                     this.S.ag();
-                    this.S.b = 0;
+                    this.S.selectedSubMenuIndex = 0;
                     V = (byte)(V + 1);
                     this.a((byte)21);
                     return;

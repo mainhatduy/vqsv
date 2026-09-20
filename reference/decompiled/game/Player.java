@@ -50,8 +50,8 @@ extends WorldEntity {
     public boolean[] T;
     public static boolean U;
     public Vector V;
-    private int primaryStepCounter;
-    private int secondaryStepCounter;
+    public int gold;
+    public int arenaPoints;
     public int[] W = new int[]{0, 16, 32, 48, 64, 76, 88};
     public int[] X = new int[]{16, 16, 16, 16, 12, 12, 12};
     private static byte[][] ah;
@@ -113,8 +113,8 @@ extends WorldEntity {
         for (n2 = 0; n2 < 4; ++n2) {
             this.P[n2] = 0;
         }
-        this.primaryStepCounter = 1000;
-        this.secondaryStepCounter = 0;
+        this.gold = 1000;
+        this.arenaPoints = 0;
         this.mountState = -1;
         this.y = false;
     }
@@ -593,7 +593,7 @@ extends WorldEntity {
         this.mountState = n2;
     }
 
-    public final void s() {
+    public final void dismount() {
         int n2;
         this.spriteRenderer.b();
         this.a(0, false);
@@ -1458,7 +1458,7 @@ extends WorldEntity {
         }
     }
 
-    public final boolean k(int n2) {
+    public final boolean hasBadge(int badgeId) {
         for (int i = 0; i < this.bagBadges.size(); ++i) {
             int[] intArray = (int[])this.bagBadges.elementAt(i);
             if (intArray[0] != n2 || intArray[1] != 1) continue;
@@ -1467,7 +1467,7 @@ extends WorldEntity {
         return false;
     }
 
-    public final boolean l(int n2) {
+    public final boolean consumeBall(int ballId) {
         for (int i = 0; i < this.bagBalls.size(); ++i) {
             int[] intArray = (int[])this.bagBalls.elementAt(i);
             if (intArray[0] != n2) continue;
@@ -1762,36 +1762,36 @@ extends WorldEntity {
         return this.badges <= 0;
     }
 
-    public final int getPrimaryStepCount() {
-        return this.primaryStepCounter;
+    public final int getGold() {
+        return this.gold;
     }
 
-    public final void addPrimarySteps(int delta) {
-        this.primaryStepCounter += delta;
+    public final void addGold(int delta) {
+        this.gold += delta;
     }
 
-    public final void resetPrimarySteps() {
-        this.primaryStepCounter = 0;
+    public final void resetGold() {
+        this.gold = 0;
     }
 
-    public final boolean hasExceededPrimarySteps(int threshold) {
-        return this.primaryStepCounter >= threshold;
+    public final boolean hasGold(int threshold) {
+        return this.gold >= threshold;
     }
 
-    public final int getSecondaryStepCount() {
-        return this.secondaryStepCounter;
+    public final int getArenaPoints() {
+        return this.arenaPoints;
     }
 
-    public final void addSecondarySteps(int delta) {
-        this.secondaryStepCounter += delta;
+    public final void addArenaPoints(int delta) {
+        this.arenaPoints += delta;
     }
 
-    public final void resetSecondarySteps() {
-        this.secondaryStepCounter = 0;
+    public final void resetArenaPoints() {
+        this.arenaPoints = 0;
     }
 
-    public final boolean hasExceededSecondarySteps(int threshold) {
-        return this.secondaryStepCounter >= threshold;
+    public final boolean hasArenaPoints(int threshold) {
+        return this.arenaPoints >= threshold;
     }
 
     public final boolean b(int n2, int n3, int n4) {

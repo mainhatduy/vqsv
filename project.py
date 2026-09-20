@@ -69,6 +69,11 @@ def run():
             shutil.copyfile(shared, config)
         else:
             config.write_text(''.join(f'input_Num{n}:{48+n}\n' for n in range(10)))
+    root_speed = ROOT / 'speed.conf'
+    runtime_speed = runtime / 'speed.conf'
+    if root_speed.exists():
+        if not runtime_speed.exists() or root_speed.stat().st_mtime > runtime_speed.stat().st_mtime:
+            shutil.copyfile(root_speed, runtime_speed)
     print('Development saves are kept separately in runtime/.', flush=True)
     os.chdir(runtime)
     os.execvp('java', ['java', '-Dfile.encoding=ISO_8859_1', '-jar', str(EMULATOR), OUTPUT.as_uri(), '0', '240', '320', '2'])

@@ -219,17 +219,17 @@ extends BaseScreen {
                 break;
             }
             case 2: {
-                if (!this.k(262144 /* MASK_SOFT_RIGHT */)) break;
-                this.k();
+                if (!this.isKeyPressed(262144 /* MASK_SOFT_RIGHT */)) break;
+                this.isKeyPressed();
                 break;
             }
             case 4: {
-                if (this.k(131072 /* MASK_SOFT_LEFT */)) {
+                if (this.isKeyPressed(131072 /* MASK_SOFT_LEFT */)) {
                     this.previousState();
                     break;
                 }
-                if (!this.k(262144 /* MASK_SOFT_RIGHT */)) break;
-                this.k();
+                if (!this.isKeyPressed(262144 /* MASK_SOFT_RIGHT */)) break;
+                this.isKeyPressed();
                 break;
             }
             case 16: {
@@ -249,13 +249,13 @@ extends BaseScreen {
                 break;
             }
             case 6: {
-                if (this.k(131072 /* MASK_SOFT_LEFT */)) {
+                if (this.isKeyPressed(131072 /* MASK_SOFT_LEFT */)) {
                     this.g = (byte)2;
                     this.a(v);
                     this.a((byte)7);
                     break;
                 }
-                if (!this.k(262144 /* MASK_SOFT_RIGHT */)) break;
+                if (!this.isKeyPressed(262144 /* MASK_SOFT_RIGHT */)) break;
                 this.g = 0;
                 this.a((byte)7);
                 break;

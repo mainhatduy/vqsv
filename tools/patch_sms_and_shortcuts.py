@@ -47,6 +47,18 @@ def patch_classes():
         an_data[i] = 0x00  # nop out the text display logic
     print("  [OK] Patched an.class: skipped 'Tin nhắn gửi đi thành công' popup display.")
 
+    # In an.class: Make field 'c' (frameDelay) public (ACC_PUBLIC | ACC_STATIC = 0x0009)
+    assert an_data[4720:4722] == bytes([0x00, 0x0a]), "Mismatch at an.class field c access flags"
+    an_data[4720:4722] = bytes([0x00, 0x09])
+    print("  [OK] Patched an.class: field 'c' (frameDelay) made public static.")
+
+    # In an.class: Default an.A() resetFrameDelay to 33ms (2x speed) instead of 66ms
+    p_reset_fps = bytes([0x10, 0x42, 0xb3, 0x00, 0x44, 0xb1])
+    idx_rf = an_data.find(p_reset_fps)
+    assert idx_rf != -1, "Could not find resetFrameDelay pattern in an.class"
+    an_data[idx_rf + 1] = 0x21  # bipush 33 (2x speed: 30 FPS)
+    print("  [OK] Patched an.class: A() (resetFrameDelay) defaults to 33ms (~30 FPS / 2x speed).")
+
     # -------------------------------------------------------------
     # 2. Patch game/k.class (WorldManager): Force BaseScreen.X = true
     # -------------------------------------------------------------

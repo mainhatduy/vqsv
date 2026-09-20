@@ -14,7 +14,7 @@ public final class UIManager {
     private Hashtable d = new Hashtable();
     private Vector e = new Vector();
     private Vector f = new Vector();
-    public TextRenderer a;
+    public TextRenderer activeView;
     public TextPainter b = new TextPainter();
 
     private UIManager() {
@@ -37,7 +37,7 @@ public final class UIManager {
             ab2.d.clear();
             ab2.e.removeAllElements();
         }
-        this.a = null;
+        this.activeView = null;
     }
 
     public final void a(Graphics g) {
@@ -50,12 +50,12 @@ public final class UIManager {
     }
 
     public final void c() {
-        if (this.a != null) {
-            this.a.b();
+        if (this.activeView != null) {
+            this.activeView.navigateSelection();
         }
     }
 
-    public final void a(String text, int n2, ScriptEventListener i2) {
+    public final void openUI(String path, int flag, ScriptEventListener listener) {
         TextRenderer ao2 = (TextRenderer)this.d.get(text);
         if (ao2 != null) {
             if (!text.equals("/data/ui/dialog.ui")) {
@@ -68,7 +68,7 @@ public final class UIManager {
             }
             if (text.equals("/data/ui/dialog.ui")) {
                 this.e.addElement(ao2);
-                this.a = ao2;
+                this.activeView = ao2;
                 this.f.addElement(text);
             }
         }
@@ -78,16 +78,16 @@ public final class UIManager {
             ao2.a(text, n2);
             this.d.put(text, ao2);
             this.e.addElement(ao2);
-            this.a = ao2;
+            this.activeView = ao2;
             this.f.addElement(text);
         }
     }
 
-    public final void a(String text) {
+    public final void closeUI(String path) {
         TextRenderer ao2 = (TextRenderer)this.d.get(text);
         if (ao2 != null) {
-            if (this.a.equals(ao2)) {
-                this.a = null;
+            if (this.activeView.equals(ao2)) {
+                this.activeView = null;
             }
             if (!text.equals("/data/ui/dialog.ui")) {
                 this.d.remove(text);
@@ -99,15 +99,15 @@ public final class UIManager {
             }
         }
         if (this.d.size() > 0 && this.e.size() > 0) {
-            this.a = (TextRenderer)this.e.lastElement();
+            this.activeView = (TextRenderer)this.e.lastElement();
         }
     }
 
-    public final boolean b(String text) {
+    public final boolean isUILoaded(String path) {
         return this.f.size() > 0 && this.f.lastElement().equals(text);
     }
 
-    public final boolean c(String text) {
+    public final boolean isUIOpen(String path) {
         return this.f.size() > 0 && this.f.contains(text);
     }
 
@@ -120,7 +120,7 @@ public final class UIManager {
     }
 
     public final boolean d() {
-        return ((ItemListWidget)this.a.a((int)1)).h().m.a().e() && ((ItemListWidget)this.a.a((int)1)).h().m.a().f();
+        return ((ItemListWidget)this.activeView.a((int)1)).h().m.a().e() && ((ItemListWidget)this.activeView.a((int)1)).h().m.a().f();
     }
 }
 

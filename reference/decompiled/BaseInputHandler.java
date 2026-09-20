@@ -124,11 +124,11 @@ public abstract class BaseInputHandler {
         return 0;
     }
 
-    public boolean k(int n2) {
+    public boolean isKeyPressed(int keyCodeMask) {
         return (this.f & n2) != 0;
     }
 
-    public boolean Q() {
+    public boolean isLeftSoftAreaTouched() {
         if (this.pointerX < 40 || this.pointerX > 85 || this.pointerY < 228 || this.pointerY > 248) {
             return false;
         }
@@ -137,11 +137,11 @@ public abstract class BaseInputHandler {
         return true;
     }
 
-    public boolean R() {
+    public boolean isRightSoftAreaTouched() {
         return (this.g & 0xF154) != 0;
     }
 
-    public boolean l(int n2) {
+    public boolean isKeyHeld(int keyCodeMask) {
         return (this.e & n2) != 0;
     }
 

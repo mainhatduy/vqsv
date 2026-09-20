@@ -78,10 +78,10 @@ extends BaseScreen {
     private short[] at;
     private static String[] au;
     public static boolean D;
-    public static Vector E;
-    public static Vector F;
-    public static byte G;
-    public static Vector H;
+    public static Vector eligibleLevelUpPets;
+    public static Vector levelUpPetIndices;
+    public static byte levelUpStatus;
+    public static Vector levelUpPets;
     public static byte I;
     public static boolean J;
     protected static boolean K;
@@ -227,7 +227,7 @@ extends BaseScreen {
         }
         this.player.Q = this.aw[l[this.sceneId] + this.roomId];
         if (this.player.t >= 0 && !this.player.g(this.player.t)) {
-            this.player.s();
+            this.player.dismount();
         }
         this.aA = this.player.Q[4];
         this.aB = (byte)-1;
@@ -609,7 +609,7 @@ extends BaseScreen {
                     this.av[i3] = ae.loadImage("/data/tex/", "down" + i3);
                 }
             }
-            this.player.s();
+            this.player.dismount();
             this.player.h(0);
         }
         if (this.sceneId == 5 && this.roomId == 6 || this.sceneId == 4 && (this.roomId == 3 || this.roomId == 4)) {
@@ -643,7 +643,7 @@ extends BaseScreen {
         if (this.p.i()) {
             return;
         }
-        this.p.a.a((byte)13, (byte)-1);
+        this.p.activeView.a((byte)13, (byte)-1);
         this.p.s = 0;
         this.p.c();
         this.stringTable.a(this.p);
@@ -888,9 +888,9 @@ extends BaseScreen {
             int[] intArray2 = new int[by];
             for (n2 = 0; n2 < n5; ++n2) {
                 intArray2[n2] = dataInputStream.readByte();
-                if (this.player.z[intArray2[n2]] == null) continue;
-                this.player.z[intArray2[n2]].w();
-                E.addElement(this.player.z[intArray2[n2]]);
+                if (this.player.petParty[intArray2[n2]] == null) continue;
+                this.player.petParty[intArray2[n2]].w();
+                E.addElement(this.player.petParty[intArray2[n2]]);
             }
             for (n2 = 0; n2 < this.aS.length; ++n2) {
                 this.aS[n2] = dataInputStream.readBoolean();
@@ -1212,8 +1212,8 @@ extends BaseScreen {
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
             this.player.F();
             this.player.H();
-            this.player.s(dataInputStream.readInt());
-            this.player.u(dataInputStream.readInt());
+            this.player.addGold(dataInputStream.readInt());
+            this.player.addArenaPoints(dataInputStream.readInt());
             byteArrayInputStream.close();
             dataInputStream.close();
             return true;
@@ -1315,9 +1315,9 @@ extends BaseScreen {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-            dataOutputStream.writeByte(this.player.A);
-            for (int i = 0; i < this.player.A; ++i) {
-                int[] intArray = this.player.z[i].P();
+            dataOutputStream.writeByte(this.player.partyPetCount);
+            for (int i = 0; i < this.player.partyPetCount; ++i) {
+                int[] intArray = this.player.petParty[i].P();
                 dataOutputStream.writeInt(intArray.length);
                 for (int i3 = 0; i3 < intArray.length; ++i3) {
                     dataOutputStream.writeInt(intArray[i3]);
@@ -1339,10 +1339,10 @@ extends BaseScreen {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(af[7].a());
             DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
             byte by = dataInputStream.readByte();
-            for (n2 = 0; n2 < this.player.A; ++n2) {
-                this.player.z[n2] = null;
+            for (n2 = 0; n2 < this.player.partyPetCount; ++n2) {
+                this.player.petParty[n2] = null;
             }
-            this.player.A = 0;
+            this.player.partyPetCount = 0;
             for (n2 = 0; n2 < by; ++n2) {
                 int[] intArray = new int[dataInputStream.readInt()];
                 for (int i = 0; i < intArray.length; ++i) {
@@ -1475,7 +1475,7 @@ extends BaseScreen {
         this.aw = null;
         this.ax = null;
         this.av = null;
-        this.p.a.b();
+        this.p.activeView.navigateSelection();
         this.p = null;
         this.e.removeAllElements();
         al.removeAllElements();
@@ -1549,7 +1549,7 @@ extends BaseScreen {
                 break;
             }
             case 7: {
-                this.S.c = 0;
+                this.S.selectedShopIndex = 0;
                 this.S.W();
                 break;
             }
@@ -1583,7 +1583,7 @@ extends BaseScreen {
                 break;
             }
             case 14: {
-                this.S.az();
+                this.S.openBodyShop();
                 break;
             }
             case 16: {
@@ -1599,7 +1599,7 @@ extends BaseScreen {
             }
             case 18: 
             case 19: {
-                this.S.c = 0;
+                this.S.selectedShopIndex = 0;
                 this.S.W();
                 break;
             }
@@ -1633,7 +1633,7 @@ extends BaseScreen {
                 break;
             }
             case 31: {
-                this.S.f = 0;
+                this.S.dialogSubState = 0;
                 Object object = this;
                 int n2 = 0;
                 ((WorldManager)object).al();
@@ -1702,7 +1702,7 @@ extends BaseScreen {
                 this.S.a(by3, (int)this.at[(by3 << 2) + 2], (int)this.at[(by3 << 2) + 3]);
             }
         }
-        this.S.g = true;
+        this.S.isDialogActive = true;
         this.P = val;
         this.resetInputState();
     }
@@ -1719,16 +1719,16 @@ extends BaseScreen {
             case 0: {
                 var1_1 = this;
                 if (!var1_1.M.h() && var1_1.c.h() < 5 && !var1_1.S.j() && var1_1.S.G()) {
-                    if (var1_1.l(4100)) {
+                    if (var1_1.isKeyHeld(4100)) {
                         var1_1.c.b((byte)1, (byte)2);
-                    } else if (var1_1.l(8448)) {
+                    } else if (var1_1.isKeyHeld(8448)) {
                         var1_1.c.b((byte)1, (byte)0);
-                    } else if (var1_1.l(16400)) {
+                    } else if (var1_1.isKeyHeld(16400)) {
                         var1_1.c.b((byte)1, (byte)3);
-                    } else if (var1_1.l(32832)) {
+                    } else if (var1_1.isKeyHeld(32832)) {
                         var1_1.c.b((byte)1, (byte)1);
                     }
-                    if (var1_1.k(65568)) {
+                    if (var1_1.isKeyPressed(65568)) {
                         if (game.WorldManager.u != -1) {
                             var1_1.c.b((byte)0, var1_1.c.n);
                             if (game.OverworldScreen.g) {
@@ -1770,17 +1770,17 @@ extends BaseScreen {
                             var1_1.c.w();
                         }
                     }
-                    if (var1_1.R()) {
+                    if (var1_1.isRightSoftAreaTouched()) {
                         var1_1.c.b((byte)0, var1_1.c.n);
                     }
-                    if (var1_1.k(262144 /* MASK_SOFT_RIGHT */)) {
+                    if (var1_1.isKeyPressed(262144 /* MASK_SOFT_RIGHT */)) {
                         var1_1.m();
                         var1_1.S.b = 0;
                         var1_1.a((byte)6);
-                    } else if (var1_1.k(131072 /* MASK_SOFT_LEFT */)) {
+                    } else if (var1_1.isKeyPressed(131072 /* MASK_SOFT_LEFT */)) {
                         var1_1.S.b = 0;
                         var1_1.a((byte)13);
-                    } else if (var1_1.k(1)) {
+                    } else if (var1_1.isKeyPressed(1)) {
                         var2_5 = var1_1;
                         var3_8 = true;
                         for (var4_13 = 0; var4_13 < game.WorldManager.aq.length; ++var4_13) {
@@ -1825,13 +1825,13 @@ extends BaseScreen {
                         } else {
                             var2_5.S.b("Khu này không có bản đồ");
                         }
-                    } else if (var1_1.k(2)) {
+                    } else if (var1_1.isKeyPressed(2)) {
                         var1_1.S.b = 0;
                         var1_1.a((byte)10);
-                    } else if (var1_1.k(8)) {
+                    } else if (var1_1.isKeyPressed(8)) {
                         var1_1.S.b = 1;
                         var1_1.a((byte)10);
-                    } else if (var1_1.k(512)) {
+                    } else if (var1_1.isKeyPressed(512)) {
                         if (var1_1.f == 3 && var1_1.g == 7) break;
                         if (var1_1.c.t >= 0 && var1_1.M.k) {
                             if (var1_1.c.r()) {
@@ -1933,10 +1933,10 @@ lbl167:
 lbl195:
                 // 3 sources
 
-                if (game.WorldManager.G == 1 && game.WorldManager.X) {
+                if (game.WorldManager.levelUpStatus == 1 && game.WorldManager.X) {
                     var1_1.a((byte)25);
                 }
-                if (!var1_1.M.h() && !var1_1.S.G() && !game.WorldManager.K && game.WorldManager.L[0] != -1 && var1_1.k(32)) {
+                if (!var1_1.M.h() && !var1_1.S.G() && !game.WorldManager.K && game.WorldManager.L[0] != -1 && var1_1.isKeyPressed(32)) {
                     game.WorldManager.U = (byte)4;
                     game.WorldManager.K = true;
                     var1_1.S.c = 0;
@@ -1960,7 +1960,7 @@ lbl195:
                 }
                 if (var1_1.S.j()) break;
                 var1_1.M.b();
-                var1_1.l();
+                var1_1.isKeyHeld();
                 break;
             }
             case 1: {
@@ -2002,23 +2002,23 @@ lbl195:
                     }
                 }
                 if (!this.aI) {
-                    if (this.l(16400)) {
+                    if (this.isKeyHeld(16400)) {
                         if (this.aE < 0) {
                             this.aE += this.aL;
                         }
-                    } else if (this.l(32832)) {
+                    } else if (this.isKeyHeld(32832)) {
                         if (this.aE + (this.aQ[this.aA << 1] << 4) * 5 > game.WorldManager.w()) {
                             this.aE -= this.aL;
                         }
-                    } else if (this.l(4100)) {
+                    } else if (this.isKeyHeld(4100)) {
                         if (this.aF < 0) {
                             this.aF += this.aL;
                         }
-                    } else if (this.l(8448)) {
+                    } else if (this.isKeyHeld(8448)) {
                         if (this.aF + (this.aQ[(this.aA << 1) + 1] << 3) * 5 > game.WorldManager.x() - 30) {
                             this.aF -= this.aL;
                         }
-                    } else if (this.k(262145)) {
+                    } else if (this.isKeyPressed(262145)) {
                         game.BattleScreen.getInstance().battleBgImage = null;
                         this.a((byte)0);
                     }
@@ -2040,7 +2040,7 @@ lbl195:
             }
             case 7: {
                 this.S.X();
-                this.l();
+                this.isKeyHeld();
                 break;
             }
             case 8: {
@@ -2072,7 +2072,7 @@ lbl195:
                 break;
             }
             case 14: {
-                this.S.aA();
+                this.S.handleBodyShopInput();
                 break;
             }
             case 16: {
@@ -2105,7 +2105,7 @@ lbl195:
             }
             case 23: {
                 var1_3 = this;
-                if (!var1_3.S.c(game.WorldManager.t, game.WorldManager.s) || !var1_3.k(196640)) ** GOTO lbl358
+                if (!var1_3.S.c(game.WorldManager.t, game.WorldManager.s) || !var1_3.isKeyPressed(196640)) ** GOTO lbl358
                 if (EngineUtils.b >= EngineUtils.b()) ** GOTO lbl340
                 EngineUtils.c();
                 var1_3.S.b(EngineUtils.b);
@@ -2143,7 +2143,7 @@ lbl358:
             }
             case 31: {
                 var1_4 = this;
-                if (var1_4.S.c(game.WorldManager.t, game.WorldManager.s) && !var1_4.S.j() && var1_4.k(196640)) {
+                if (var1_4.S.c(game.WorldManager.t, game.WorldManager.s) && !var1_4.S.j() && var1_4.isKeyPressed(196640)) {
                     if (EngineUtils.b < EngineUtils.b()) {
                         EngineUtils.c();
                         var1_4.S.b(EngineUtils.b);
@@ -2203,26 +2203,26 @@ lbl358:
             case 101: 
             case 102: 
             case 104: {
-                this.S.aM();
+                this.S.handleSmsTipInput();
                 break;
             }
             case 25: {
                 this.S.as();
             }
         }
-        if (this.P == 0 && !this.eventManager.h() && game.WorldManager.I == 0 && game.WorldManager.H != null && game.WorldManager.H.size() > 0) {
-            if (this.ac >= game.WorldManager.H.size()) {
-                game.WorldManager.H.removeAllElements();
+        if (this.P == 0 && !this.eventManager.h() && game.WorldManager.I == 0 && game.WorldManager.levelUpPets != null && game.WorldManager.levelUpPets.size() > 0) {
+            if (this.ac >= game.WorldManager.levelUpPets.size()) {
+                game.WorldManager.levelUpPets.removeAllElements();
                 this.ac = 0;
                 game.WorldManager.I = 1;
             } else if (this.S.ax()) {
-                var1_1 = (int[])game.WorldManager.H.elementAt(this.ac);
+                var1_1 = (int[])game.WorldManager.levelUpPets.elementAt(this.ac);
                 var2_7 = "Tiến hóa";
                 if (GameDatabase.gameDatabase[0][GameDatabase.spriteTable((byte)0, (short)var1_1[0], (byte)19)][2] == 3) {
                     var2_7 = "Dị hoá";
                 }
                 if (!game.WorldManager.K && game.WorldManager.L[0] != -1) {
-                    if (this.ac == game.WorldManager.H.size() - 1) {
+                    if (this.ac == game.WorldManager.levelUpPets.size() - 1) {
                         this.S.E();
                         this.S.a("Nhấn #2" + game.WorldManager.f((int)var1_1[1]) + "#0 đạt tới có thể" + (String)var2_7 + " điều kiện", "Nhấn nút 5 để tiếp tục");
                     } else {
@@ -2342,11 +2342,11 @@ lbl358:
                 graphics2.drawString("Đạo quán vào cửa", 175, game.WorldManager.x() - 25, 20);
                 return;
             }
-            if (this.P == 0 || this.P == 23 || this.S.g) {
+            if (this.P == 0 || this.P == 23 || this.S.isDialogActive) {
                 this.stringTable.a(g);
                 ScreenView.getInstance().c(g);
-                if (this.S.g) {
-                    this.S.g = false;
+                if (this.S.isDialogActive) {
+                    this.S.isDialogActive = false;
                 }
             }
             if (ScreenView.getInstance().d != -1) {
@@ -2475,13 +2475,13 @@ lbl358:
                 }
                 if (V == 3) {
                     game.WorldManager.c(1, 0);
-                    String string = game.WorldManager.f(GameDatabase.gameDatabase[0][this.player.z[BaseScreen.K()].q()][0]);
+                    String string = game.WorldManager.f(GameDatabase.gameDatabase[0][this.player.petParty[BaseScreen.K()].q()][0]);
                     V = (byte)(V + 1);
                     this.S.c("Hãy lựa chọn #2" + string);
                     return;
                 }
                 if (V == 4) {
-                    if (!this.S.ay() || !BaseScreen.b(this.S.b, 0)) break;
+                    if (!this.S.ay() || !BaseScreen.b(this.S.selectedSubMenuIndex, 0)) break;
                     V = (byte)(V + 1);
                     this.S.c("Hãy nhấn #2nút 5");
                     return;
@@ -2513,7 +2513,7 @@ lbl358:
                     return;
                 }
                 if (V == 1) {
-                    if (!game.WorldManager.b(this.S.b, 0)) break;
+                    if (!game.WorldManager.b(this.S.selectedSubMenuIndex, 0)) break;
                     V = (byte)(V + 1);
                     this.S.c("Hãy nhấn vào mục #2Mua sắm");
                     return;
@@ -2530,7 +2530,7 @@ lbl358:
                     return;
                 }
                 if (V == 5) {
-                    if (!game.WorldManager.b(this.S.b, 0)) break;
+                    if (!game.WorldManager.b(this.S.selectedSubMenuIndex, 0)) break;
                     V = (byte)(V + 1);
                     this.S.c("Nhấn #2nút 5#1 mua sắm");
                     return;
@@ -2545,24 +2545,24 @@ lbl358:
             case 4: {
                 if (V == 0) {
                     game.WorldManager.c(0, 1);
-                    for (int i = 0; i < this.player.A; ++i) {
-                        if (this.player.z[i].s() != L[0] || this.player.z[i].q() != L[1]) continue;
+                    for (int i = 0; i < this.player.partyPetCount; ++i) {
+                        if (this.player.petParty[i].getLevel() != L[0] || this.player.petParty[i].q() != L[1]) continue;
                         game.WorldManager.c(1, i);
                         break;
                     }
                     V = (byte)(V + 1);
-                    String string = game.WorldManager.f(GameDatabase.spriteTable((byte)0, (short)this.player.z[BaseScreen.K()].q(), (byte)0));
+                    String string = game.WorldManager.f(GameDatabase.spriteTable((byte)0, (short)this.player.petParty[BaseScreen.K()].q(), (byte)0));
                     this.S.c("Hãy lựa chọn #2" + string + "#0 tiến hành tiến hóa");
                     return;
                 }
                 if (V == 1) {
-                    if (!game.WorldManager.b(this.S.b, 0) || !this.S.ay()) break;
+                    if (!game.WorldManager.b(this.S.selectedSubMenuIndex, 0) || !this.S.ay()) break;
                     V = (byte)(V + 1);
                     this.S.c("Hãy nhấn #2nút 5#0 để tiếp tục");
                     return;
                 }
                 if (V == 3) {
-                    if (!game.WorldManager.b(this.S.c, 0)) break;
+                    if (!game.WorldManager.b(this.S.selectedShopIndex, 0)) break;
                     V = (byte)(V + 1);
                     this.S.c("Nhấn #2nút 5#0 để vào mục Tiến hóa");
                     return;
@@ -2586,7 +2586,7 @@ lbl358:
                     return;
                 }
                 if (V == 2) {
-                    if (!this.S.ay() || !game.WorldManager.b(this.S.b, 0)) break;
+                    if (!this.S.ay() || !game.WorldManager.b(this.S.selectedSubMenuIndex, 0)) break;
                     this.S.c("Nhấn #2nút mềm trái#0 vào Tuyển hạng");
                     V = (byte)(V + 1);
                     return;
@@ -2685,7 +2685,7 @@ lbl358:
                     V = (byte)(V + 1);
                     return;
                 }
-                if (V != 8 || !game.WorldManager.b(this.S.b, 1)) break;
+                if (V != 8 || !game.WorldManager.b(this.S.selectedSubMenuIndex, 1)) break;
                 this.S.c("Hãy lựa chọn #2Trứng sủng vật#0 để ấp trứng");
                 game.WorldManager.c(2, 0);
                 game.WorldManager.c(1, 0);

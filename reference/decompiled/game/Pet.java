@@ -953,8 +953,8 @@ extends WorldEntity {
 
     public final void J() {
         short s2;
-        if (game.WorldManager.H == null) {
-            game.WorldManager.H = new Vector();
+        if (game.WorldManager.levelUpPets == null) {
+            game.WorldManager.levelUpPets = new Vector();
         }
         if ((s2 = GameDatabase.spriteTable((byte)0, (short)this.petId, (byte)19)) == -1) {
             return;
@@ -969,7 +969,7 @@ extends WorldEntity {
         }
         if (bl) {
             int[] intArray = new int[]{this.petId, GameDatabase.gameDatabase[0][this.petId][0]};
-            game.WorldManager.H.addElement(intArray);
+            game.WorldManager.levelUpPets.addElement(intArray);
             game.WorldManager.L[0] = (byte)this.level;
             game.WorldManager.L[1] = (byte)this.petId;
             game.WorldManager.I = 0;

@@ -309,7 +309,7 @@ extends WorldEntity {
                             game.WorldManager.getInstance().a(((NpcEntity)object).I, 0, ((NpcEntity)object).h, true);
                         }
                         if ((((NpcEntity)object).v == 7 || ((NpcEntity)object).v == 6) && (n2 = EngineUtils.randomInt(2)) > 0) {
-                            game.Player.getInstance().s(n2);
+                            game.Player.getInstance().addGold(n2);
                             object = new int[]{n2, ((BaseEntity)object).i, ((BaseEntity)object).j - 20, 0};
                             game.Player.getInstance().V.addElement(object);
                         }

@@ -39,18 +39,18 @@ TimerCallback {
     private static Timer i;
     private static TimerTask j;
     private static boolean k;
-    public static boolean W;
-    public static boolean X;
-    private byte l;
-    private static byte[] m;
-    private SmsSender n = null;
-    private byte o;
-    private byte p;
-    private byte q;
-    private String[] r = new String[]{"01", "02", "03", "04", "05"};
-    private byte[][] s = new byte[][]{{4, 1, 0}, {2, 1, 1}, {2, 1, 2}, {2, 1, 3}, {2, 1, 4}};
-    private String[][] t = new String[][]{{"Kích hoạt", "Bạn muốn khám phá bí mật của vương quốc sủng vật, dẫn dắt thú yêu chiến đấu, tiến hóa, ấp trứng? Chỉ cần 1 tin nhắn 15000đ để kích hoạt trò chơi, chỉ nhắn tin 1 lần cho tất cả các lượt chơi. Bạn có muốn nhắn tin không?"}, {"Tất trúng cầu", "Chỉ cần nhắn 1 tin nhắn 10000đ, bạn sẽ sở hữu 1 tất trúng cầu, tỷ lệ 100% bắt được sủng vật? Bạn có muốn nhắn tin không?"}, {"Mua sắm kim tiền", "Kiếm tiền vất vả, vật phẩm đắt đỏ? Chỉ cần nhắn 1 tin nhắn 10000đ bạn sẽ đạt được 10000 kim tiền. Bạn có muốn nhắn tin không?"}, {"Mua đẳng cấp", "Thăng cấp chậm chạp, kẻ địch lại quá mạnh? Chỉ cần 1 tin nhắn 10000đ, tất cả sủng vật trong ba lô của bạn đều được thăng lên 5 cấp. Bạn có muốn nhắn tin không?"}, {"Mua sắm huy hiệu", "Kiếm huy hiệu khó khăn? Chỉ cần 1 tin nhắn 10000đ, bạn sẽ đạt được 10 huy hiệu. Bạn có muốn nhắn tin không?"}};
-    private BillingCanvas u;
+    public static boolean isGameStarted;
+    public static boolean isVipUnlocked;
+    private byte billingDialogState;
+    private static byte[] packagePurchaseCounts;
+    private SmsSender smsSender = null;
+    private byte selectedBillingPackageId;
+    private byte currentSmsSuccessCount;
+    private byte requiredSmsCount;
+    private String[] billingServiceCodes = new String[]{"01", "02", "03", "04", "05"};
+    private byte[][] billingMetadata = new byte[][]{{4, 1, 0}, {2, 1, 1}, {2, 1, 2}, {2, 1, 3}, {2, 1, 4}};
+    private String[][] billingDescriptions = new String[][]{{"Kích hoạt", "Bạn muốn khám phá bí mật của vương quốc sủng vật, dẫn dắt thú yêu chiến đấu, tiến hóa, ấp trứng? Chỉ cần 1 tin nhắn 15000đ để kích hoạt trò chơi, chỉ nhắn tin 1 lần cho tất cả các lượt chơi. Bạn có muốn nhắn tin không?"}, {"Tất trúng cầu", "Chỉ cần nhắn 1 tin nhắn 10000đ, bạn sẽ sở hữu 1 tất trúng cầu, tỷ lệ 100% bắt được sủng vật? Bạn có muốn nhắn tin không?"}, {"Mua sắm kim tiền", "Kiếm tiền vất vả, vật phẩm đắt đỏ? Chỉ cần nhắn 1 tin nhắn 10000đ bạn sẽ đạt được 10000 kim tiền. Bạn có muốn nhắn tin không?"}, {"Mua đẳng cấp", "Thăng cấp chậm chạp, kẻ địch lại quá mạnh? Chỉ cần 1 tin nhắn 10000đ, tất cả sủng vật trong ba lô của bạn đều được thăng lên 5 cấp. Bạn có muốn nhắn tin không?"}, {"Mua sắm huy hiệu", "Kiếm huy hiệu khó khăn? Chỉ cần 1 tin nhắn 10000đ, bạn sẽ đạt được 10 huy hiệu. Bạn có muốn nhắn tin không?"}};
+    private BillingCanvas billingCanvas;
 
     public abstract void b();
 
@@ -60,7 +60,7 @@ TimerCallback {
 
     public abstract void f();
 
-    public abstract void a(byte val);
+    public abstract void setScreenMode(byte mode);
 
     public final void startTimer() {
         if (g) {
@@ -117,12 +117,20 @@ TimerCallback {
         return (short)(screenHeight / 2);
     }
 
+    /**
+     * Resets the game frame delay. Defaulted to 33ms (~30 FPS, 2x speed) by bytecode patch.
+     * Dynamic speed (1x, 2x, 3x, 4x) is configured in speed.conf and managed by GameSpeedConfig.
+     */
     public static void resetFrameDelay() {
-        frameDelay = 66;
+        frameDelay = 33;
     }
 
     public static int getFrameDelay() {
         return frameDelay;
+    }
+
+    public static void setFrameDelay(int delay) {
+        frameDelay = delay;
     }
 
     public static void setKeyDelay(int delay) {
@@ -299,23 +307,23 @@ TimerCallback {
         return h[U][1];
     }
 
-    public final void b(boolean flag) {
-        if (this.l == 4) {
+    public final void onBillingResult(boolean success) {
+        if (this.billingDialogState == 4) {
             if (flag) {
                 BaseScreen an2 = this;
-                an2.p = (byte)(an2.p + 1);
-                byte by = an2.o;
-                m[by] = (byte)(m[by] + 1);
-                System.out.println(" curNum = " + an2.p + " tolNum = " + an2.q);
-                if (an2.p >= an2.q) {
-                    switch (an2.o) {
+                an2.currentSmsSuccessCount = (byte)(an2.currentSmsSuccessCount + 1);
+                byte by = an2.selectedBillingPackageId;
+                packagePurchaseCounts[by] = (byte)(packagePurchaseCounts[by] + 1);
+                System.out.println(" curNum = " + an2.currentSmsSuccessCount + " tolNum = " + an2.requiredSmsCount);
+                if (an2.currentSmsSuccessCount >= an2.requiredSmsCount) {
+                    switch (an2.selectedBillingPackageId) {
                         case 0: {
                             X = true;
-                            game.Player.getInstance().s(2000);
+                            game.Player.getInstance().addGold(2000);
                             game.Player.getInstance().c(1, 5, (byte)0);
                             game.Player.getInstance().c(4, 5, (byte)0);
                             game.Player.getInstance().c(11, 2, (byte)0);
-                            game.Player.getInstance().u(5);
+                            game.Player.getInstance().addArenaPoints(5);
                             game.OverworldScreen.getInstance().b[game.WorldManager.a((int)9, (int)0)][5] = 3;
                             game.OverworldScreen.getInstance().a[5].a((byte)3);
                             break;
@@ -325,48 +333,48 @@ TimerCallback {
                             break;
                         }
                         case 2: {
-                            game.Player.getInstance().s(10000);
+                            game.Player.getInstance().addGold(10000);
                             break;
                         }
                         case 3: {
-                            game.WorldManager.G = 0;
-                            if (game.WorldManager.F == null) {
-                                game.WorldManager.F = new Vector();
+                            game.WorldManager.levelUpStatus = 0;
+                            if (game.WorldManager.levelUpPetIndices == null) {
+                                game.WorldManager.levelUpPetIndices = new Vector();
                             }
-                            if (game.WorldManager.E == null) {
-                                game.WorldManager.E = new Vector();
+                            if (game.WorldManager.eligibleLevelUpPets == null) {
+                                game.WorldManager.eligibleLevelUpPets = new Vector();
                             }
-                            game.WorldManager.F.removeAllElements();
-                            game.WorldManager.E.removeAllElements();
-                            for (int i = 0; i < game.Player.getInstance().A; ++i) {
-                                if (game.Player.getInstance().z[i].s() == 50) {
-                                    game.Player.getInstance().z[i].J();
+                            game.WorldManager.levelUpPetIndices.removeAllElements();
+                            game.WorldManager.eligibleLevelUpPets.removeAllElements();
+                            for (int i = 0; i < game.Player.getInstance().partyPetCount; ++i) {
+                                if (game.Player.getInstance().petParty[i].getLevel() == 50) {
+                                    game.Player.getInstance().petParty[i].J();
                                     continue;
                                 }
-                                game.Player.getInstance().z[i].x();
-                                if (game.Player.getInstance().z[i].s() + 5 >= 50) {
-                                    game.Player.getInstance().z[i].h(50 - game.Player.getInstance().z[i].s());
+                                game.Player.getInstance().petParty[i].x();
+                                if (game.Player.getInstance().petParty[i].getLevel() + 5 >= 50) {
+                                    game.Player.getInstance().petParty[i].h(50 - game.Player.getInstance().petParty[i].getLevel());
                                 } else {
-                                    game.Player.getInstance().z[i].h(5);
+                                    game.Player.getInstance().petParty[i].h(5);
                                 }
-                                game.Player.getInstance().z[i].I();
-                                if (game.Player.getInstance().z[i].E() >= 5 || game.Player.getInstance().z[i].E() >= game.Player.getInstance().z[i].s() / 10 + 1) continue;
-                                game.WorldManager.E.addElement(game.Player.getInstance().z[i]);
-                                game.WorldManager.F.addElement("" + i);
+                                game.Player.getInstance().petParty[i].I();
+                                if (game.Player.getInstance().petParty[i].E() >= 5 || game.Player.getInstance().petParty[i].E() >= game.Player.getInstance().petParty[i].getLevel() / 10 + 1) continue;
+                                game.WorldManager.eligibleLevelUpPets.addElement(game.Player.getInstance().petParty[i]);
+                                game.WorldManager.levelUpPetIndices.addElement("" + i);
                             }
-                            if (game.WorldManager.E.size() <= 0) {
-                                game.WorldManager.G = (byte)2;
+                            if (game.WorldManager.eligibleLevelUpPets.size() <= 0) {
+                                game.WorldManager.levelUpStatus = (byte)2;
                                 break;
                             }
-                            game.WorldManager.G = 1;
+                            game.WorldManager.levelUpStatus = 1;
                             break;
                         }
                         case 4: {
-                            game.Player.getInstance().u(10);
+                            game.Player.getInstance().addArenaPoints(10);
                         }
                     }
                 }
-                an2.d((byte)2);
+                an2.setBillingDialogState((byte)2);
                 return;
             }
             this.d((byte)3);
@@ -374,75 +382,75 @@ TimerCallback {
     }
 
     private boolean a() {
-        if (this.n == null) {
+        if (this.smsSender == null) {
             try {
-                this.n = new SmsSender(this);
-                this.n.a("sms://");
+                this.smsSender = new SmsSender(this);
+                this.smsSender.a("sms://");
             }
             catch (ClassNotFoundException classNotFoundException) {
                 return false;
             }
         }
-        switch (this.o) {
+        switch (this.selectedBillingPackageId) {
             case 0: {
-                this.a((int)this.o);
+                this.a((int)this.selectedBillingPackageId);
                 break;
             }
             case 1: {
-                this.a((int)this.o);
+                this.a((int)this.selectedBillingPackageId);
                 break;
             }
             case 2: {
-                this.a((int)this.o);
+                this.a((int)this.selectedBillingPackageId);
                 break;
             }
             case 3: {
-                this.a((int)this.o);
+                this.a((int)this.selectedBillingPackageId);
                 break;
             }
             case 4: {
-                this.a((int)this.o);
+                this.a((int)this.selectedBillingPackageId);
             }
         }
         return true;
     }
 
-    public final boolean c(byte val) {
-        this.o = val;
+    public final boolean setBillingPackage(byte packageId) {
+        this.selectedBillingPackageId = val;
         switch (val) {
             case 0: {
-                this.q = 1;
+                this.requiredSmsCount = 1;
                 break;
             }
             case 1: {
-                this.q = 1;
+                this.requiredSmsCount = 1;
                 break;
             }
             case 2: {
-                this.q = 1;
+                this.requiredSmsCount = 1;
                 break;
             }
             case 3: {
-                this.q = 1;
+                this.requiredSmsCount = 1;
                 break;
             }
             case 4: {
-                this.q = 1;
+                this.requiredSmsCount = 1;
             }
         }
-        this.p = 0;
+        this.currentSmsSuccessCount = 0;
         return true;
     }
 
-    public final void d(byte val) {
+    public final void setBillingDialogState(byte state) {
         while (true) {
             if (val != 5 && val != 0) {
-                this.S.aK();
+                this.S.showSmsTipDialog();
             }
             switch (val) {
                 case 1: {
-                    System.out.println(" " + BaseScreen.a(513, new int[]{this.q, this.p}));
-                    this.S.d(BaseScreen.a(513, new int[]{this.q, this.p}));
+                    System.out.println(" " + BaseScreen.a(513, new int[]{this.requiredSmsCount, this.currentSmsSuccessCount}));
+                    this.S.d(BaseScreen.a(513, new int[]{this.requiredSmsCount, this.currentSmsSuccessCount}));
                     break;
                 }
                 case 4: {
@@ -460,32 +468,32 @@ TimerCallback {
                 }
                 case 5: {
                     T = false;
-                    this.S.aL();
+                    this.S.closeSmsTipDialog();
                 }
             }
-            this.l = val;
+            this.billingDialogState = val;
             if (val != 5) break;
             val = 0;
         }
     }
 
-    public final int L() {
-        return this.o;
+    public final int getBillingPackageId() {
+        return this.selectedBillingPackageId;
     }
 
-    public final boolean M() {
-        return this.p >= this.q;
+    public final boolean isPaymentComplete() {
+        return this.currentSmsSuccessCount >= this.requiredSmsCount;
     }
 
-    public final byte N() {
-        return this.l;
+    public final byte getBillingDialogState() {
+        return this.billingDialogState;
     }
 
-    public final byte O() {
-        return this.q;
+    public final byte getRequiredSmsCount() {
+        return this.requiredSmsCount;
     }
 
-    public final void g(int n2) {
+    public final void confirmBillingPurchase(int option) {
         T = true;
         if (n2 == 1) {
             this.d((byte)4);
@@ -497,8 +505,8 @@ TimerCallback {
         }
     }
 
-    public final void h(int n2) {
-        switch (this.l) {
+    public final void handleBillingDialogAction(int action) {
+        switch (this.billingDialogState) {
             case 1: {
                 this.g(n2);
                 return;
@@ -513,9 +521,9 @@ TimerCallback {
     private void a(int n2) {
         SmsConfig.a(GameMIDLet.a);
         SmsConfig.a(n2);
-        this.u = new BillingCanvas(GameMIDLet.a, game.GameCanvas.a, "", "", this.r[n2], this.s[n2][0], this.t[n2][0], SmsConfig.c[n2], "");
-        Display.getDisplay(GameMIDLet.a).setCurrent(this.u);
-        this.u.a(this);
+        this.billingCanvas = new BillingCanvas(GameMIDLet.a, game.GameCanvas.a, "", "", this.billingServiceCodes[n2], this.billingMetadata[n2][0], this.billingDescriptions[n2][0], SmsConfig.c[n2], "");
+        Display.getDisplay(GameMIDLet.a).setCurrent(this.billingCanvas);
+        this.billingCanvas.a(this);
     }
 
     public final void a(boolean flag) {

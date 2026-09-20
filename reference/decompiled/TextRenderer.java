@@ -436,7 +436,7 @@ public final class TextRenderer {
         return EngineUtils.a(this.c, n2);
     }
 
-    public final boolean b(int n2) {
+    public final boolean navigateSelection(int direction) {
         boolean bl;
         UIComponent w2;
         int n3 = 0;

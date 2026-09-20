@@ -68,7 +68,7 @@ extends BaseScreen {
 
     private void e() {
         game.WorldManager.D = false;
-        game.WorldManager.G = 0;
+        game.WorldManager.levelUpStatus = 0;
         game.OverworldScreen.f = true;
         game.WorldManager.x = false;
         game.WorldManager.getInstance().f = 0;
@@ -192,22 +192,22 @@ extends BaseScreen {
                 break;
             }
             case 4: {
-                if (this.k(131072 /* MASK_SOFT_LEFT */)) {
+                if (this.isKeyPressed(131072 /* MASK_SOFT_LEFT */)) {
                     game.GameStateController.getInstance().a((byte)1);
                     break;
                 }
-                if (!this.k(262144 /* MASK_SOFT_RIGHT */)) break;
+                if (!this.isKeyPressed(262144 /* MASK_SOFT_RIGHT */)) break;
                 this.a((byte)0);
                 break;
             }
             case 5: {
-                if (this.k(131104)) {
+                if (this.isKeyPressed(131104)) {
                     game.WorldManager.getInstance();
                     game.WorldManager.o();
                     this.e();
                     break;
                 }
-                if (!this.k(262144 /* MASK_SOFT_RIGHT */)) break;
+                if (!this.isKeyPressed(262144 /* MASK_SOFT_RIGHT */)) break;
                 this.a((byte)0);
                 this.R.a("/data/ui/msgtip.ui");
             }
@@ -289,7 +289,7 @@ extends BaseScreen {
         this.R.b();
     }
 
-    public final void a(byte val) {
+    public final void setScreenMode(byte mode) {
         this.P = val;
         switch (val) {
             case 2: {

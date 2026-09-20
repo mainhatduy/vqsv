@@ -19,6 +19,11 @@ extends MIDlet {
         this.b = Display.getDisplay(this);
         this.c = e.a(this);
         this.b.setCurrent(this.c);
+        try {
+            Class.forName("GameSpeedConfig").getMethod("init").invoke(null);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     public void startApp() {
