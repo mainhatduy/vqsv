@@ -545,7 +545,7 @@ extends BaseScreen {
         object2 = this;
         this.k = WorldManager.getString(384 + l[((WorldManager)object2).f] + ((WorldManager)object2).g);
         ((WorldManager)object2).a.loadMap(((WorldManager)object2).ab);
-        ((WorldManager)object2).a.a(0, 0);
+        ((WorldManager)object2).a.centerCamera(0, 0);
         ((WorldManager)object2).b.a(((WorldManager)object2).a);
         this.ak();
         if (x) {
@@ -1419,19 +1419,19 @@ extends BaseScreen {
                 byte by2 = 0;
                 switch (by) {
                     case 2: {
-                        by2 = MapEngine.getInstance().b(npcEntity2.posX, npcEntity2.posY - n);
+                        by2 = MapEngine.getInstance().getCollisionTile(npcEntity2.posX, npcEntity2.posY - n);
                         break;
                     }
                     case 0: {
-                        by2 = MapEngine.getInstance().b(npcEntity2.posX, npcEntity2.posY + n);
+                        by2 = MapEngine.getInstance().getCollisionTile(npcEntity2.posX, npcEntity2.posY + n);
                         break;
                     }
                     case 3: {
-                        by2 = MapEngine.getInstance().b(npcEntity2.posX - n, npcEntity2.posY);
+                        by2 = MapEngine.getInstance().getCollisionTile(npcEntity2.posX - n, npcEntity2.posY);
                         break;
                     }
                     case 1: {
-                        by2 = MapEngine.getInstance().b(npcEntity2.posX + n, npcEntity2.posY);
+                        by2 = MapEngine.getInstance().getCollisionTile(npcEntity2.posX + n, npcEntity2.posY);
                     }
                 }
                 if (!(by2 == 0)) break;
@@ -1856,7 +1856,7 @@ extends BaseScreen {
                 var2_7 = var1_1;
                 if (!var2_7.c.D()) ** GOTO lbl195
                 var3_9 = var2_7;
-                var4_15 = MapEngine.getInstance().b(Player.getInstance().posX, Player.getInstance().posY);
+                var4_15 = MapEngine.getInstance().getCollisionTile(Player.getInstance().posX, Player.getInstance().posY);
                 var5_19 = null;
                 WorldManager.O = var4_15;
                 switch (var4_15) {

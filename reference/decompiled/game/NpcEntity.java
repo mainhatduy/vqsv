@@ -502,7 +502,7 @@ extends WorldEntity {
             byte by = 0;
             switch (n2) {
                 case 2: {
-                    by = MapEngine.getInstance().b(npcEntity.posX, npcEntity.posY - n);
+                    by = MapEngine.getInstance().getCollisionTile(npcEntity.posX, npcEntity.posY - n);
                     for (n2 = 0; n2 < WorldManager.a().d.length; ++n2) {
                         if (WorldManager.a().d[n2].v == npcEntity.v || WorldManager.a().d[n2].spriteRenderer.k() == null || !EngineUtils.a(npcEntity.posX, npcEntity.posY - n, WorldManager.a().d[n2].posX, WorldManager.a().d[n2].posY, WorldManager.a().d[n2].spriteRenderer.k())) continue;
                         NpcEntity npcEntity2 = npcEntity;
@@ -512,7 +512,7 @@ extends WorldEntity {
                     break;
                 }
                 case 0: {
-                    by = MapEngine.getInstance().b(npcEntity.posX, npcEntity.posY + n);
+                    by = MapEngine.getInstance().getCollisionTile(npcEntity.posX, npcEntity.posY + n);
                     for (n2 = 0; n2 < WorldManager.a().d.length; ++n2) {
                         if (WorldManager.a().d[n2].v == npcEntity.v || WorldManager.a().d[n2].spriteRenderer.k() == null || !EngineUtils.a(npcEntity.posX, npcEntity.posY + n, WorldManager.a().d[n2].posX, WorldManager.a().d[n2].posY, WorldManager.a().d[n2].spriteRenderer.k())) continue;
                         NpcEntity npcEntity3 = npcEntity;
@@ -522,7 +522,7 @@ extends WorldEntity {
                     break;
                 }
                 case 3: {
-                    by = MapEngine.getInstance().b(npcEntity.posX - n, npcEntity.posY);
+                    by = MapEngine.getInstance().getCollisionTile(npcEntity.posX - n, npcEntity.posY);
                     for (n2 = 0; n2 < WorldManager.a().d.length; ++n2) {
                         if (WorldManager.a().d[n2].v == npcEntity.v || WorldManager.a().d[n2].spriteRenderer.k() == null || !EngineUtils.a(npcEntity.posX - n, npcEntity.posY, WorldManager.a().d[n2].posX, WorldManager.a().d[n2].posY, WorldManager.a().d[n2].spriteRenderer.k())) continue;
                         NpcEntity npcEntity4 = npcEntity;
@@ -532,7 +532,7 @@ extends WorldEntity {
                     break;
                 }
                 case 1: {
-                    by = MapEngine.getInstance().b(npcEntity.posX + n, npcEntity.posY);
+                    by = MapEngine.getInstance().getCollisionTile(npcEntity.posX + n, npcEntity.posY);
                     for (n2 = 0; n2 < WorldManager.a().d.length; ++n2) {
                         if (WorldManager.a().d[n2].v == npcEntity.v || WorldManager.a().d[n2].spriteRenderer.k() == null || !EngineUtils.a(npcEntity.posX + n, npcEntity.posY, WorldManager.a().d[n2].posX, WorldManager.a().d[n2].posY, WorldManager.a().d[n2].spriteRenderer.k())) continue;
                         NpcEntity npcEntity5 = npcEntity;
@@ -566,19 +566,19 @@ extends WorldEntity {
         byte by3 = 0;
         switch (by) {
             case 2: {
-                by3 = MapEngine.getInstance().b(this.posX, this.posY - this.spriteRenderer.k()[3] - n);
+                by3 = MapEngine.getInstance().getCollisionTile(this.posX, this.posY - this.spriteRenderer.k()[3] - n);
                 break;
             }
             case 0: {
-                by3 = MapEngine.getInstance().b(this.posX, this.posY + n);
+                by3 = MapEngine.getInstance().getCollisionTile(this.posX, this.posY + n);
                 break;
             }
             case 3: {
-                by3 = MapEngine.getInstance().b(this.posX - n - this.spriteRenderer.k()[2] / 2, this.posY);
+                by3 = MapEngine.getInstance().getCollisionTile(this.posX - n - this.spriteRenderer.k()[2] / 2, this.posY);
                 break;
             }
             case 1: {
-                by3 = MapEngine.getInstance().b(this.posX + n + this.spriteRenderer.k()[2] / 2, this.posY);
+                by3 = MapEngine.getInstance().getCollisionTile(this.posX + n + this.spriteRenderer.k()[2] / 2, this.posY);
             }
         }
         return by3 == by2;

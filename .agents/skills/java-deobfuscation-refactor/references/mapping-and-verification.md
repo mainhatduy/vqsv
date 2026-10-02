@@ -73,6 +73,24 @@ không import kiểu default package theo cách thông thường; binary gốc c
 liên kết mà source tái dựng chưa diễn đạt hợp lệ. Nếu cần thay class runtime,
 khôi phục Java hợp lệ, giữ ABI hoặc migrate mọi caller, rồi build/test riêng.
 
+## Định dạng JSON và hoàn thiện Reference
+
+- **Định dạng mảng compact:** Giữ mỗi entry của `fields`, `methods` và `parameters`
+  trên một dòng đơn:
+  ```json
+  ["owner", "name", "desc", "newName"]
+  ```
+  Tránh dùng `json.dump(..., indent=2)` mà không format lại, vì mặc định nó sẽ bẻ
+  từng phần tử mảng thành nhiều dòng, gây phình to diff git hàng nghìn dòng.
+- **Xử lý biến cục bộ và lỗi dịch ngược (Decompiler Artifacts):**
+  JAR legacy thường bị strip bảng `LocalVariableTable`, khiến decompiler sinh các
+  biến tạm (`n`, `n2`, `s`, `by`) hoặc cú pháp lỗi (`void var2_...`).
+  Quy trình tối ưu:
+  1. Chạy remapper (`refactor_reference.py` / `rebuild_reference.py --apply`) để đồng bộ
+     tên class, field, method và parameter trên toàn bộ các file gọi (callers).
+  2. Dọn dẹp trực tiếp trên file reference đích: đổi tên các biến cục bộ trong thân hàm
+     thành tên có ý nghĩa, khắc phục lỗi cú pháp của decompiler và bổ sung Javadoc.
+
 ## Giới hạn backend đi kèm
 
 `ReadableReference.java` dùng visitor ASM legacy có sẵn ở nhiều toolchain cũ.

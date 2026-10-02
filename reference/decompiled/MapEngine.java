@@ -14,7 +14,7 @@ import javax.microedition.lcdui.Image;
 
 public final class MapEngine {
     private static MapEngine instance;
-    private static final int[] f;
+    private static final int[] transformLookupTable;
     private int viewportWidth = -1;
     private int viewportHeight = -1;
     private short mapColumns = (short)-1;
@@ -27,23 +27,23 @@ public final class MapEngine {
     private Image[] tileImages = null;
     public int cameraX;
     public int cameraY;
-    private int q;
-    private int r;
+    private int lastCameraX;
+    private int lastCameraY;
     public int mapPixelWidth;
     public int mapPixelHeight;
-    private int s;
-    private int t;
-    private int u;
-    private int v;
-    private int w;
-    private int x;
-    private byte y;
-    private short[][] z;
-    private short[][][] A;
-    private byte[] B = null;
-    private static Image C;
-    private static Graphics D;
-    private boolean E = true;
+    private int startTileCol;
+    private int startTileRow;
+    private int endTileCol;
+    private int endTileRow;
+    private int visibleTileCols;
+    private int visibleTileRows;
+    private byte layerCount;
+    private short[][] tileDefinitions;
+    private short[][][] layerData;
+    private byte[] layerTypes = null;
+    private static Image bufferImage;
+    private static Graphics bufferGraphics;
+    private boolean needsFullRedraw = true;
 
     public static MapEngine getInstance() {
         if (instance == null) {
@@ -68,12 +68,12 @@ public final class MapEngine {
         for (n = 0; n < GameDatabase.tilesetImageTable[this.tilesetId].length; ++n) {
             ImageCache.evictImage(GameDatabase.tilesetImageTable[this.tilesetId][n]);
         }
-        C = null;
-        D = null;
+        bufferImage = null;
+        bufferGraphics = null;
         MapEngine mapEngine = this;
-        this.A = null;
-        mapEngine.B = null;
-        mapEngine.z = null;
+        this.layerData = null;
+        mapEngine.layerTypes = null;
+        mapEngine.tileDefinitions = null;
     }
 
     public final void loadMap(int mapId) {
@@ -86,30 +86,30 @@ public final class MapEngine {
             byte by = ((DataInputStream)inputStream).readByte();
             mapEngine.previousTilesetId = mapEngine.tilesetId;
             mapEngine.tilesetId = ((DataInputStream)inputStream).readByte();
-            mapEngine.d();
+            mapEngine.loadTileset();
             mapEngine.mapColumns = by == 1 ? (short)((DataInputStream)inputStream).readByte() : ((DataInputStream)inputStream).readShort();
             mapEngine.mapRows = by == 1 ? (short)((DataInputStream)inputStream).readByte() : ((DataInputStream)inputStream).readShort();
             mapEngine.tileHeight = mapEngine.tileWidth = (short)((DataInputStream)inputStream).readByte();
             mapEngine.mapPixelWidth = mapEngine.mapColumns * mapEngine.tileWidth;
             mapEngine.mapPixelHeight = mapEngine.mapRows * mapEngine.tileHeight;
-            mapEngine.y = ((DataInputStream)inputStream).readByte();
-            mapEngine.B = new byte[mapEngine.y];
-            mapEngine.A = new short[mapEngine.y][][];
-            for (int i = 0; i < mapEngine.y; ++i) {
+            mapEngine.layerCount = ((DataInputStream)inputStream).readByte();
+            mapEngine.layerTypes = new byte[mapEngine.layerCount];
+            mapEngine.layerData = new short[mapEngine.layerCount][][];
+            for (int i = 0; i < mapEngine.layerCount; ++i) {
                 int n;
                 int n2;
                 byte by2 = ((DataInputStream)inputStream).readByte();
-                mapEngine.B[i] = ((DataInputStream)inputStream).readByte();
+                mapEngine.layerTypes[i] = ((DataInputStream)inputStream).readByte();
                 short s = ((DataInputStream)inputStream).readShort();
-                if (mapEngine.B[by2] == 0 || mapEngine.B[by2] == 1) {
-                    mapEngine.A[by2] = new short[mapEngine.mapColumns][mapEngine.mapRows];
+                if (mapEngine.layerTypes[by2] == 0 || mapEngine.layerTypes[by2] == 1) {
+                    mapEngine.layerData[by2] = new short[mapEngine.mapColumns][mapEngine.mapRows];
                     for (n2 = 0; n2 < mapEngine.mapColumns; ++n2) {
                         for (n = 0; n < mapEngine.mapRows; ++n) {
-                            mapEngine.A[by2][n2][n] = -1;
+                            mapEngine.layerData[by2][n2][n] = -1;
                         }
                     }
                 } else {
-                    mapEngine.A[by2] = new short[s][4];
+                    mapEngine.layerData[by2] = new short[s][4];
                 }
                 for (n2 = 0; n2 < s; ++n2) {
                     short s2;
@@ -121,18 +121,18 @@ public final class MapEngine {
                         s2 = ((DataInputStream)inputStream).readShort();
                     }
                     short s3 = ((DataInputStream)inputStream).readShort();
-                    if (mapEngine.B[i] == 1) {
-                        mapEngine.A[i][n][s2] = s3;
+                    if (mapEngine.layerTypes[i] == 1) {
+                        mapEngine.layerData[i][n][s2] = s3;
                         continue;
                     }
-                    if (mapEngine.B[by2] == 0) {
-                        mapEngine.A[i][n][s2] = (short)(s3 & 0xFFF);
+                    if (mapEngine.layerTypes[by2] == 0) {
+                        mapEngine.layerData[i][n][s2] = (short)(s3 & 0xFFF);
                         continue;
                     }
-                    mapEngine.A[i][n2][1] = n;
-                    mapEngine.A[i][n2][2] = s2;
-                    mapEngine.A[i][n2][0] = (short)(s3 & 0xFFF);
-                    mapEngine.A[i][n2][3] = (short)((s3 & 0x7000) >> 12);
+                    mapEngine.layerData[i][n2][1] = n;
+                    mapEngine.layerData[i][n2][2] = s2;
+                    mapEngine.layerData[i][n2][0] = (short)(s3 & 0xFFF);
+                    mapEngine.layerData[i][n2][3] = (short)((s3 & 0x7000) >> 12);
                 }
             }
             ((FilterInputStream)inputStream).close();
@@ -141,14 +141,14 @@ public final class MapEngine {
             Object var2_4 = null;
             exception.printStackTrace();
         }
-        if (C == null) {
-            C = Image.createImage(this.viewportWidth, this.viewportHeight);
-            D = C.getGraphics();
+        if (bufferImage == null) {
+            bufferImage = Image.createImage(this.viewportWidth, this.viewportHeight);
+            bufferGraphics = bufferImage.getGraphics();
         }
-        this.E = true;
+        this.needsFullRedraw = true;
     }
 
-    private void d() {
+    private void loadTileset() {
         int n;
         if (this.tileImages != null) {
             for (n = 0; n < this.tileImages.length; ++n) {
@@ -173,13 +173,13 @@ public final class MapEngine {
             InputStream inputStream = ResourceStream.openResource("/data/mod/mod_" + this.tilesetId + ".mid");
             DataInputStream dataInputStream = new DataInputStream(inputStream);
             int n2 = dataInputStream.readShort();
-            this.z = new short[n2][5];
+            this.tileDefinitions = new short[n2][5];
             for (int i = 0; i < n2; ++i) {
-                this.z[i][0] = dataInputStream.readByte();
-                this.z[i][1] = dataInputStream.readShort();
-                this.z[i][2] = dataInputStream.readShort();
-                this.z[i][3] = dataInputStream.readShort();
-                this.z[i][4] = dataInputStream.readShort();
+                this.tileDefinitions[i][0] = dataInputStream.readByte();
+                this.tileDefinitions[i][1] = dataInputStream.readShort();
+                this.tileDefinitions[i][2] = dataInputStream.readShort();
+                this.tileDefinitions[i][3] = dataInputStream.readShort();
+                this.tileDefinitions[i][4] = dataInputStream.readShort();
             }
             dataInputStream.close();
             inputStream.close();
@@ -191,150 +191,155 @@ public final class MapEngine {
         }
     }
 
-    public final void c() {
+    public final void updateVisibleBounds() {
         if (this.tileWidth == 0) {
             return;
         }
-        this.t = this.cameraY / this.tileHeight;
-        this.s = this.cameraX / this.tileWidth;
-        this.v = (this.cameraY + this.viewportHeight) / this.tileHeight;
+        this.startTileRow = this.cameraY / this.tileHeight;
+        this.startTileCol = this.cameraX / this.tileWidth;
+        this.endTileRow = (this.cameraY + this.viewportHeight) / this.tileHeight;
         if ((this.cameraY + this.viewportHeight) % this.tileHeight != 0) {
-            ++this.v;
+            ++this.endTileRow;
         }
-        if (this.v > this.mapRows) {
-            this.v = this.mapRows;
+        if (this.endTileRow > this.mapRows) {
+            this.endTileRow = this.mapRows;
         }
-        this.u = (this.cameraX + this.viewportWidth) / this.tileWidth;
+        this.endTileCol = (this.cameraX + this.viewportWidth) / this.tileWidth;
         if ((this.cameraX + this.viewportWidth) % this.tileWidth != 0) {
-            ++this.u;
+            ++this.endTileCol;
         }
-        if (this.u > this.mapColumns) {
-            this.u = this.mapColumns;
+        if (this.endTileCol > this.mapColumns) {
+            this.endTileCol = this.mapColumns;
         }
-        this.x = this.viewportHeight / this.tileHeight + 1;
-        this.w = this.viewportWidth / this.tileWidth + 1;
-        if (this.t + this.x >= this.mapRows) {
-            this.x = this.mapRows - 1 - this.t;
+        this.visibleTileRows = this.viewportHeight / this.tileHeight + 1;
+        this.visibleTileCols = this.viewportWidth / this.tileWidth + 1;
+        if (this.startTileRow + this.visibleTileRows >= this.mapRows) {
+            this.visibleTileRows = this.mapRows - 1 - this.startTileRow;
         }
-        if (this.w + this.s >= this.mapColumns) {
-            this.w = this.mapColumns - 1 - this.s;
+        if (this.visibleTileCols + this.startTileCol >= this.mapColumns) {
+            this.visibleTileCols = this.mapColumns - 1 - this.startTileCol;
         }
     }
 
-    private void a(Graphics graphics, int n, int n2, int n3, int n4, int n5) {
+    private void renderTileRegion(Graphics graphics, int layerIndex, int startCol, int startRow, int endCol, int endRow) {
         WorldManager.a();
-        WorldManager.a(graphics, n2, n3, n4, n5);
-        switch (this.B[n]) {
+        WorldManager.a(graphics, startCol, startRow, endCol, endRow);
+        switch (this.layerTypes[layerIndex]) {
             case 0: {
-                this.b(graphics, n, n2, n3, n4, n5);
+                this.renderBasicGridRegion(graphics, layerIndex, startCol, startRow, endCol, endRow);
                 return;
             }
             case 1: {
-                this.c(graphics, n, n2, n3, n4, n5);
+                this.renderTransformedGridRegion(graphics, layerIndex, startCol, startRow, endCol, endRow);
             }
         }
     }
 
-    public final void a(Graphics object, int n, int n2) {
-        switch (this.B[n]) {
+    /*
+     * WARNING - void declaration
+     */
+    public final void renderLayer(Graphics graphics, int layerIndex, int layerParam) {
+        switch (this.layerTypes[layerIndex]) {
             case 0:
             case 1: {
-                n2 = n;
-                Graphics graphics = object;
-                object = this;
-                if (((MapEngine)object).E) {
-                    int n3 = ((MapEngine)object).cameraX / ((MapEngine)object).tileWidth < 0 ? 0 : ((MapEngine)object).cameraX / ((MapEngine)object).tileWidth;
-                    int n4 = ((MapEngine)object).cameraY / ((MapEngine)object).tileHeight < 0 ? 0 : ((MapEngine)object).cameraY / ((MapEngine)object).tileHeight;
-                    int n5 = (((MapEngine)object).cameraX + ((MapEngine)object).viewportWidth) / ((MapEngine)object).tileWidth + 1 > ((MapEngine)object).mapColumns ? ((MapEngine)object).mapColumns : (((MapEngine)object).cameraX + ((MapEngine)object).viewportWidth) / ((MapEngine)object).tileWidth + 1;
-                    int n6 = (((MapEngine)object).cameraY + ((MapEngine)object).viewportHeight) / ((MapEngine)object).tileHeight + 1 > ((MapEngine)object).mapRows ? ((MapEngine)object).mapRows : (((MapEngine)object).cameraY + ((MapEngine)object).viewportHeight) / ((MapEngine)object).tileHeight + 1;
+                layerParam = layerIndex;
+                Graphics graphics2 = graphics;
+                MapEngine mapEngine = this;
+                if (mapEngine.needsFullRedraw) {
+                    int n = mapEngine.cameraX / mapEngine.tileWidth < 0 ? 0 : mapEngine.cameraX / mapEngine.tileWidth;
+                    int n2 = mapEngine.cameraY / mapEngine.tileHeight < 0 ? 0 : mapEngine.cameraY / mapEngine.tileHeight;
+                    int n3 = (mapEngine.cameraX + mapEngine.viewportWidth) / mapEngine.tileWidth + 1 > mapEngine.mapColumns ? mapEngine.mapColumns : (mapEngine.cameraX + mapEngine.viewportWidth) / mapEngine.tileWidth + 1;
+                    int n4 = (mapEngine.cameraY + mapEngine.viewportHeight) / mapEngine.tileHeight + 1 > mapEngine.mapRows ? mapEngine.mapRows : (mapEngine.cameraY + mapEngine.viewportHeight) / mapEngine.tileHeight + 1;
                     WorldManager.a();
-                    WorldManager.a(D, 0, 0, ((MapEngine)object).viewportWidth, ((MapEngine)object).viewportHeight);
-                    switch (((MapEngine)object).B[n2]) {
+                    WorldManager.a(bufferGraphics, 0, 0, mapEngine.viewportWidth, mapEngine.viewportHeight);
+                    switch (mapEngine.layerTypes[layerParam]) {
                         case 0: {
-                            super.b(D, n2, n3, n4, n5, n6);
+                            mapEngine.renderBasicGridRegion(bufferGraphics, layerParam, n, n2, n3, n4);
                             break;
                         }
                         case 1: {
-                            super.c(D, n2, n3, n4, n5, n6);
+                            mapEngine.renderTransformedGridRegion(bufferGraphics, layerParam, n, n2, n3, n4);
                         }
                     }
-                    ((MapEngine)object).E = false;
-                } else if (((MapEngine)object).q != ((MapEngine)object).cameraX || ((MapEngine)object).r != ((MapEngine)object).cameraY) {
-                    int n7 = 0;
-                    int n8 = 0;
-                    if (((MapEngine)object).cameraX > ((MapEngine)object).q) {
-                        n7 = ((MapEngine)object).q - ((MapEngine)object).cameraX;
-                    } else if (((MapEngine)object).cameraX < ((MapEngine)object).q) {
-                        n7 = ((MapEngine)object).q - ((MapEngine)object).cameraX;
+                    mapEngine.needsFullRedraw = false;
+                } else if (mapEngine.lastCameraX != mapEngine.cameraX || mapEngine.lastCameraY != mapEngine.cameraY) {
+                    int n = 0;
+                    int n5 = 0;
+                    if (mapEngine.cameraX > mapEngine.lastCameraX) {
+                        n = mapEngine.lastCameraX - mapEngine.cameraX;
+                    } else if (mapEngine.cameraX < mapEngine.lastCameraX) {
+                        n = mapEngine.lastCameraX - mapEngine.cameraX;
                     }
-                    if (((MapEngine)object).cameraY > ((MapEngine)object).r) {
-                        n8 = ((MapEngine)object).r - ((MapEngine)object).cameraY;
-                    } else if (((MapEngine)object).cameraY < ((MapEngine)object).r) {
-                        n8 = ((MapEngine)object).r - ((MapEngine)object).cameraY;
+                    if (mapEngine.cameraY > mapEngine.lastCameraY) {
+                        n5 = mapEngine.lastCameraY - mapEngine.cameraY;
+                    } else if (mapEngine.cameraY < mapEngine.lastCameraY) {
+                        n5 = mapEngine.lastCameraY - mapEngine.cameraY;
                     }
-                    D.copyArea(0, 0, ((MapEngine)object).viewportWidth, ((MapEngine)object).viewportHeight, n7, n8, 20);
-                    if (((MapEngine)object).cameraX > ((MapEngine)object).q) {
-                        int n9 = (((MapEngine)object).q + ((MapEngine)object).viewportWidth) / ((MapEngine)object).tileWidth;
-                        super.a(D, n2, n9, ((MapEngine)object).t, ((MapEngine)object).u, ((MapEngine)object).v);
-                    } else if (((MapEngine)object).cameraX < ((MapEngine)object).q) {
-                        n7 = ((MapEngine)object).q / ((MapEngine)object).tileWidth + 1;
-                        super.a(D, n2, ((MapEngine)object).s, ((MapEngine)object).t, n7, ((MapEngine)object).v);
+                    bufferGraphics.copyArea(0, 0, mapEngine.viewportWidth, mapEngine.viewportHeight, n, n5, 20);
+                    if (mapEngine.cameraX > mapEngine.lastCameraX) {
+                        int n6 = (mapEngine.lastCameraX + mapEngine.viewportWidth) / mapEngine.tileWidth;
+                        mapEngine.renderTileRegion(bufferGraphics, layerParam, n6, mapEngine.startTileRow, mapEngine.endTileCol, mapEngine.endTileRow);
+                    } else if (mapEngine.cameraX < mapEngine.lastCameraX) {
+                        n = mapEngine.lastCameraX / mapEngine.tileWidth + 1;
+                        mapEngine.renderTileRegion(bufferGraphics, layerParam, mapEngine.startTileCol, mapEngine.startTileRow, n, mapEngine.endTileRow);
                     }
-                    if (((MapEngine)object).cameraY > ((MapEngine)object).r) {
-                        int n10 = (((MapEngine)object).r + ((MapEngine)object).viewportHeight) / ((MapEngine)object).tileHeight;
-                        super.a(D, n2, ((MapEngine)object).s, n10, ((MapEngine)object).u, ((MapEngine)object).v);
-                    } else if (((MapEngine)object).cameraY < ((MapEngine)object).r) {
-                        n7 = ((MapEngine)object).r / ((MapEngine)object).tileHeight + 1;
-                        super.a(D, n2, ((MapEngine)object).s, ((MapEngine)object).t, ((MapEngine)object).u, n7);
+                    if (mapEngine.cameraY > mapEngine.lastCameraY) {
+                        int n7 = (mapEngine.lastCameraY + mapEngine.viewportHeight) / mapEngine.tileHeight;
+                        mapEngine.renderTileRegion(bufferGraphics, layerParam, mapEngine.startTileCol, n7, mapEngine.endTileCol, mapEngine.endTileRow);
+                    } else if (mapEngine.cameraY < mapEngine.lastCameraY) {
+                        n = mapEngine.lastCameraY / mapEngine.tileHeight + 1;
+                        mapEngine.renderTileRegion(bufferGraphics, layerParam, mapEngine.startTileCol, mapEngine.startTileRow, mapEngine.endTileCol, n);
                     }
                 }
-                graphics.drawImage(C, 0, 0, 20);
-                ((MapEngine)object).q = ((MapEngine)object).cameraX;
-                ((MapEngine)object).r = ((MapEngine)object).cameraY;
+                graphics2.drawImage(bufferImage, 0, 0, 20);
+                mapEngine.lastCameraX = mapEngine.cameraX;
+                mapEngine.lastCameraY = mapEngine.cameraY;
                 return;
             }
             case 2:
             case 3:
             case 4: {
-                n2 = n;
-                Graphics graphics = object;
-                object = this;
-                for (int i = 0; i < ((MapEngine)object).A[n2].length; ++i) {
-                    if (((MapEngine)object).A[n2][i][2] < 0 || !EngineUtils.a(((MapEngine)object).A[n2][i][1], ((MapEngine)object).A[n2][i][2], ((MapEngine)object).z[((MapEngine)object).A[n2][i][0]][3], ((MapEngine)object).z[((MapEngine)object).A[n2][i][0]][4], ((MapEngine)object).s, ((MapEngine)object).t, ((MapEngine)object).w + 1, ((MapEngine)object).x + 1, ((MapEngine)object).A[n2][i][3])) continue;
-                    graphics.drawRegion(((MapEngine)object).tileImages[((MapEngine)object).z[((MapEngine)object).A[n2][i][0]][0]], ((MapEngine)object).z[((MapEngine)object).A[n2][i][0]][1], ((MapEngine)object).z[((MapEngine)object).A[n2][i][0]][2], ((MapEngine)object).z[((MapEngine)object).A[n2][i][0]][3], ((MapEngine)object).z[((MapEngine)object).A[n2][i][0]][4], f[((MapEngine)object).A[n2][i][3]], (((MapEngine)object).A[n2][i][1] - ((MapEngine)object).s) * ((MapEngine)object).tileWidth - ((MapEngine)object).cameraX % ((MapEngine)object).tileWidth, (((MapEngine)object).A[n2][i][2] - ((MapEngine)object).t) * ((MapEngine)object).tileHeight - ((MapEngine)object).cameraY % ((MapEngine)object).tileHeight, 20);
+                void var2_2;
+                MapEngine mapEngine;
+                layerParam = var2_2;
+                void var2_4 = mapEngine;
+                mapEngine = this;
+                for (int i = 0; i < mapEngine.layerData[layerParam].length; ++i) {
+                    if (mapEngine.layerData[layerParam][i][2] < 0 || !EngineUtils.a(mapEngine.layerData[layerParam][i][1], mapEngine.layerData[layerParam][i][2], mapEngine.tileDefinitions[mapEngine.layerData[layerParam][i][0]][3], mapEngine.tileDefinitions[mapEngine.layerData[layerParam][i][0]][4], mapEngine.startTileCol, mapEngine.startTileRow, mapEngine.visibleTileCols + 1, mapEngine.visibleTileRows + 1, mapEngine.layerData[layerParam][i][3])) continue;
+                    var2_4.drawRegion(mapEngine.tileImages[mapEngine.tileDefinitions[mapEngine.layerData[layerParam][i][0]][0]], mapEngine.tileDefinitions[mapEngine.layerData[layerParam][i][0]][1], mapEngine.tileDefinitions[mapEngine.layerData[layerParam][i][0]][2], mapEngine.tileDefinitions[mapEngine.layerData[layerParam][i][0]][3], mapEngine.tileDefinitions[mapEngine.layerData[layerParam][i][0]][4], transformLookupTable[mapEngine.layerData[layerParam][i][3]], (mapEngine.layerData[layerParam][i][1] - mapEngine.startTileCol) * mapEngine.tileWidth - mapEngine.cameraX % mapEngine.tileWidth, (mapEngine.layerData[layerParam][i][2] - mapEngine.startTileRow) * mapEngine.tileHeight - mapEngine.cameraY % mapEngine.tileHeight, 20);
                 }
                 break;
             }
         }
     }
 
-    private void b(Graphics graphics, int n, int n2, int n3, int n4, int n5) {
-        while (n2 < n4) {
-            for (int i = n3; i < n5; ++i) {
-                short s = this.A[n][n2][i];
+    private void renderBasicGridRegion(Graphics graphics, int layerIndex, int startCol, int startRow, int endCol, int endRow) {
+        while (startCol < endCol) {
+            for (int i = startRow; i < endRow; ++i) {
+                short s = this.layerData[layerIndex][startCol][i];
                 if (s == -1) continue;
-                graphics.drawRegion(this.tileImages[0], this.z[s][1], this.z[s][2], this.z[s][3], this.z[s][4], 0, n2 * this.tileWidth - this.cameraX, i * this.tileHeight - this.cameraY, 20);
+                graphics.drawRegion(this.tileImages[0], this.tileDefinitions[s][1], this.tileDefinitions[s][2], this.tileDefinitions[s][3], this.tileDefinitions[s][4], 0, startCol * this.tileWidth - this.cameraX, i * this.tileHeight - this.cameraY, 20);
             }
-            ++n2;
+            ++startCol;
         }
     }
 
-    private void c(Graphics graphics, int n, int n2, int n3, int n4, int n5) {
-        while (n2 < n4) {
-            for (int i = n3; i < n5; ++i) {
-                short s = this.A[n][n2][i];
+    private void renderTransformedGridRegion(Graphics graphics, int layerIndex, int startCol, int startRow, int endCol, int endRow) {
+        while (startCol < endCol) {
+            for (int i = startRow; i < endRow; ++i) {
+                short s = this.layerData[layerIndex][startCol][i];
                 if (s == -1) continue;
                 short s2 = (short)(s & 0xFFF);
-                s = (short)f[(s & 0x7000) >> 12];
-                graphics.drawRegion(this.tileImages[this.z[s2][0]], this.z[s2][1], this.z[s2][2], this.z[s2][3], this.z[s2][4], s, n2 * this.tileWidth - this.cameraX, i * this.tileHeight - this.cameraY, 20);
+                s = (short)transformLookupTable[(s & 0x7000) >> 12];
+                graphics.drawRegion(this.tileImages[this.tileDefinitions[s2][0]], this.tileDefinitions[s2][1], this.tileDefinitions[s2][2], this.tileDefinitions[s2][3], this.tileDefinitions[s2][4], s, startCol * this.tileWidth - this.cameraX, i * this.tileHeight - this.cameraY, 20);
             }
-            ++n2;
+            ++startCol;
         }
     }
 
-    public final void a(int n, int n2) {
-        this.cameraX = n - this.viewportWidth / 2;
-        this.cameraY = n2 - this.viewportHeight / 2;
+    public final void centerCamera(int targetX, int targetY) {
+        this.cameraX = targetX - this.viewportWidth / 2;
+        this.cameraY = targetY - this.viewportHeight / 2;
         if (this.cameraX + this.viewportWidth >= this.mapColumns * this.tileWidth) {
             this.cameraX = this.mapColumns * this.tileWidth - this.viewportWidth;
         }
@@ -349,37 +354,37 @@ public final class MapEngine {
         }
     }
 
-    public final byte b(int n, int n2) {
-        if (this.A == null || this.A[0] == null) {
+    public final byte getCollisionTile(int pixelX, int pixelY) {
+        if (this.layerData == null || this.layerData[0] == null) {
             return -1;
         }
-        int n3 = n / this.tileWidth;
-        int n4 = n2 / this.tileHeight;
-        if (this.c(n, n2)) {
+        int n = pixelX / this.tileWidth;
+        int n2 = pixelY / this.tileHeight;
+        if (this.isOutOfBounds(pixelX, pixelY)) {
             return 1;
         }
-        if (n4 < 0) {
-            n4 = 0;
+        if (n2 < 0) {
+            n2 = 0;
         }
-        if (n3 < 0) {
-            n3 = 0;
+        if (n < 0) {
+            n = 0;
         }
-        if (n3 > this.mapColumns) {
-            n3 = this.mapColumns;
+        if (n > this.mapColumns) {
+            n = this.mapColumns;
         }
-        if (n4 > this.mapRows) {
-            n4 = this.mapRows;
+        if (n2 > this.mapRows) {
+            n2 = this.mapRows;
         }
-        return (byte)this.A[0][n3][n4];
+        return (byte)this.layerData[0][n][n2];
     }
 
-    public final boolean c(int n, int n2) {
-        return n <= 0 || n >= this.mapPixelWidth || n2 <= 0 || n2 >= this.mapPixelHeight;
+    public final boolean isOutOfBounds(int pixelX, int pixelY) {
+        return pixelX <= 0 || pixelX >= this.mapPixelWidth || pixelY <= 0 || pixelY >= this.mapPixelHeight;
     }
 
     static {
         int[] nArray = new int[]{0, 270, 180, 90, 8192, 8462, 8372, 8282};
-        f = new int[]{0, 5, 3, 6, 2, 4, 1, 7};
+        transformLookupTable = new int[]{0, 5, 3, 6, 2, 4, 1, 7};
     }
 }
 

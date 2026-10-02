@@ -79,8 +79,8 @@ public final class StringTable {
     public final void b() {
         int n;
         this.e.d();
-        this.a.a(this.e.posX, this.e.posY);
-        this.a.c();
+        this.a.centerCamera(this.e.posX, this.e.posY);
+        this.a.updateVisibleBounds();
         for (n = 0; n < this.b.size(); ++n) {
             ((WorldEntity)this.b.elementAt(n)).advanceAnimationIfVisible();
         }
@@ -112,8 +112,8 @@ public final class StringTable {
     public final void a(Graphics graphics) {
         int n;
         int n2;
-        this.a.a(graphics, 1, 1);
-        this.a.a(graphics, 2, 1);
+        this.a.renderLayer(graphics, 1, 1);
+        this.a.renderLayer(graphics, 2, 1);
         for (n2 = 0; n2 < this.d.size(); ++n2) {
             if (!((WorldEntity)this.d.elementAt(n2)).k()) continue;
             ((WorldEntity)this.d.elementAt(n2)).renderInWorld(graphics, this.a.cameraX, this.a.cameraY);
@@ -146,7 +146,7 @@ public final class StringTable {
                     ((NpcEntity)this.c.elementAt((int)n)).H.renderInWorld(graphics, this.a.cameraX, this.a.cameraY);
                 }
                 n2 = 7;
-                n = MapEngine.getInstance().b(Player.getInstance().posX, Player.getInstance().posY);
+                n = MapEngine.getInstance().getCollisionTile(Player.getInstance().posX, Player.getInstance().posY);
                 n2 = 8;
                 if (n != 1 && WorldManager.a().c.targetEntity != null && WorldManager.a().c.isVisible()) {
                     n2 = 9;
@@ -188,7 +188,7 @@ public final class StringTable {
         catch (Exception exception) {
             DebugLogger.a(exception, "" + n2);
         }
-        this.a.a(graphics, 3, 1);
+        this.a.renderLayer(graphics, 3, 1);
         for (n = 0; n < this.b.size(); ++n) {
             WorldEntity worldEntity = (WorldEntity)this.b.elementAt(n);
             if (!worldEntity.k()) continue;
@@ -200,8 +200,8 @@ public final class StringTable {
         int n;
         WorldManager.a();
         WorldManager.a(graphics, 0, 0, BaseScreen.getScreenWidth(), BaseScreen.getScreenHeight());
-        this.a.a(graphics, 1, 1);
-        this.a.a(graphics, 2, 1);
+        this.a.renderLayer(graphics, 1, 1);
+        this.a.renderLayer(graphics, 2, 1);
         for (n = 0; n < this.d.size(); ++n) {
             if (!((WorldEntity)this.d.elementAt(n)).k() || !(this.d.elementAt(n) instanceof NpcEntity) || ((NpcEntity)this.d.elementAt((int)n)).v != 0) continue;
             ((WorldEntity)this.d.elementAt(n)).renderInWorld(graphics, this.a.cameraX, this.a.cameraY);
@@ -210,7 +210,7 @@ public final class StringTable {
             if (!((WorldEntity)this.c.elementAt(n)).k() || !(this.c.elementAt(n) instanceof NpcEntity) || ((NpcEntity)this.c.elementAt((int)n)).v != 0) continue;
             ((WorldEntity)this.c.elementAt(n)).renderInWorld(graphics, this.a.cameraX, this.a.cameraY);
         }
-        this.a.a(graphics, 3, 1);
+        this.a.renderLayer(graphics, 3, 1);
         for (n = 0; n < this.b.size(); ++n) {
             if (!((WorldEntity)this.b.elementAt(n)).k() || !(this.b.elementAt(n) instanceof NpcEntity) || ((NpcEntity)this.b.elementAt((int)n)).v != 0) continue;
             ((WorldEntity)this.b.elementAt(n)).renderInWorld(graphics, this.a.cameraX, this.a.cameraY);

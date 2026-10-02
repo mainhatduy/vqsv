@@ -80,6 +80,7 @@ At the root of `reference/decompiled/` (binary classes are in the default packag
 | SpriteWidget | `m` | Sprite presentation inside UI |
 | ScriptCommand / ScriptSequence / ScriptEventListener | `ad` / `p` / `i` | Event command / sequence / callback |
 | SkillEffect / ParticleEffect | `ah` / `ai` | Skill visuals / particle effects |
+| MapEngine | `j` | Map data loader (/data/map/map_*.mid), tileset modules (/data/mod/mod_*.mid), layer compositor, double-buffered scrolling, and tile collision |
 | SaveStorage | `ar` | RecordStore persistence |
 
 The complete 68-class map is `CLASS_RENAME_MAP` in

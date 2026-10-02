@@ -20,7 +20,15 @@ EMULATOR = ROOT.parent / 'emulator/freej2me_plus.jar'
 ORIGINAL = ROOT / 'original/game.jar'
 
 
+def ensure_jdk_environment():
+    for candidate in [Path('/opt/homebrew/opt/openjdk/bin'), Path('/usr/local/opt/openjdk/bin')]:
+        if candidate.is_dir() and str(candidate) not in os.environ.get('PATH', ''):
+            os.environ['PATH'] = f"{candidate}:{os.environ.get('PATH', '')}"
+            break
+
+
 def run(*args):
+    ensure_jdk_environment()
     subprocess.run(list(map(str, args)), check=True)
 
 

@@ -50,6 +50,19 @@ writing packed assets.
 - Compilation uses the original JAR and emulator as classpath, not patched
   resource classes. Inspect signatures with `javap`; inspect the output JAR when
   the patch differs from the original.
+- Build & environment execution:
+  - macOS OpenJDK: If `/usr/bin/java` or `javac` errors with "Unable to locate a Java Runtime",
+    ensure `/opt/homebrew/opt/openjdk/bin` (or `$JAVA_HOME/bin`) is prepended to `PATH`.
+  - Terminal sandbox & emulator access: The emulator JAR lives at `../emulator/freej2me_plus.jar`
+    (outside the repository directory). Commands executing `project.py build`, `project.py run`,
+    or `tools/rebuild_reference.py` must run unsandboxed (`BypassSandbox: true`) to avoid sandbox permission errors.
+- Two-step reference refactoring workflow:
+  1. Symbol Registry: Register classes, fields, methods, and parameters in `tools/reference-names.json`
+     (preserving 1-line compact array format), then run `python3 tools/rebuild_reference.py --apply`.
+     This propagates renames across all callers in `reference/decompiled/` with round-trip bytecode verification.
+  2. Local Variables & Decompiler Fixes: Decompilers (CFR) produce synthetic local names (`n`, `s`, `by`)
+     and occasional invalid syntax (`void var2_2;`). Once symbol renames are applied, polish the target
+     file directly in `reference/decompiled/` with clean local variables, docstrings, and verified syntax.
 - Pet ID, text ID, sprite ID, animation ID, image ID, UI component ID, and icon
   frame index are distinct. Trace references rather than replacing equal numbers
   globally.

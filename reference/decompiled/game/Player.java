@@ -177,19 +177,19 @@ extends WorldEntity {
                     Player player = this;
                     switch (player.facingDirection) {
                         case 2: {
-                            bl = MapEngine.getInstance().c(n2, n - 25 - player.Z);
+                            bl = MapEngine.getInstance().isOutOfBounds(n2, n - 25 - player.Z);
                             break;
                         }
                         case 0: {
-                            bl = MapEngine.getInstance().c(n2, n - 25 + player.Z);
+                            bl = MapEngine.getInstance().isOutOfBounds(n2, n - 25 + player.Z);
                             break;
                         }
                         case 3: {
-                            bl = MapEngine.getInstance().c(n2 - player.Z, n - 25);
+                            bl = MapEngine.getInstance().isOutOfBounds(n2 - player.Z, n - 25);
                             break;
                         }
                         case 1: {
-                            bl = MapEngine.getInstance().c(n2 + player.Z, n - 25);
+                            bl = MapEngine.getInstance().isOutOfBounds(n2 + player.Z, n - 25);
                             break;
                         }
                         default: {
@@ -318,22 +318,22 @@ extends WorldEntity {
                 boolean bl = true;
                 switch (player.facingDirection) {
                     case 3: {
-                        bl = player.d(MapEngine.getInstance().b(player.posX - 16, player.posY));
+                        bl = player.d(MapEngine.getInstance().getCollisionTile(player.posX - 16, player.posY));
                         break;
                     }
                     case 1: {
-                        bl = player.d(MapEngine.getInstance().b(player.posX + 16, player.posY));
+                        bl = player.d(MapEngine.getInstance().getCollisionTile(player.posX + 16, player.posY));
                         break;
                     }
                     case 2: {
-                        bl = player.d(MapEngine.getInstance().b(player.posX, player.posY - 16));
+                        bl = player.d(MapEngine.getInstance().getCollisionTile(player.posX, player.posY - 16));
                         break;
                     }
                     case 0: {
-                        bl = player.d(MapEngine.getInstance().b(player.posX, player.posY + 16));
+                        bl = player.d(MapEngine.getInstance().getCollisionTile(player.posX, player.posY + 16));
                     }
                 }
-                if (bl && MapEngine.getInstance().b(player.posX, player.posY) != 3 ? false : bl) {
+                if (bl && MapEngine.getInstance().getCollisionTile(player.posX, player.posY) != 3 ? false : bl) {
                     this.moveInFacingDirection(this.baseStats[2]);
                     return;
                 }
@@ -573,7 +573,7 @@ extends WorldEntity {
     }
 
     public final boolean r() {
-        return this.t != 2 || MapEngine.getInstance().b(this.posX + 7, this.posY + 7) == 0 && MapEngine.getInstance().b(this.posX - 8, this.posY - 8) == 0;
+        return this.t != 2 || MapEngine.getInstance().getCollisionTile(this.posX + 7, this.posY + 7) == 0 && MapEngine.getInstance().getCollisionTile(this.posX - 8, this.posY - 8) == 0;
     }
 
     public final void h(int n) {
@@ -802,7 +802,7 @@ extends WorldEntity {
                             return false;
                         }
                         case 9: {
-                            if (MapEngine.getInstance().b(this.posX, this.posY) == 2 || MapEngine.getInstance().b(this.posX, this.posY) == 1) {
+                            if (MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 2 || MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 1) {
                                 return false;
                             }
                             if (this.facingDirection != 3 && this.facingDirection != 1) break;
@@ -815,7 +815,7 @@ extends WorldEntity {
                             return false;
                         }
                         case 10: {
-                            if (MapEngine.getInstance().b(this.posX, this.posY) == 2 || MapEngine.getInstance().b(this.posX, this.posY) == 1) {
+                            if (MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 2 || MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 1) {
                                 return false;
                             }
                             if (this.facingDirection != 0 && this.facingDirection != 2) break;
@@ -858,20 +858,20 @@ extends WorldEntity {
         byte[] byArray = new byte[]{-1, -1, -1, -1, -1};
         switch (this.facingDirection) {
             case 2: {
-                if (MapEngine.getInstance().c(this.posX, n2 - this.Z)) {
+                if (MapEngine.getInstance().isOutOfBounds(this.posX, n2 - this.Z)) {
                     return false;
                 }
-                byArray[0] = MapEngine.getInstance().b(n, n2 - this.Z);
-                byArray[1] = MapEngine.getInstance().b(n3, n2 - this.Z);
-                byArray[2] = MapEngine.getInstance().b(this.posX, n2 - this.Z);
+                byArray[0] = MapEngine.getInstance().getCollisionTile(n, n2 - this.Z);
+                byArray[1] = MapEngine.getInstance().getCollisionTile(n3, n2 - this.Z);
+                byArray[2] = MapEngine.getInstance().getCollisionTile(this.posX, n2 - this.Z);
                 if (!this.d(byArray[0]) && !this.d(byArray[1])) {
-                    if (MapEngine.getInstance().b(this.posX, this.posY) == 3) {
+                    if (MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 3) {
                         return false;
                     }
-                    byArray[0] = MapEngine.getInstance().b(this.posX - 16, n2 - this.Z);
-                    byArray[1] = MapEngine.getInstance().b(this.posX + 16, n2 - this.Z);
-                    byArray[3] = MapEngine.getInstance().b(this.posX - 16, this.posY);
-                    byArray[4] = MapEngine.getInstance().b(this.posX + 16, this.posY);
+                    byArray[0] = MapEngine.getInstance().getCollisionTile(this.posX - 16, n2 - this.Z);
+                    byArray[1] = MapEngine.getInstance().getCollisionTile(this.posX + 16, n2 - this.Z);
+                    byArray[3] = MapEngine.getInstance().getCollisionTile(this.posX - 16, this.posY);
+                    byArray[4] = MapEngine.getInstance().getCollisionTile(this.posX + 16, this.posY);
                     this.Z = this.currentStats[1];
                     if (!this.d(byArray[0])) {
                         return this.d(byArray[1], (byte)1);
@@ -898,20 +898,20 @@ extends WorldEntity {
                 }
             }
             case 0: {
-                if (MapEngine.getInstance().c(this.posX, n4 + this.Z)) {
+                if (MapEngine.getInstance().isOutOfBounds(this.posX, n4 + this.Z)) {
                     return false;
                 }
-                byArray[0] = MapEngine.getInstance().b(n, n4 + this.Z);
-                byArray[1] = MapEngine.getInstance().b(n3, n4 + this.Z);
-                byArray[2] = MapEngine.getInstance().b(this.posX, n4 + this.Z);
+                byArray[0] = MapEngine.getInstance().getCollisionTile(n, n4 + this.Z);
+                byArray[1] = MapEngine.getInstance().getCollisionTile(n3, n4 + this.Z);
+                byArray[2] = MapEngine.getInstance().getCollisionTile(this.posX, n4 + this.Z);
                 if (!this.d(byArray[0]) && !this.d(byArray[1])) {
-                    if (MapEngine.getInstance().b(this.posX, this.posY) == 3) {
+                    if (MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 3) {
                         return false;
                     }
-                    byArray[0] = MapEngine.getInstance().b(n - 16, n4 + this.Z);
-                    byArray[1] = MapEngine.getInstance().b(n3 + 16, n4 + this.Z);
-                    byArray[3] = MapEngine.getInstance().b(this.posX - 16, this.posY);
-                    byArray[4] = MapEngine.getInstance().b(this.posX + 16, this.posY);
+                    byArray[0] = MapEngine.getInstance().getCollisionTile(n - 16, n4 + this.Z);
+                    byArray[1] = MapEngine.getInstance().getCollisionTile(n3 + 16, n4 + this.Z);
+                    byArray[3] = MapEngine.getInstance().getCollisionTile(this.posX - 16, this.posY);
+                    byArray[4] = MapEngine.getInstance().getCollisionTile(this.posX + 16, this.posY);
                     this.Z = this.currentStats[1];
                     if (!this.d(byArray[0])) {
                         return this.d(byArray[1], (byte)1);
@@ -938,20 +938,20 @@ extends WorldEntity {
                 }
             }
             case 3: {
-                if (MapEngine.getInstance().c(n - this.Z, this.posY)) {
+                if (MapEngine.getInstance().isOutOfBounds(n - this.Z, this.posY)) {
                     return false;
                 }
-                byArray[0] = MapEngine.getInstance().b(n - this.Z, n2);
-                byArray[1] = MapEngine.getInstance().b(n - this.Z, n4);
-                byArray[2] = MapEngine.getInstance().b(n - this.Z, this.posY);
+                byArray[0] = MapEngine.getInstance().getCollisionTile(n - this.Z, n2);
+                byArray[1] = MapEngine.getInstance().getCollisionTile(n - this.Z, n4);
+                byArray[2] = MapEngine.getInstance().getCollisionTile(n - this.Z, this.posY);
                 if (!this.d(byArray[0]) && !this.d(byArray[1])) {
-                    if (MapEngine.getInstance().b(this.posX, this.posY) == 3) {
+                    if (MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 3) {
                         return false;
                     }
-                    byArray[0] = MapEngine.getInstance().b(n - this.Z, n2 - 16);
-                    byArray[1] = MapEngine.getInstance().b(n - this.Z, n4 + 16);
-                    byArray[3] = MapEngine.getInstance().b(this.posX, this.posY - 16);
-                    byArray[4] = MapEngine.getInstance().b(this.posX, this.posY + 16);
+                    byArray[0] = MapEngine.getInstance().getCollisionTile(n - this.Z, n2 - 16);
+                    byArray[1] = MapEngine.getInstance().getCollisionTile(n - this.Z, n4 + 16);
+                    byArray[3] = MapEngine.getInstance().getCollisionTile(this.posX, this.posY - 16);
+                    byArray[4] = MapEngine.getInstance().getCollisionTile(this.posX, this.posY + 16);
                     this.Z = this.currentStats[1];
                     if (!this.d(byArray[0])) {
                         return this.d(byArray[1], (byte)0);
@@ -978,20 +978,20 @@ extends WorldEntity {
                 }
             }
             case 1: {
-                if (MapEngine.getInstance().c(n3 + this.Z, this.posY)) {
+                if (MapEngine.getInstance().isOutOfBounds(n3 + this.Z, this.posY)) {
                     return false;
                 }
-                byArray[0] = MapEngine.getInstance().b(n3 + this.Z, n2);
-                byArray[1] = MapEngine.getInstance().b(n3 + this.Z, n4);
-                byArray[2] = MapEngine.getInstance().b(n3 + this.Z, this.posY);
+                byArray[0] = MapEngine.getInstance().getCollisionTile(n3 + this.Z, n2);
+                byArray[1] = MapEngine.getInstance().getCollisionTile(n3 + this.Z, n4);
+                byArray[2] = MapEngine.getInstance().getCollisionTile(n3 + this.Z, this.posY);
                 if (!this.d(byArray[0]) && !this.d(byArray[1])) {
-                    if (MapEngine.getInstance().b(this.posX, this.posY) == 3) {
+                    if (MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 3) {
                         return false;
                     }
-                    byArray[0] = MapEngine.getInstance().b(n3 + this.Z, n2 - 16);
-                    byArray[1] = MapEngine.getInstance().b(n3 + this.Z, n4 + 16);
-                    byArray[3] = MapEngine.getInstance().b(this.posX, this.posY - 16);
-                    byArray[4] = MapEngine.getInstance().b(this.posX, this.posY + 16);
+                    byArray[0] = MapEngine.getInstance().getCollisionTile(n3 + this.Z, n2 - 16);
+                    byArray[1] = MapEngine.getInstance().getCollisionTile(n3 + this.Z, n4 + 16);
+                    byArray[3] = MapEngine.getInstance().getCollisionTile(this.posX, this.posY - 16);
+                    byArray[4] = MapEngine.getInstance().getCollisionTile(this.posX, this.posY + 16);
                     this.Z = this.currentStats[1];
                     if (!this.d(byArray[0])) {
                         return this.d(byArray[1], (byte)0);
@@ -1094,22 +1094,22 @@ extends WorldEntity {
         boolean bl = true;
         switch (this.facingDirection) {
             case 3: {
-                bl = this.d(MapEngine.getInstance().b(this.posX - this.currentStats[0], this.posY));
+                bl = this.d(MapEngine.getInstance().getCollisionTile(this.posX - this.currentStats[0], this.posY));
                 break;
             }
             case 1: {
-                bl = this.d(MapEngine.getInstance().b(this.posX + this.currentStats[0], this.posY));
+                bl = this.d(MapEngine.getInstance().getCollisionTile(this.posX + this.currentStats[0], this.posY));
                 break;
             }
             case 2: {
-                bl = this.d(MapEngine.getInstance().b(this.posX, this.posY - this.currentStats[0]));
+                bl = this.d(MapEngine.getInstance().getCollisionTile(this.posX, this.posY - this.currentStats[0]));
                 break;
             }
             case 0: {
-                bl = this.d(MapEngine.getInstance().b(this.posX, this.posY + this.currentStats[0]));
+                bl = this.d(MapEngine.getInstance().getCollisionTile(this.posX, this.posY + this.currentStats[0]));
             }
         }
-        if (bl && MapEngine.getInstance().b(this.posX, this.posY) != 2) {
+        if (bl && MapEngine.getInstance().getCollisionTile(this.posX, this.posY) != 2) {
             return false;
         }
         return bl;
@@ -1123,7 +1123,7 @@ extends WorldEntity {
                 break;
             }
             case 1: {
-                if (MapEngine.getInstance().b(this.posX, this.posY) == 2) {
+                if (MapEngine.getInstance().getCollisionTile(this.posX, this.posY) == 2) {
                     this.b((byte)2, by2);
                 }
                 return false;
