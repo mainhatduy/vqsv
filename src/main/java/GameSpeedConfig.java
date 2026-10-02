@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
 import java.util.Properties;
 
 /**
@@ -93,7 +92,7 @@ public final class GameSpeedConfig {
     }
 
     /**
-     * Tìm vị trí file cấu hình speed.conf (ưu tiên runtime/, sau đó đến root).
+     * Tìm speed.conf theo thứ tự cwd, thư mục cha, rồi runtime/ trong cwd.
      */
     private static File findConfigFile(boolean forWriting) {
         File[] candidateFiles = new File[] {
@@ -154,8 +153,8 @@ public final class GameSpeedConfig {
                     }
                 } catch (NumberFormatException ignored) {}
             }
-        } catch (Exception e) {
-            System.err.println("[VQSV Speed] Không thể đọc file speed.conf: " + e.getMessage());
+        } catch (Exception configurationError) {
+            System.err.println("[VQSV Speed] Không thể đọc file speed.conf: " + configurationError.getMessage());
         }
 
         speedMultiplier = DEFAULT_SPEED_MULTIPLIER;
@@ -220,7 +219,7 @@ public final class GameSpeedConfig {
      */
     public static void applySpeed() {
         syncLegacyVariables();
-        applyFrameDelayToBaseScreen(currentFrameDelayMs);
+        GameEngineBridge.applyFrameDelayToBaseScreen(currentFrameDelayMs);
 
         int approxFps = Math.round(1000f / currentFrameDelayMs);
         System.out.println("--------------------------------------------------");
@@ -397,12 +396,8 @@ public final class GameSpeedConfig {
      */
     public static boolean isOptionsMenuOpen() {
         try {
-            ab uiManager = getGameUIManager();
-            if (uiManager != null && uiManager.b(UI_PATH_HELP_SCREEN)) {
-                ao activeView = getActiveUIView(uiManager);
-                String currentTitle = getComponentText(activeView, UI_COMPONENT_ID_TITLE);
-                return UI_TITLE_OPTIONS_MENU.equals(currentTitle);
-            }
+            return GameEngineBridge.isTopViewWithTitle(
+                UI_PATH_HELP_SCREEN, UI_COMPONENT_ID_TITLE, UI_TITLE_OPTIONS_MENU);
         } catch (Throwable ignored) {}
         return false;
     }
@@ -412,15 +407,8 @@ public final class GameSpeedConfig {
      */
     public static void updateOptionsMenu() {
         try {
-            ab uiManager = getGameUIManager();
-            if (uiManager != null && uiManager.b(UI_PATH_HELP_SCREEN)) {
-                ao activeView = getActiveUIView(uiManager);
-                String currentTitle = getComponentText(activeView, UI_COMPONENT_ID_TITLE);
-                if (UI_TITLE_OPTIONS_MENU.equals(currentTitle)) {
-                    String expectedText = getMenuDisplayText();
-                    setComponentText(activeView, UI_COMPONENT_ID_CONTENT_AREA, expectedText);
-                }
-            }
+            GameEngineBridge.setTopViewText(UI_PATH_HELP_SCREEN, UI_COMPONENT_ID_TITLE,
+                UI_TITLE_OPTIONS_MENU, UI_COMPONENT_ID_CONTENT_AREA, getMenuDisplayText());
         } catch (Throwable ignored) {}
     }
 
@@ -443,88 +431,4 @@ public final class GameSpeedConfig {
         watcherThread.start();
     }
 
-    // =========================================================================
-    // 5. CÁC HÀM BỌC (WRAPPERS) TƯƠNG TÁC VỚI ENGINE GỐC ĐÃ BỊ OBFUSCATE
-    // =========================================================================
-
-    /**
-     * Lấy bộ quản lý giao diện singleton UIManager (lớp gốc: ab.class, hàm ab.a()).
-     */
-    private static ab getGameUIManager() {
-        try {
-            return ab.a();
-        } catch (Throwable ignored) {
-            return null;
-        }
-    }
-
-    /**
-     * Lấy view giao diện đang hoạt động activeView (lớp gốc: ao.class, trường ab.a).
-     */
-    private static ao getActiveUIView(ab uiManager) {
-        if (uiManager == null) return null;
-        return uiManager.a;
-    }
-
-    /**
-     * Lấy UIComponent theo ID (lớp gốc: w.class, hàm ao.a(int id)).
-     */
-    private static w getUIComponent(ao activeView, int componentId) {
-        if (activeView == null) return null;
-        try {
-            return activeView.a(componentId);
-        } catch (Throwable ignored) {
-            return null;
-        }
-    }
-
-    /**
-     * Lấy hotspot chứa text và thuộc tính vẽ của UIComponent (lớp gốc: k.class, hàm w.h()).
-     */
-    private static k getUIHotspot(w component) {
-        if (component == null) return null;
-        try {
-            return component.h();
-        } catch (Throwable ignored) {
-            return null;
-        }
-    }
-
-    /**
-     * Lấy chuỗi văn bản của một thành phần UI.
-     */
-    private static String getComponentText(ao activeView, int componentId) {
-        w component = getUIComponent(activeView, componentId);
-        k hotspot = getUIHotspot(component);
-        return (hotspot != null && hotspot.a != null) ? hotspot.a : "";
-    }
-
-    /**
-     * Gán chuỗi văn bản cho một thành phần UI nếu nội dung có thay đổi.
-     */
-    private static boolean setComponentText(ao activeView, int componentId, String newText) {
-        w component = getUIComponent(activeView, componentId);
-        k hotspot = getUIHotspot(component);
-        if (hotspot != null) {
-            if (!newText.equals(hotspot.a)) {
-                hotspot.a = newText;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Áp dụng giá trị frame delay vào biến static c của BaseScreen (lớp gốc: an.class).
-     * Ghi chú: Dùng reflection vì khi build qua javac, file original/game.jar chứa field c là private.
-     */
-    private static void applyFrameDelayToBaseScreen(int frameDelayMs) {
-        try {
-            Field frameDelayField = an.class.getDeclaredField("c");
-            frameDelayField.setAccessible(true);
-            frameDelayField.setInt(null, frameDelayMs);
-        } catch (Throwable t) {
-            System.err.println("[VQSV Speed] Lỗi áp dụng frameDelay vào BaseScreen (an.c): " + t.getMessage());
-        }
-    }
 }

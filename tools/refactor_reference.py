@@ -6,6 +6,11 @@ and semantic refactoring algorithms to make the codebase clean, legible,
 and human-understandable.
 """
 
+# Historical regex migration; superseded by owner/descriptor-aware regeneration.
+if __name__ == '__main__':
+    raise SystemExit('Historical refactor disabled. Use python3 tools/rebuild_reference.py --apply instead.')
+
+
 import os
 import re
 import glob

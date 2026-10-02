@@ -1,45 +1,45 @@
-Summary for original/game.jar
+Summary for original/game.jar with tools/reference-names.json
 Decompiled with CFR 0.152
 
 
-ao
+UILayoutView
+----------------------------
+
+render(javax.microedition.lcdui.Graphics )
+  Unable to fully structure code
+
+
+ScreenView
 ----------------------------
 
 a(javax.microedition.lcdui.Graphics )
   Unable to fully structure code
 
 
-b
-----------------------------
-
-a(javax.microedition.lcdui.Graphics )
-  Unable to fully structure code
-
-
-q
+BillingCanvas
 ----------------------------
 
 keyPressed(int )
   Unable to fully structure code
 
 
-a.h
+a.SecurityHelper
 ----------------------------
 
 b(java.lang.Object int )
   Unable to fully structure code
 
 
-game.b
+game.Pet
 ----------------------------
 
-a(game.b )
+getElementalAffinity(game.Pet )
   Unable to fully structure code
-b(game.b )
+calculateDamage(game.Pet )
   Unable to fully structure code
 
 
-game.c
+game.OverworldScreen
 ----------------------------
 
 b()
@@ -49,14 +49,14 @@ n()
   Unable to fully structure code
 
 
-game.d
+game.BattleScreen
 ----------------------------
 
 b()
   Unable to fully structure code
 
 
-game.j
+game.TileMapRenderer
 ----------------------------
 
 a(javax.microedition.lcdui.Graphics )
@@ -65,7 +65,7 @@ a(javax.microedition.lcdui.Graphics int int )
   Unable to fully structure code
 
 
-game.k
+game.WorldManager
 ----------------------------
 
 b()

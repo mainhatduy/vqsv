@@ -10,7 +10,9 @@ dịch ngược, không phải API được nhà phát triển gốc công bố.
 | Nguồn | Vai trò |
 | --- | --- |
 | [GameMIDLet.java](../src/main/java/game/GameMIDLet.java) | Entry point đang biên dịch; gọi `game.e.a(this)`, đặt Canvas, gọi `GameSpeedConfig.init()` qua reflection |
-| [GameSpeedConfig.java](../src/main/java/GameSpeedConfig.java) | Source đang biên dịch; cấu hình tốc độ, AWT hotkey, cập nhật vùng chữ menu |
+| [GameSpeedConfig.java](../src/main/java/GameSpeedConfig.java) | Cấu hình tốc độ, AWT hotkey, watcher menu |
+| [GameEngineBridge.java](../src/main/java/GameEngineBridge.java) | Gom API UI gốc và reflection ghi frame delay |
+| [GameCanvasFactory.java](../src/main/java/game/GameCanvasFactory.java) | Cầu nối tạo Canvas qua `game.e.a(GameMIDLet)` |
 | [src/main/resources](../src/main/resources/) | Tài nguyên và bytecode override `an.class`, `game/h.class`, `game/k.class` |
 | [original/game.jar](../original/game.jar) | Class/tài nguyên nền; tên binary thực tế phần lớn còn bị rút gọn |
 | [reference/decompiled](../reference/decompiled/) | 68 file tham khảo đã đổi tên; compiler của project không đọc thư mục này |
@@ -52,13 +54,13 @@ Java cần tìm trong reference.
 | [BaseInputHandler](../reference/decompiled/BaseInputHandler.java) | `ap` | Keycode và mask input |
 | [BaseScreen](../reference/decompiled/BaseScreen.java) | `an` | Cơ sở màn hình, delay, kích thước và trạng thái dùng chung |
 | [UIManager](../reference/decompiled/UIManager.java) | `ab` | Mở/đóng/cache/stack UI |
-| [TextRenderer](../reference/decompiled/TextRenderer.java) | `ao` | Parser layout UI, component lookup, điều hướng và vẽ |
+| [UILayoutView](../reference/decompiled/UILayoutView.java) | `ao` | Parser layout UI, component lookup, điều hướng và vẽ |
 | [UIComponent](../reference/decompiled/UIComponent.java) | `w` | Interface của widget |
 | [MenuWidget](../reference/decompiled/MenuWidget.java) | `al` | Container, type 0 của layout |
 | [ItemListWidget](../reference/decompiled/ItemListWidget.java) | `af` | Widget type 1, chữ/icon |
 | [MessageBox](../reference/decompiled/MessageBox.java) | `ac` | Widget type 2, lưới/hộp |
-| [UIButton](../reference/decompiled/UIButton.java) | `k` | Thuộc tính chữ/nền/icon của widget |
-| [NumericInputWidget](../reference/decompiled/NumericInputWidget.java) | `z` | Cấu hình chọn/điều hướng |
+| [UIStyle](../reference/decompiled/UIStyle.java) | `k` | Thuộc tính chữ/nền/icon của widget |
+| [UISelectionConfig](../reference/decompiled/UISelectionConfig.java) | `z` | Cấu hình chọn/điều hướng |
 | [SpriteWidget](../reference/decompiled/SpriteWidget.java) | `m` | Sprite trong UI |
 | [ScriptCommand](../reference/decompiled/ScriptCommand.java) | `ad` | Opcode, tham số số và chuỗi |
 | [ScriptSequence](../reference/decompiled/ScriptSequence.java) | `p` | Chuỗi lệnh, program counter, trạng thái thực thi |
@@ -67,9 +69,11 @@ Java cần tìm trong reference.
 | [ParticleEffect](../reference/decompiled/ParticleEffect.java) | `ai` | Hiệu ứng hạt |
 | [SaveStorage](../reference/decompiled/SaveStorage.java) | `ar` | RecordStore/RMS |
 
-Bảng đổi tên đầy đủ của 68 class nằm trong `CLASS_RENAME_MAP` ở
-[rename_classes_and_files.py](../tools/rename_classes_and_files.py).
-Đọc mapping không cần chạy script; script có chức năng sửa file reference.
+Bảng tên hiện tại nằm trong [reference-names.json](../tools/reference-names.json).
+Mapping đầy đủ sau khi lan truyền tên qua kế thừa nằm trong
+[names.tsv](../reference/decompiled/names.tsv), gồm owner, tên gốc và descriptor JVM.
+Xem [quy trình đặt tên](REFACTORING.md) để bổ sung hoặc tái tạo reference.
+Các script regex cũ được giữ làm lịch sử và đã chặn chạy trực tiếp.
 
 ## 3. Các chữ ký cần tra bằng tên gốc
 
@@ -95,9 +99,9 @@ javap -classpath original/game.jar -p -c aa
 
 `GameDatabase.spriteTable`, `Pet.initPet`, `UIManager.openUI` là tên trong
 reference; không viết chúng như API runtime nếu chưa thay toàn bộ liên kết tương
-ứng. Một số phép đổi tên còn sai nghĩa: `Pet.growthRate` giữ sprite ID; tham số
-`loop` trong renderer chọn định dạng bước animation. Chữ ký cùng tên bị overload
-phải đối chiếu cả kiểu tham số và kiểu trả về.
+ứng. Tên sai nghĩa trước đây đã sửa: `Pet.spriteId` thay `growthRate`; tham số
+`hasExtendedAnimationSteps` thay `loop`. Chữ ký cùng tên bị overload phải đối chiếu
+cả kiểu tham số và kiểu trả về. Các tên chưa xác minh vẫn giữ tên gốc.
 
 ## 4. Tài nguyên và công cụ
 
@@ -105,7 +109,7 @@ phải đối chiếu cả kiểu tham số và kiểu trả về.
 | --- | --- |
 | `script/db.mid`, `script/chs.mid`, `script/sprite.mid` | GameDatabase, EngineUtils |
 | `img/`, `tex/`, `spr/` | ImageCache, EngineUtils, AnimationCache, SpriteRenderer |
-| `ui/*.ui` | TextRenderer + UIManager; binary, không phải XML |
+| `ui/*.ui` | UILayoutView + UIManager; binary, không phải XML |
 | `event/scene_*.mid` | WorldManager, ScriptCommand, ScriptSequence, OverworldScreen |
 | `map/`, `mod/` | MapEngine, TileMapRenderer |
 | `script/petArea.mid`, `script/petRide.mid` | WorldManager |
@@ -123,7 +127,7 @@ CFR ghi lỗi control flow/kiểu tại chín class, đối chiếu với
 
 | Runtime | Tên file hiện tại |
 | --- | --- |
-| `ao` | TextRenderer |
+| `ao` | UILayoutView |
 | `b` | ScreenView |
 | `q` | BillingCanvas |
 | `a.h` | SecurityHelper |
@@ -134,7 +138,9 @@ CFR ghi lỗi control flow/kiểu tại chín class, đối chiếu với
 | `game.k` | WorldManager |
 
 Các class không có cảnh báo cũng chưa được xác nhận biên dịch lại được. Bản
-reference đã qua đổi tên có thêm chỗ khai báo/call site không nhất quán. Muốn sửa
-class gốc cần giữ binary name, superclass/interface, trường và chữ ký được bên
+reference hiện được tái tạo bằng mapping owner/descriptor trước khi chạy CFR;
+kiểm tra đổi tên ngược xác nhận bytecode, chữ ký và tài nguyên được giữ nguyên.
+CFR vẫn có thể suy luận sai kiểu/local variable ngay cả ở hàm không có cảnh báo.
+Muốn sửa class gốc cần giữ binary name, superclass/interface, trường và chữ ký được bên
 ngoài dùng; khôi phục Java hợp lệ và giải quyết vấn đề package. Tái dựng cả source
 thành kiến trúc mới là công việc riêng, không phải chỉ đổi tên file hoặc thêm import.

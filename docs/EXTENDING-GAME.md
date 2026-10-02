@@ -36,7 +36,7 @@ thêm; repository chưa có sẵn API hay công cụ được mô tả ở phầ
 
 | Nguồn | Vai trò thực tế | Cách sửa |
 | --- | --- | --- |
-| `src/main/java/` | Hai source: `game/GameMIDLet.java`, `GameSpeedConfig.java` | Sửa/thêm Java và build |
+| `src/main/java/` | Entry point, cấu hình tốc độ và các cầu nối API gốc | Sửa/thêm Java và build |
 | `src/main/resources/` | Tài nguyên và class patch, ví dụ `an.class`, `game/h.class`, `game/k.class` | Thay đúng đường dẫn resource hoặc tái tạo patch đã kiểm tra |
 | `original/game.jar` | Các class còn lại và tài nguyên nền | Giữ nguyên; build kiểm SHA-256 |
 | `reference/decompiled/` | 68 source đã đổi tên để đọc | Không được đưa vào build; tên/hàm có chỗ bị đổi sai hoặc chưa nhất quán |
@@ -96,9 +96,11 @@ javap -classpath build/vuong-quoc-sung-vat-dev.jar -p an
 ```
 
 Lệnh đầu xem chữ ký thật; `-c` xem bytecode; lệnh cuối cần build trước và xem bản
-đã đóng gói. Đừng lấy tên tham số trong reference làm đặc tả: `Pet.growthRate`
-thực tế giữ sprite ID; boolean được đặt tên `loop` trong `SpriteRenderer.loadSprite`
-chọn cách đọc mỗi bước animation, không trực tiếp quyết định lặp.
+đã đóng gói. Reference hiện dùng `Pet.spriteId` và
+`SpriteRenderer.loadSprite(..., hasExtendedAnimationSteps)`; các tên cũ `growthRate`
+và `loop` đã được sửa. Boolean này chọn cách đọc mỗi bước animation, không trực
+tiếp quyết định lặp. Mapping được xác định bằng owner và descriptor JVM; xem
+[quy trình refactor](REFACTORING.md).
 
 Tra bảng tên trong [SOURCE-MAP](SOURCE-MAP.md). Khi source tham khảo không hợp lệ,
 dùng CFR xuất một bản riêng bằng `python3 project.py decompile`, hoặc `javap`.
@@ -300,8 +302,9 @@ pet.a(68, 7, (short)-1, (byte)2, (short)2, (byte)-1);
 Sáu đối số lần lượt là pet ID, cấp, giá trị `c[5]` (-1: không gán thuộc tính đó),
 giá trị ban đầu `c[6]` (ví dụ game dùng 2), phẩm chất 1–5 (hoặc -1 dùng mặc định),
 mã biến thể ảnh hưởng chỉ số (-1: không áp dụng nhánh 7/8/9).
-Tên `skillId`, `rarity`, `nature` trong reference chỉ là diễn giải sau refactor;
-đối số thứ ba không phải danh sách chiêu chủ động đã học.
+Reference hiện đặt tên lần lượt `speciesId`, `level`, `attributeId`, `initialState`,
+`quality`, `statVariant`. `attributeId` là tên mô tả vị trí chỉ số `c[5]`; chưa xác
+minh ý nghĩa nội dung đầy đủ. Đối số thứ ba không phải danh sách chiêu chủ động đã học.
 
 `pet.P()` trong thử nghiệm trên trả:
 
@@ -404,18 +407,18 @@ viết tài liệu.
 | Vai trò | Reference → runtime | Ghi chú |
 | --- | --- | --- |
 | Quản lý UI đang mở | `UIManager` → `ab` | Cache theo đường dẫn, stack hiển thị, active view |
-| Đọc layout và tìm component | `TextRenderer` → `ao` | Tên dễ gây nhầm: có cả parser `.ui`, không chỉ vẽ chữ |
+| Đọc layout và tìm component | `UILayoutView` → `ao` | Parser `.ui`, lookup, điều hướng và vẽ |
 | Giao diện component | `UIComponent` → `w` | Vẽ, geometry, visibility, ID, con |
 | Container | `MenuWidget` → `al` | Type 0 trong parser |
 | Widget có chữ/icon | `ItemListWidget` → `af` | Type 1; nội dung/hình nằm ở đối tượng trả bởi `h()` |
 | Widget lưới/hộp | `MessageBox` → `ac` | Type 2; bố cục khác type 1 |
-| Thuộc tính chữ/nền/icon | `UIButton` → `k` | Không có một type `.ui` riêng tên Button |
-| Chọn/focus | `NumericInputWidget` → `z` | Cấu hình các nhóm và đường điều hướng |
+| Thuộc tính chữ/nền/icon | `UIStyle` → `k` | Style dùng chung; không phải một type `.ui` riêng |
+| Chọn/focus | `UISelectionConfig` → `z` | Cấu hình các nhóm và đường điều hướng |
 | Render sprite trong UI | `SpriteWidget` → `m` | Cần phân biệt sprite ID với frame/icon index |
 | Callback | `ScriptEventListener` → `i` | Chữ ký runtime `void a(int[])` |
 
 Nguồn: [UIManager](../reference/decompiled/UIManager.java),
-[TextRenderer](../reference/decompiled/TextRenderer.java),
+[UILayoutView](../reference/decompiled/UILayoutView.java),
 [UIComponent](../reference/decompiled/UIComponent.java).
 Layout hiện có tối đa 200 chỗ trong mảng component của view; container `al` có
 60 chỗ cho con. Đây là giới hạn cấp phát của code hiện tại, không phải quy tắc
@@ -522,7 +525,8 @@ hoặc patch có kiểm tra; việc đặt tên mới cho class không thay đư
 
 ### 7.2 Ví dụ thật: hệ thống tốc độ
 
-Đọc [GameSpeedConfig](../src/main/java/GameSpeedConfig.java) cùng
+Đọc [GameSpeedConfig](../src/main/java/GameSpeedConfig.java),
+[GameEngineBridge](../src/main/java/GameEngineBridge.java) cùng
 [GameMIDLet](../src/main/java/game/GameMIDLet.java):
 
 ```text
@@ -877,7 +881,8 @@ mảnh chuỗi; loader `chs` nối các mảnh cùng hàng thành một chuỗi.
 | `recover_assets.py` | Giải mã các asset đã liệt kê, kiểm tra cuối dữ liệu ở nhiều reader | Writer database/sprite/scene/UI, editor trực quan |
 | `ReferenceProbe.java` | Harness dùng class gốc làm đối chiếu số liệu/render | Công cụ spawn thú trong bản mod hay test gameplay đầy đủ |
 | `patch_sms_and_shortcuts.py` | Tái tạo ba patch cụ thể, có assert mẫu byte | Patch engine bất kỳ hoặc giữ mọi patch mới |
-| Các script `refactor_*`, `rename_classes_and_files.py` | Tham khảo lịch sử/mapping tên | Chuyển reference thành source biên dịch được một cách bảo đảm |
+| `rebuild_reference.py` + `reference-names.json` | Tái tạo reference với tên theo owner/descriptor, kiểm tra đổi tên ngược | Tạo source runtime biên dịch được một cách bảo đảm |
+| Các script `refactor_*`, `rename_classes_and_files.py` | Lịch sử; đã chặn chạy trực tiếp | Refactor tiếp bằng regex |
 
 Nếu cần làm mod thường xuyên, phần công cụ còn thiếu là writer theo từng format
 với round-trip, kiểm tra tham chiếu ID và preview đúng runtime. Đó là một công

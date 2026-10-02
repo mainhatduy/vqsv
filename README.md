@@ -87,7 +87,8 @@ Chưa có bước preverify hoặc toolchain CLDC để cài bản sửa lên No
   chính xác toàn bộ source ban đầu chỉ từ JAR.
 - CFR báo các hàm chưa tái dựng hoàn chỉnh trong 9 class. Không coi toàn bộ
   `reference/decompiled/` là source có thể build ngay. Việc đổi tên trong bản tham
-  khảo còn có chỗ sai nghĩa/không nhất quán; kiểm tra lại với chữ ký và bytecode gốc.
+  khảo được tạo lại bằng mapping owner/descriptor; các tên chưa xác minh còn giữ
+  tên gốc. Kiểm tra bytecode khi khôi phục source runtime.
 - Project dùng save riêng trong `runtime/`, không nhập tiến trình Nokia hoặc save
   ở thư mục cha. Lần chạy đầu sao chép cấu hình phím hiện tại, gồm hàng số 0–9.
 - Kiểm tra hiện tại xác nhận build thành công và entry point Java đã sửa được
@@ -117,3 +118,12 @@ python3 project.py decompile
 ```
 
 Kết quả nằm ở `build/decompiled/`. Lệnh sẽ dừng nếu thư mục đó đã tồn tại.
+
+Để tái tạo reference với tên dễ đọc, xem [quy trình refactor](docs/REFACTORING.md):
+
+```bash
+python3 tools/rebuild_reference.py          # xuất riêng vào build/readable-reference/
+python3 tools/rebuild_reference.py --apply  # tái tạo reference/decompiled/
+```
+
+Hai lệnh kiểm tra đổi tên ngược trước khi xuất, không sửa JAR gốc hoặc bản game chạy.

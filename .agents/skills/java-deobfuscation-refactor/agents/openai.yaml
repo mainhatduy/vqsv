@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java Deobfuscation Refactor"
+  short_description: "Rename recovered Java symbols with ABI-aware checks"
+  default_prompt: "Use $java-deobfuscation-refactor to recover meaningful Java names while preserving runtime compatibility."
