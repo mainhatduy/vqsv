@@ -1,0 +1,12 @@
+MIDlet-Delete-Confirm: Tai game hay tai WapTai.COM
+MIDlet-Name: Vuong Quoc Sung Vat - WapTai.COM
+MIDlet-1: Vuong Quoc Sung Vat - WapTai.COM,/icon.png,game.GameMIDLet
+MIDlet-Description: N7370
+MIDlet-Icon: /icon.png
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.8.0
+MIDlet-Vendor: WapTai.COM
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0
+Created-By: 1.6.0_16-b01 (Sun Microsystems Inc.)
+MIDlet-Version: 1.0

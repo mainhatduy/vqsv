@@ -1,9 +1,10 @@
 # Cẩm nang mở rộng Vương Quốc Sủng Vật
 
 Tài liệu dành cho người sửa bản J2ME 240×320 trong repository này, chạy bằng
-FreeJ2ME trên máy tính. Đối chiếu ngày 2026-10-02 với tài nguyên đã khảo sát,
-bytecode gốc, bản dịch ngược mới và source đang được build. Các mô tả engine gốc
-không tự bao gồm hành vi của những bytecode patch được thêm sau lần đối chiếu.
+FreeJ2ME trên máy tính. Khảo sát định dạng ban đầu ngày 2026-10-02; cập nhật build source ngày
+2026-10-03. Toàn bộ engine đã có Java hợp lệ trong `src/main/java/`. Những chữ
+ký binary ngắn trong phần khảo sát là tên gốc; tra `tools/source-names.tsv` để
+đối chiếu API source hiện tại. Xem [SOURCE-BUILD](SOURCE-BUILD.md).
 
 **Trả lời nhanh:** thú/Pokémon là bản ghi dữ liệu, không phải mỗi loài một class.
 100 loài hiện có dùng một hình gốc cho mỗi sprite; engine tạo thêm chuyển động.
@@ -32,58 +33,47 @@ thêm; repository chưa có sẵn API hay công cụ được mô tả ở phầ
 <a id="architecture"></a>
 ## 1. Kiến trúc và build: sửa ở đâu mới chạy?
 
-### Ba lớp mã đang cùng tồn tại
+### Source đang build và nguồn đối chiếu
 
 | Nguồn | Vai trò thực tế | Cách sửa |
 | --- | --- | --- |
-| `src/main/java/` | Entry point, cấu hình tốc độ và các cầu nối API gốc | Sửa/thêm Java và build |
-| `src/main/resources/` | Tài nguyên và class patch, ví dụ `an.class`, `game/h.class`, `game/k.class` | Thay đúng đường dẫn resource hoặc tái tạo patch đã kiểm tra |
-| `original/game.jar` | Các class còn lại và tài nguyên nền | Giữ nguyên; build kiểm SHA-256 |
-| `reference/decompiled/` | 68 source đã đổi tên để đọc | Không được đưa vào build; tên/hàm có chỗ bị đổi sai hoặc chưa nhất quán |
+| `src/main/java/` | Toàn bộ 68 class phục hồi + 3 helper | Sửa Java và build |
+| `src/main/resources/` | Toàn bộ asset và manifest | Thay đúng đường dẫn resource |
+| `original/game.jar`, `reference/runtime-patches/` | Oracle bytecode gốc và các patch trước phục hồi | Giữ làm đối chiếu; không dùng trong build |
+| `reference/decompiled/` | Reference CFR lịch sử | Không được đưa vào build |
 
-[project.py](../project.py) biên dịch Java với classpath là **JAR gốc + emulator**,
-không phải các class patch trong resources. Khi đóng gói, ưu tiên trùng đường dẫn:
+[project.py](../project.py) biên dịch với classpath chỉ có **API emulator**, rồi
+đóng gói class mới và resources. Không đọc JAR gốc và không chồng binary patch.
+Build từ chối `.class` trong resources. Xóa asset ở resources sẽ xóa nó khỏi JAR.
+Sửa `src/main/java/game/Pet.java` sẽ thay logic thú đang chạy; sửa reference thì không.
 
-```text
-class vừa biên dịch > file trong src/main/resources > entry trong original/game.jar
-```
-
-Vì vậy, sửa `reference/decompiled/game/Pet.java` không đổi game. Thêm một class
-`game.Pet` cũng không thay `game.b`: bytecode gốc vẫn gọi `game.b`. Xóa file khỏi
-resources sẽ để bản tương ứng trong JAR gốc xuất hiện trở lại, không xóa entry đó.
-
-Ba patch do script hiện có tạo ra thay hành vi thanh toán, phím xác nhận, mở
-shop/VIP và frame delay; đọc [script patch](../tools/patch_sms_and_shortcuts.py)
-để biết phạm vi. Build chỉ
-đóng gói các `.class` đã có, không tự chạy script này. Script patch đọc JAR gốc
-và ghi đè ba file đầu ra; chạy lại có thể làm mất patch bổ sung của bạn.
-
-Kiểm kê thêm các override hiện có bằng `rg --files src/main/resources -g '*.class'`.
-Đối chiếu chúng với JAR đầu ra khi môi trường đang có những thay đổi khác song song.
+Các hành vi từ 4 patch cũ (`an`, `game/h`, `game/i`, `game/k`) được giữ trong
+source phục hồi. [Script patch lịch sử](../tools/patch_sms_and_shortcuts.py) chỉ
+phục vụ oracle; không cần chạy để sửa source và có thể ghi đè thay đổi oracle.
 
 ### Luồng thực thi
 
 ```mermaid
 flowchart TD
-    M[GameMIDLet: Java đang build] --> C[game.e: GameCanvas]
+    M[GameMIDLet] --> C[GameCanvas]
     M --> S[GameSpeedConfig: cấu hình và hotkey máy tính]
-    C --> I[game.i: GameStateController]
+    C --> I[GameStateController]
     K[Phím và con trỏ] --> C
-    I --> T[game.f: TitleScreen]
-    I --> W[game.k / game.c: world và overworld]
-    I --> B[game.d: BattleScreen]
-    W --> H[game.h: menu và điều phối tương tác]
+    I --> T[TitleScreen]
+    I --> W[WorldManager / OverworldScreen]
+    I --> B[BattleScreen]
+    W --> H[ScriptEngine: menu và tương tác]
     B --> H
-    H --> U[ab / ao: quản lý và nạp UI]
+    H --> U[UIManager / UILayoutView]
     U --> R[Vẽ component bằng Graphics]
-    W --> P[game.g / game.b: Player và Pet]
+    W --> P[Player / Pet]
     B --> P
-    W --> SAVE[game.k / ar: ghi và đọc RMS]
+    W --> SAVE[WorldManager / SaveStorage]
 ```
 
-`game.e.run()` gọi cập nhật, repaint/serviceRepaints rồi nghỉ theo `an.c`.
-State cấp game do `game.i` quản lý; chế độ menu/gameplay còn được điều phối ở
-world/battle và `game.h`. Không coi mọi số `case` trong các class là cùng một enum.
+`GameCanvas.run()` gọi cập nhật, repaint/serviceRepaints rồi nghỉ theo `BaseScreen.frameDelayMs`.
+State cấp game do `GameStateController` quản lý; chế độ menu/gameplay còn được điều phối ở
+world/battle và `ScriptEngine`. Không coi mọi số `case` trong các class là cùng một enum.
 Sprite animation tiến theo lần cập nhật, nên thay tốc độ game cũng thay tốc độ
 chuyển động và nhiều bộ đếm gameplay.
 
@@ -92,7 +82,7 @@ chuyển động và nhiều bộ đếm gameplay.
 ```bash
 javap -classpath original/game.jar -p game.b aq aa ab ao
 javap -classpath original/game.jar -p -c game.b
-javap -classpath build/vuong-quoc-sung-vat-dev.jar -p an
+javap -classpath build/vuong-quoc-sung-vat-dev.jar -p game.BaseScreen game.Pet
 ```
 
 Lệnh đầu xem chữ ký thật; `-c` xem bytecode; lệnh cuối cần build trước và xem bản
@@ -102,10 +92,9 @@ và `loop` đã được sửa. Boolean này chọn cách đọc mỗi bước a
 tiếp quyết định lặp. Mapping được xác định bằng owner và descriptor JVM; xem
 [quy trình refactor](REFACTORING.md).
 
-Tra bảng tên trong [SOURCE-MAP](SOURCE-MAP.md). Khi source tham khảo không hợp lệ,
-dùng CFR xuất một bản riêng bằng `python3 project.py decompile`, hoặc `javap`.
-Chép nguyên cây reference vào source không khắc phục lỗi Java, tên binary,
-chữ ký bị trùng hay tham chiếu từ package `game` tới default package.
+Tra bảng tên trong [SOURCE-MAP](SOURCE-MAP.md). Sửa source đã phục hồi trong
+`src/main/java/`; chỉ dùng `javap`/reference để đối chiếu khi còn nghi ngờ về logic.
+Không chép đè cây reference CFR lên source hiện tại vì nó còn lỗi dịch ngược.
 
 <a id="inspect-assets"></a>
 ## 2. Đọc tài nguyên trước khi sửa
@@ -204,7 +193,7 @@ không thay thế việc tìm tham chiếu trực tiếp trong code hoặc các 
 **Đối với cơ chế thú 86–185 hiện tại: một hình gốc đủ để giữ hành vi animation sẵn có.**
 Không cần vẽ 5 hình chỉ vì JSON có 5 frame. Cả 100 file sprite thú có một module và
 một frame gốc; 96 file có một animation thô, 4 file không có animation thô.
-[AnimationCache](../reference/decompiled/AnimationCache.java), runtime `aa.a(int)`,
+[AnimationCache](../src/main/java/game/AnimationCache.java), runtime `aa.a(int)`,
 thay dữ liệu frame/animation của toàn bộ dải này khi nạp.
 
 Điện Miêu có module `[0, 0, 0, 43, 46]`: ảnh số 0 trong danh sách ảnh của sprite,
@@ -253,9 +242,9 @@ Dòng 68 là:
 ```
 
 Các tên dưới đây mô tả tác dụng quan sát được, không phải tên schema gốc. Nguồn
-chính: [Pet](../reference/decompiled/game/Pet.java),
-[ScriptEngine](../reference/decompiled/game/ScriptEngine.java),
-[BattleScreen](../reference/decompiled/game/BattleScreen.java).
+chính: [Pet](../src/main/java/game/Pet.java),
+[ScriptEngine](../src/main/java/game/ScriptEngine.java),
+[BattleScreen](../src/main/java/game/BattleScreen.java).
 
 | Cột | Giá trị | Ý nghĩa/tác dụng đã xác định | Nơi kiểm tra |
 | --- | ---: | --- | --- |
@@ -290,15 +279,15 @@ dùng phép chia nguyên `/10` cho phần tăng theo cấp. Giá trị cuối é
 
 ### 3.4 Object thú đang chơi khác bản ghi loài
 
-Ví dụ sau dùng **chữ ký runtime thật**, đã biên dịch và chạy với database hiện tại:
+Ví dụ sau dùng API Java hiện tại; cấu trúc dữ liệu đã đối chiếu với bytecode gốc:
 
 ```java
-game.b pet = new game.b();
-pet.a(68, 7, (short)-1, (byte)2, (short)2, (byte)-1);
-// q(): pet ID; s(): level; P(): dữ liệu instance dùng khi lưu.
+game.Pet pet = new game.Pet();
+pet.initPet(68, 7, (short)-1, (byte)2, (short)2, (byte)-1);
+// getPetId(): pet ID; getLevel(): level; toSaveData(): dữ liệu lưu.
 ```
 
-Điều kiện: `aq.c` đã nạp 9 bảng. Không gọi tại thời điểm database còn null.
+Điều kiện: `GameDatabase.gameDatabase` đã nạp 9 bảng. Không gọi tại thời điểm database còn null.
 Sáu đối số lần lượt là pet ID, cấp, giá trị `c[5]` (-1: không gán thuộc tính đó),
 giá trị ban đầu `c[6]` (ví dụ game dùng 2), phẩm chất 1–5 (hoặc -1 dùng mặc định),
 mã biến thể ảnh hưởng chỉ số (-1: không áp dụng nhánh 7/8/9).
@@ -306,7 +295,7 @@ Reference hiện đặt tên lần lượt `speciesId`, `level`, `attributeId`, 
 `quality`, `statVariant`. `attributeId` là tên mô tả vị trí chỉ số `c[5]`; chưa xác
 minh ý nghĩa nội dung đầy đủ. Đối số thứ ba không phải danh sách chiêu chủ động đã học.
 
-`pet.P()` trong thử nghiệm trên trả:
+`pet.toSaveData()` trong thử nghiệm trên trả:
 
 ```text
 [68, 7, -1, 2, 2, -1, 150, 0, 0, 0]
@@ -318,7 +307,7 @@ tên runtime vì chưa xác nhận đủ ý nghĩa. HP=150 trong bối cảnh pl
 hiệu ứng huy chương. Chiêu nằm ở `z[]` và `y[]`, tối đa 5 slot; `g(byte)` thêm chiêu,
 `G()`/`F()` tham gia học/chọn chiêu. Init object riêng chưa thêm thú vào đội,
 chưa nạp sprite và chưa đăng ký thu thập. Luồng thêm đội nằm trong
-[Player](../reference/decompiled/game/Player.java); đội hiện có 6 slot.
+[Player](../src/main/java/game/Player.java); đội hiện có 6 slot.
 
 <a id="replace-pet"></a>
 ## 4. Quy trình A: thay một loài có sẵn
@@ -385,9 +374,9 @@ database sẽ không hoàn tất sách thú, nhóm hệ, animation và tương t
 6. Thêm cách nhận thú: encounter, quà NPC hoặc script; cập nhật sách thú, tiến
    hóa và các bộ đếm liên quan. Tái sử dụng kỹ năng hiện có trước; nhóm chiêu hiện
    chia thành 7 hệ ×10 ID, nên thêm hệ mới là một thay đổi riêng.
-7. Khôi phục các class cần sửa với tên binary/chữ ký tương thích, hoặc thiết kế
-   patch có kiểm tra đầu vào. Những sửa đổi này chưa thể thực hiện bằng việc sửa
-   các file đã đổi tên trong reference. Giữ các patch hiện có khi thay `game.h/k`.
+7. Sửa các class tương ứng trong `src/main/java/game/`, nhất là `Pet`,
+   `Player`, `ScriptEngine` và `WorldManager`; cập nhật declaration và caller
+   khi đổi API. Sửa reference lịch sử không thay bản chạy.
 8. Thiết kế đọc save cũ trước khi tăng mảng: `WorldManager` ghi các mảng `C/D`
    theo thứ tự, không ghi độ dài từng hàng tại chỗ đó. Reader mới đọc số lượng
    khác sẽ lệch phần dữ liệu tiếp theo. Dùng migration có phân biệt định dạng hoặc
@@ -417,9 +406,9 @@ viết tài liệu.
 | Render sprite trong UI | `SpriteWidget` → `m` | Cần phân biệt sprite ID với frame/icon index |
 | Callback | `ScriptEventListener` → `i` | Chữ ký runtime `void a(int[])` |
 
-Nguồn: [UIManager](../reference/decompiled/UIManager.java),
-[UILayoutView](../reference/decompiled/UILayoutView.java),
-[UIComponent](../reference/decompiled/UIComponent.java).
+Nguồn: [UIManager](../src/main/java/game/UIManager.java),
+[UILayoutView](../src/main/java/game/UILayoutView.java),
+[UIComponent](../src/main/java/game/UIComponent.java).
 Layout hiện có tối đa 200 chỗ trong mảng component của view; container `al` có
 60 chỗ cho con. Đây là giới hạn cấp phát của code hiện tại, không phải quy tắc
 tự động mở rộng khi thêm node.
@@ -481,7 +470,7 @@ nhật phù hợp. Nếu cùng sửa component 8, hãy hợp nhất với `GameS
 
 Các mask là mask bit, không phải keycode: ví dụ 196640 gộp confirm được dùng
 trong nhiều menu, 262144 là soft-right; các nhánh khác có thể dùng mask kết hợp
-khác. Đọc [BaseInputHandler](../reference/decompiled/BaseInputHandler.java) và
+khác. Đọc [BaseInputHandler](../src/main/java/game/BaseInputHandler.java) và
 caller cụ thể, không áp một mask cho tất cả màn hình. Các vùng pointer của
 GameCanvas cũng không cung cấp tự động hit-test cho mọi nút mới.
 
@@ -517,11 +506,10 @@ widget mới. Không dùng JavaFX/Swing làm UI trong Canvas J2ME; AWT trong ví
 | Sự kiện cốt truyện | Scene/room script và interpreter | Opcode và tham số phải được interpreter hỗ trợ |
 | Thông tin cần lưu | `game.k` + `ar` hoặc vùng lưu riêng | Có reader/writer và chính sách save cũ |
 
-Nhiều class gốc là `final`; không mặc định có thể subclass để thay handler.
-Java có package không gọi trực tiếp kiểu ở default package bằng import thông
-thường. Cách hiện có là helper ở default package và entrypoint gọi qua reflection.
-Nếu cần thay logic nằm sâu trong class gốc, chuẩn bị source tương thích binary
-hoặc patch có kiểm tra; việc đặt tên mới cho class không thay được call site cũ.
+Nhiều class là `final`; sửa trực tiếp source hoặc thay thiết kế có kiểm tra
+caller. Engine/UI đều đã thuộc package `game`, nên các class này gọi nhau bằng
+API Java thông thường. Helper tốc độ desktop còn ở default package và entrypoint
+gọi qua reflection. Khi thêm API, cập nhật cả declaration, caller và override.
 
 ### 7.2 Ví dụ thật: hệ thống tốc độ
 
@@ -570,7 +558,7 @@ Giới hạn cần hiểu trước khi lấy làm mẫu:
 2. Chọn chủ sở hữu trạng thái: cấu hình toàn cục, player, pet, room, battle hay
    session. Tránh lấy một mảng hiện có làm nơi lưu tạm nếu chưa hiểu mọi caller.
 3. Tạo phần logic nhỏ có tên rõ; xác định hook khởi tạo và thời điểm dữ liệu sẵn
-   sàng. Nếu chưa có hook, ghi việc khôi phục/patch caller thành một bước bắt buộc.
+   sàng. Nếu chưa có hook, sửa caller trong source thành một bước bắt buộc.
 4. Nối input, cập nhật và UI. Chỉ xử lý phím trong đúng state; khi đổi màn hình
    cần reset/tiêu thụ input phù hợp để phím xác nhận không lọt xuống gameplay.
 5. Xử lý mở/đóng/pause/đổi map/hết trận: dừng bộ đếm, bỏ listener và trả tài nguyên
@@ -611,9 +599,9 @@ hiệu ứng 1 trong `Pet.w(int)` hồi HP theo phần trăm + số cố định
 **Chuẩn bị:** tên/mô tả trong `chs.mid`, icon trong sprite UI thích hợp, bản ghi
 cùng loại hiệu ứng và cách nhận/mua. Tái sử dụng hiệu ứng trước khi tạo enum mới.
 
-**Nối vào game:** lần theo [Player](../reference/decompiled/game/Player.java)
-để biết túi nào chứa vật phẩm, [ScriptEngine](../reference/decompiled/game/ScriptEngine.java)
-để biết menu/shop và [Pet.w(int)](../reference/decompiled/game/Pet.java) để biết
+**Nối vào game:** lần theo [Player](../src/main/java/game/Player.java)
+để biết túi nào chứa vật phẩm, [ScriptEngine](../src/main/java/game/ScriptEngine.java)
+để biết menu/shop và [Pet.w(int)](../src/main/java/game/Pet.java) để biết
 hiệu ứng. Danh mục/nhóm và xử lý một số ID hardcode; append dòng chưa tự thêm vào
 shop hay đúng ngăn túi. Nếu tạo effect kind mới, thêm cả nhánh dùng vật phẩm và
 điều kiện cho phép dùng trong/ngoài trận.
@@ -631,9 +619,9 @@ mỗi hàng 10 số, nhóm 10 kỹ năng cho mỗi hệ. `Pet.F()` lọc khả n
 các nhánh tính sát thương còn switch theo skill ID.
 
 **Chuẩn bị:** tên/mô tả, thông số chiêu, điều kiện học, lượt sử dụng, animation/
-hiệu ứng nếu khác hiện tại. Đọc [SkillEffect](../reference/decompiled/SkillEffect.java),
-[Pet](../reference/decompiled/game/Pet.java) và
-[BattleScreen](../reference/decompiled/game/BattleScreen.java); lần loader của
+hiệu ứng nếu khác hiện tại. Đọc [SkillEffect](../src/main/java/game/SkillEffect.java),
+[Pet](../src/main/java/game/Pet.java) và
+[BattleScreen](../src/main/java/game/BattleScreen.java); lần loader của
 `effect.mid`, `speffect.mid`, `bufDebuf.mid` và sprite tương ứng.
 
 **Nối vào game:** sửa dữ liệu, danh sách học/trang bị và logic sát thương/trạng
@@ -656,9 +644,9 @@ mẫu “NPC nói chuyện” dùng chung cho mọi kind.
 
 **Chuẩn bị:** sprite có hướng/animation cần dùng, tọa độ, loại actor, tên,
 điều kiện tương tác, chuỗi hội thoại và script được kích hoạt. Đọc
-[NpcEntity](../reference/decompiled/game/NpcEntity.java), loader scene trong
-[WorldManager](../reference/decompiled/game/WorldManager.java) và interpreter
-[OverworldScreen](../reference/decompiled/game/OverworldScreen.java).
+[NpcEntity](../src/main/java/game/NpcEntity.java), loader scene trong
+[WorldManager](../src/main/java/game/WorldManager.java) và interpreter
+[OverworldScreen](../src/main/java/game/OverworldScreen.java).
 
 **Nối vào game:** thêm actor đúng nhánh kind của room, cập nhật số lượng và các
 tham chiếu actor/event; thêm tên/chữ ở đúng bảng mà caller sử dụng. Một số hội
@@ -703,9 +691,9 @@ giữ trong `trailing_bytes`.
 
 **Chuẩn bị:** các ảnh tileset, danh sách module trong `mod_*.mid`, ánh xạ ảnh
 `modInfo.mid`, dữ liệu ô/layer của map và room chứa actor/event/điểm vào-ra.
-Đọc [MapEngine](../reference/decompiled/MapEngine.java),
-[TileMapRenderer](../reference/decompiled/game/TileMapRenderer.java) và
-[WorldManager](../reference/decompiled/game/WorldManager.java).
+Đọc [MapEngine](../src/main/java/game/MapEngine.java),
+[TileMapRenderer](../src/main/java/game/TileMapRenderer.java) và
+[WorldManager](../src/main/java/game/WorldManager.java).
 
 **Nối vào game:** thay map cũ để thử trước; tạo map mới thì phải có room trỏ tới
 map ID đó và script/cổng dẫn đến room. Phân biệt map ID, scene ID và room index.
@@ -787,7 +775,7 @@ payload của từng room. Room chứa string pool, tên, map ID, trường chư
 actor theo kind, tên actor và các event. Thay độ dài chuỗi/actor/lệnh cần tính
 lại kích thước room và các count liên quan.
 
-Mỗi event có i16 số lệnh. Một lệnh theo [ScriptCommand](../reference/decompiled/ScriptCommand.java):
+Mỗi event có i16 số lệnh. Một lệnh theo [ScriptCommand](../src/main/java/game/ScriptCommand.java):
 
 ```text
 i16 opcode
@@ -877,16 +865,17 @@ mảnh chuỗi; loader `chs` nối các mảnh cùng hàng thành một chuỗi.
 
 | Công cụ | Có thể dùng ngay | Không đảm nhiệm |
 | --- | --- | --- |
-| `project.py` | Build overlay, run emulator, decompile ra bản riêng | Tự phục hồi code reference hoặc pack JSON |
+| `project.py` | Build toàn bộ source, run emulator, decompile ra bản riêng | Tự phục hồi code reference hoặc pack JSON |
 | `recover_assets.py` | Giải mã các asset đã liệt kê, kiểm tra cuối dữ liệu ở nhiều reader | Writer database/sprite/scene/UI, editor trực quan |
 | `ReferenceProbe.java` | Harness dùng class gốc làm đối chiếu số liệu/render | Công cụ spawn thú trong bản mod hay test gameplay đầy đủ |
-| `patch_sms_and_shortcuts.py` | Tái tạo ba patch cụ thể, có assert mẫu byte | Patch engine bất kỳ hoặc giữ mọi patch mới |
+| `patch_sms_and_shortcuts.py` | Tái tạo ba patch oracle lịch sử, có assert mẫu byte | Sửa source runtime hoặc giữ mọi patch mới |
+| `verify_source.py` | Đối chiếu source và oracle, gameplay/save/render, startup | Kiểm thử mọi quest hay SMS mạng thật |
 | `rebuild_reference.py` + `reference-names.json` | Tái tạo reference với tên theo owner/descriptor, kiểm tra đổi tên ngược | Tạo source runtime biên dịch được một cách bảo đảm |
 | Các script `refactor_*`, `rename_classes_and_files.py` | Lịch sử; đã chặn chạy trực tiếp | Refactor tiếp bằng regex |
 
 Nếu cần làm mod thường xuyên, phần công cụ còn thiếu là writer theo từng format
 với round-trip, kiểm tra tham chiếu ID và preview đúng runtime. Đó là một công
-việc tiếp theo; không có công cụ mới được thêm trong thay đổi tài liệu này.
+việc tiếp theo ngoài phạm vi phục hồi source hiện tại.
 
 <a id="validation"></a>
 ## 10. Build, thử nghiệm và tiêu chí hoàn tất
@@ -936,7 +925,7 @@ print("Resource trong JAR khớp source")
 
 | Triệu chứng | Kiểm tra đầu tiên |
 | --- | --- |
-| Sửa mã mà không thấy thay đổi | Có sửa reference thay vì source? Binary name đúng chưa? Phiên game có đang dùng JAR cũ? |
+| Sửa mã mà không thấy thay đổi | Có sửa reference thay vì source? Caller đã nối logic? Phiên game có đang dùng JAR cũ? |
 | Thêm PNG mà hình không đổi | Loader đang đọc `.mid` hay `.png`? Sprite dùng image ID nào? |
 | Sprite mới đứng yên hoặc lỗi index | Animation 0/1/2 có đủ? Có quy tắc ghi đè 86–185? Chế độ cặp/nhóm 4 đúng chưa? |
 | Thú mới không hiện sách thú | Mapping hệ/ID và `W/X/C/D`, bộ đếm thu thập |
@@ -948,8 +937,10 @@ print("Resource trong JAR khớp source")
 
 ### 10.4 Phạm vi đã kiểm chứng khi viết tài liệu
 
-- Build nền thành công với 2 source Java; cảnh báo Java 8 obsolete không làm
-  build thất bại. Không thay source, asset hay save trong đợt tài liệu.
+- Build source ngày 2026-10-03 compile đủ 71 Java, không cần JAR gốc hay patch;
+  cảnh báo Java 8 obsolete không làm build thất bại. Đối chiếu source/oracle và
+  save/load, startup được mô tả trong [SOURCE-BUILD](SOURCE-BUILD.md). Các mục
+  khảo sát asset dưới đây thuộc đợt tài liệu ban đầu.
 - Đã đọc trực tiếp 9 bảng database, chuỗi, mapping sprite; kiểm tra 100 sprite
   thú gốc và quy tắc sinh frame. Chuỗi ID và ví dụ Điện Miêu khớp tài nguyên.
 - Đã xuất asset vào thư mục tạm bằng công cụ hiện có; ví dụ đọc và ghi database

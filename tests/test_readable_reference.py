@@ -11,14 +11,13 @@ EMULATOR = ROOT.parent / 'emulator/freej2me_plus.jar'
 
 
 class ReferenceRenameTest(unittest.TestCase):
-    def test_runtime_bridge_against_original_game_classes(self):
+    def test_runtime_bridge_against_source_game_classes(self):
         with tempfile.TemporaryDirectory(prefix='vqsv-runtime-test-') as temp:
             folder = Path(temp)
             work = folder / 'work'
             work.mkdir()
             (work / 'runtime').mkdir()
-            original = ROOT / 'original/game.jar'
-            api = os.pathsep.join(map(str, [original, EMULATOR]))
+            api = str(EMULATOR)
             sources = sorted((ROOT / 'src/main/java').rglob('*.java'))
             self.run_command('javac', '--release', '8', '-encoding', 'UTF-8', '-cp', api,
                              '-d', folder, *sources, ROOT / 'tests/RuntimeRefactorCheck.java')

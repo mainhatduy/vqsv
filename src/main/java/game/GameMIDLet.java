@@ -1,6 +1,5 @@
 /*
- * Recovered entry point. The public field a is part of the original binary ABI.
- * Edit this file to experiment; the build replaces only compiled classes.
+ * Entry point for the source-built game and desktop development controls.
  */
 package game;
 
@@ -12,11 +11,13 @@ public class GameMIDLet
 extends MIDlet {
     private Display display;
     private Canvas canvas;
-    /** Original classes still reference this binary name. Use getInstance() in new code. */
+    public static GameMIDLet instance;
+    /** Legacy alias retained for existing development integrations. */
     public static GameMIDLet a;
 
     public GameMIDLet() {
         a = this;
+        instance = this;
         this.display = Display.getDisplay(this);
         this.canvas = GameCanvasFactory.create(this);
         this.display.setCurrent(this.canvas);
@@ -46,4 +47,3 @@ extends MIDlet {
         }
     }
 }
-

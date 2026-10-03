@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+Historical oracle patcher; not part of the Java source build.
+This regenerates only three patches and may overwrite later oracle changes.
 Automated Bytecode Patcher:
 1. Bypasses SMS billing across the game (auto-succeeds transactions instantly).
 2. Unlocks VIP / Portable Shop (BaseScreen.X = true) permanently.
@@ -14,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ORIGINAL = ROOT / "original/game.jar"
-RESOURCES = ROOT / "src/main/resources"
+RESOURCES = ROOT / "reference/runtime-patches"
 
 
 def patch_classes():

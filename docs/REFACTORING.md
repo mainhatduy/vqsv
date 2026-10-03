@@ -1,12 +1,17 @@
 # Đặt tên rõ nghĩa cho code dịch ngược
 
-Source đang chạy trong `src/main/java/` dùng `display`, `canvas`,
-`notifyOnDestroy` thay các biến nội bộ `b`, `c`, `bl`. `GameSpeedConfig`
-gọi [GameEngineBridge](../src/main/java/GameEngineBridge.java) để đọc/ghi UI và
-frame delay; [GameCanvasFactory](../src/main/java/game/GameCanvasFactory.java)
-gom điểm tạo Canvas. Các tên binary ngắn chỉ còn ở cầu nối hoặc API phải tương
-thích với JAR gốc. `GameMIDLet.a` được giữ vì class cũ tham chiếu trực tiếp;
-code mới có thể đọc qua `GameMIDLet.getInstance()`.
+Toàn bộ source runtime hiện nằm trong `src/main/java/` và đã compile được;
+engine/UI dùng `game.*`, billing dùng `game.billing.*`. Sửa tên trong source
+phải đồng bộ declaration/caller/override bằng công cụ hiểu symbol và chạy build.
+[GameEngineBridge](../src/main/java/GameEngineBridge.java) gọi trực tiếp API UI
+và `BaseScreen.frameDelayMs`. `GameMIDLet.instance` là singleton hiện tại;
+alias `a` vẫn được giữ cho các helper cũ.
+
+Các mục dưới mô tả **quy trình tái tạo reference CFR lịch sử**. Registry và lệnh
+`--apply` chỉ thay `reference/decompiled/`, không đổi source runtime. Mapping
+cho lần phục hồi source nằm ở `tools/source-names.tsv`; nó giúp probe đối chiếu
+bytecode cũ, không phải bộ đổi tên tự động cho Java đang phát triển.
+Xem [SOURCE-BUILD](SOURCE-BUILD.md) về phục hồi source.
 
 ## Tên reference đã sửa
 
@@ -61,15 +66,16 @@ xác. Bytecode, chữ ký, hằng số và exception table phải khớp. Kết 
 hiệu lực nằm trong [names.tsv](../reference/decompiled/names.tsv).
 
 JAR trung gian **chỉ phục vụ dịch ngược**: manifest và chuỗi reflection vẫn dùng
-tên runtime cũ. Không chạy hoặc phát hành JAR này. `project.py build` vẫn compile
-source thật và chồng lên JAR gốc; reference không được compile. Lỗi CFR còn ghi
-trong [summary.txt](../reference/decompiled/summary.txt); khôi phục Java hợp lệ và
-thay class runtime là bước riêng.
+tên runtime cũ. Không chạy hoặc phát hành JAR này. `project.py build` chỉ compile source hiện
+tại và đóng gói resources; reference và JAR gốc không tham gia build. Lỗi CFR
+còn ghi trong [summary.txt](../reference/decompiled/summary.txt), thuộc reference
+lịch sử; source runtime đã được phục hồi và sửa riêng.
 
 Các script `refactor_*` và `rename_classes_and_files.py` được giữ làm lịch sử,
 đã chặn chạy trực tiếp vì regex cũ làm hỏng overload, khai báo và call site.
-Không dùng chúng để bổ sung tên mới. Tài liệu skill trong `.agents/` có thể còn
-mang alias của lần khảo sát trước; ưu tiên registry và SOURCE-MAP hiện tại.
+Không dùng chúng để bổ sung tên mới. Tài liệu skill trong `.agents/` còn mô tả
+build overlay của lần khảo sát trước; dùng `project.py`, SOURCE-BUILD và
+SOURCE-MAP hiện tại để xác định pipeline và API đang chạy.
 
 ## Bổ sung tên mới
 

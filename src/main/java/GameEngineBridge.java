@@ -1,20 +1,24 @@
-import java.lang.reflect.Field;
+import game.BaseScreen;
+import game.UIComponent;
+import game.UILayoutView;
+import game.UIManager;
+import game.UIStyle;
 
-/** Compatibility boundary for the original obfuscated JAR. */
+/** Access to the source-built engine used by desktop speed controls. */
 final class GameEngineBridge {
     private GameEngineBridge() {}
 
     static boolean isTopViewWithTitle(String path, int titleComponentId, String title) {
-        ab uiManager = getGameUIManager();
-        return uiManager != null && uiManager.b(path)
+        UIManager uiManager = getGameUIManager();
+        return uiManager != null && uiManager.isTopUI(path)
             && title.equals(getComponentText(getActiveUIView(uiManager), titleComponentId));
     }
 
     static void setTopViewText(String path, int titleComponentId, String title,
                                int contentComponentId, String text) {
-        ab uiManager = getGameUIManager();
-        if (uiManager != null && uiManager.b(path)) {
-            ao activeView = getActiveUIView(uiManager);
+        UIManager uiManager = getGameUIManager();
+        if (uiManager != null && uiManager.isTopUI(path)) {
+            UILayoutView activeView = getActiveUIView(uiManager);
             if (title.equals(getComponentText(activeView, titleComponentId))) {
                 setComponentText(activeView, contentComponentId, text);
             }
@@ -24,9 +28,9 @@ final class GameEngineBridge {
     /**
      * Lấy bộ quản lý giao diện singleton UIManager (lớp gốc: ab.class, hàm ab.a()).
      */
-    private static ab getGameUIManager() {
+    private static UIManager getGameUIManager() {
         try {
-            return ab.a();
+            return UIManager.getInstance();
         } catch (Throwable ignored) {
             return null;
         }
@@ -35,18 +39,18 @@ final class GameEngineBridge {
     /**
      * Lấy view giao diện đang hoạt động activeView (lớp gốc: ao.class, trường ab.a).
      */
-    private static ao getActiveUIView(ab uiManager) {
+    private static UILayoutView getActiveUIView(UIManager uiManager) {
         if (uiManager == null) return null;
-        return uiManager.a;
+        return uiManager.activeView;
     }
 
     /**
      * Lấy UIComponent theo ID (lớp gốc: w.class, hàm ao.a(int id)).
      */
-    private static w getUIComponent(ao activeView, int componentId) {
+    private static UIComponent getUIComponent(UILayoutView activeView, int componentId) {
         if (activeView == null) return null;
         try {
-            return activeView.a(componentId);
+            return activeView.getComponent(componentId);
         } catch (Throwable ignored) {
             return null;
         }
@@ -55,10 +59,10 @@ final class GameEngineBridge {
     /**
      * Lấy style chứa text và thuộc tính vẽ của UIComponent (lớp gốc: k.class, hàm w.h()).
      */
-    private static k getComponentStyle(w component) {
+    private static UIStyle getComponentStyle(UIComponent component) {
         if (component == null) return null;
         try {
-            return component.h();
+            return component.getStyle();
         } catch (Throwable ignored) {
             return null;
         }
@@ -67,21 +71,21 @@ final class GameEngineBridge {
     /**
      * Lấy chuỗi văn bản của một thành phần UI.
      */
-    private static String getComponentText(ao activeView, int componentId) {
-        w component = getUIComponent(activeView, componentId);
-        k componentStyle = getComponentStyle(component);
-        return (componentStyle != null && componentStyle.a != null) ? componentStyle.a : "";
+    private static String getComponentText(UILayoutView activeView, int componentId) {
+        UIComponent component = getUIComponent(activeView, componentId);
+        UIStyle componentStyle = getComponentStyle(component);
+        return (componentStyle != null && componentStyle.text != null) ? componentStyle.text : "";
     }
 
     /**
      * Gán chuỗi văn bản cho một thành phần UI nếu nội dung có thay đổi.
      */
-    private static boolean setComponentText(ao activeView, int componentId, String newText) {
-        w component = getUIComponent(activeView, componentId);
-        k componentStyle = getComponentStyle(component);
+    private static boolean setComponentText(UILayoutView activeView, int componentId, String newText) {
+        UIComponent component = getUIComponent(activeView, componentId);
+        UIStyle componentStyle = getComponentStyle(component);
         if (componentStyle != null) {
-            if (!newText.equals(componentStyle.a)) {
-                componentStyle.a = newText;
+            if (!newText.equals(componentStyle.text)) {
+                componentStyle.text = newText;
                 return true;
             }
         }
@@ -89,16 +93,9 @@ final class GameEngineBridge {
     }
 
     /**
-     * Áp dụng giá trị frame delay vào biến static c của BaseScreen (lớp gốc: an.class).
-     * Ghi chú: Dùng reflection vì khi build qua javac, file original/game.jar chứa field c là private.
+     * Áp dụng frame delay trực tiếp vào engine được biên dịch từ source.
      */
     static void applyFrameDelayToBaseScreen(int frameDelayMs) {
-        try {
-            Field frameDelayField = an.class.getDeclaredField("c");
-            frameDelayField.setAccessible(true);
-            frameDelayField.setInt(null, frameDelayMs);
-        } catch (Throwable frameDelayError) {
-            System.err.println("[VQSV Speed] Lỗi áp dụng frameDelay vào BaseScreen (an.c): " + frameDelayError.getMessage());
-        }
+        BaseScreen.frameDelayMs = frameDelayMs;
     }
 }

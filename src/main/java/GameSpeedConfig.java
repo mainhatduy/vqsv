@@ -215,7 +215,7 @@ public final class GameSpeedConfig {
     }
 
     /**
-     * Áp dụng frameDelay vào biến tĩnh c của BaseScreen (lớp gốc an.class).
+     * Áp dụng frame delay vào BaseScreen.frameDelayMs trong source game.
      */
     public static void applySpeed() {
         syncLegacyVariables();

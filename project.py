@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Local edit/build/run workflow. Requires Python 3 and the installed JDK."""
+"""Build all game classes from editable Java; run with FreeJ2ME on desktop."""
 
 import argparse
-import hashlib
 import os
 import shutil
 import subprocess
@@ -25,13 +24,14 @@ def ensure_jdk_environment():
 
 def build():
     ensure_jdk_environment()
-    expected = (ROOT / "original/SHA256.txt").read_text().split()[0]
-    if hashlib.sha256(ORIGINAL.read_bytes()).hexdigest() != expected:
-        raise SystemExit(
-            "original/game.jar has changed; restore the original before building."
-        )
     if not EMULATOR.is_file():
         raise SystemExit(f"Missing J2ME API/emulator: {EMULATOR}")
+    resources = ROOT / "src/main/resources"
+    binary_classes = sorted(resources.rglob("*.class"))
+    if binary_classes:
+        raise SystemExit(f"Source build refuses binary class overrides: {binary_classes[0]}")
+    if not (resources / "META-INF/MANIFEST.MF").is_file():
+        raise SystemExit("Missing source-owned META-INF/MANIFEST.MF")
     OUTPUT.parent.mkdir(exist_ok=True)
     sources = sorted((ROOT / "src/main/java").rglob("*.java"))
     with tempfile.TemporaryDirectory(prefix="vqsv-build-") as temp:
@@ -47,7 +47,7 @@ def build():
                     "UTF-8",
                     "-g",
                     "-classpath",
-                    os.pathsep.join([str(ORIGINAL), str(EMULATOR)]),
+                    str(EMULATOR),
                     "-d",
                     str(classes),
                     *map(str, sources),
@@ -55,27 +55,15 @@ def build():
                 check=True,
             )
         replacements = {}
-        for folder in [ROOT / "src/main/resources", classes]:
+        for folder in [resources, classes]:
             for file in sorted(folder.rglob("*")):
                 if file.is_file() and not file.name.startswith("."):
                     replacements[file.relative_to(folder).as_posix()] = (
                         file.read_bytes()
                     )
         staged = Path(temp) / "game.jar"
-        with (
-            zipfile.ZipFile(ORIGINAL) as original,
-            zipfile.ZipFile(staged, "w", zipfile.ZIP_DEFLATED) as output,
-        ):
-            for info in original.infolist():
-                name = info.filename
-                if name in replacements or info.is_dir():
-                    continue
-                if name.upper().startswith("META-INF/") and name.upper().endswith(
-                    (".SF", ".RSA", ".DSA", ".EC")
-                ):
-                    continue
-                output.writestr(name, original.read(info))
-            for name, content in replacements.items():
+        with zipfile.ZipFile(staged, "w", zipfile.ZIP_DEFLATED) as output:
+            for name, content in sorted(replacements.items()):
                 output.writestr(name, content)
         with zipfile.ZipFile(staged) as result:
             bad = result.testzip()
@@ -84,7 +72,7 @@ def build():
         shutil.copyfile(staged, OUTPUT)
     print(f"Built: {OUTPUT}", flush=True)
     print(
-        f"Compiled {len(sources)} source file(s); remaining classes come from original/game.jar.",
+        f"Compiled all {len(sources)} Java source files; no original game classes or binary patches included.",
         flush=True,
     )
 
